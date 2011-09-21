@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# Copyright 2011 GRNET S.A. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#   1. Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#
+#  2. Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation are
+# those of the authors and should not be interpreted as representing official
+# policies, either expressed or implied, of GRNET S.A.
+
+set -e
+
+. common.sh
+
+case "$IMAGE_TYPE" in
+    extdump)
+	IMAGE_FILE="${IMAGE_DIR}/${IMAGE_NAME}-${ARCH}-root.extdump";;
+    ntfsdump)
+        IMAGE_FILE="${IMAGE_DIR}/${IMAGE_NAME}-${ARCH}-root.ntfsdump";;
+    *)
+        log_error "Unknown image type: \`$IMAGE_TYPE'.";
+        exit 1
+esac
+
+if [ ! -e "$IMAGE_FILE" ]; then
+    log_error "Image file \`$IMAGE_FILE' does not exit."
+    exit 1
+fi
+
+MONITOR="" #Empty if progress monitor support is disabled
+if [ "$progress_monitor_support" = "yes" ]; then
+    IMAGE_SIZE="$(stat -L -c %s ${IMAGE_FILE})"
+    MONITOR="$PROGRESS_MONITOR -i ${INSTANCE_NAME} -r ${IMAGE_SIZE}"
+fi
+
+# If the target device is not a real block device we'll first losetup it.
+# This is needed for file disks.
+if [ ! -b $blockdev ]; then
+    ORIGINAL_BLOCKDEV=$blockdev
+    blockdev=$($LOSETUP -sf $blockdev)
+    CLEANUP+=("$LOSETUP -d $blockdev")
+fi
+
+${IMAGE_TYPE}_format_disk0 $blockdev
+
+filesystem_dev=$(map_disk0 $blockdev)
+CLEANUP+=("unmap_disk0 $blockdev")
+
+root_dev="${filesystem_dev}-1"
+
+# dd the dump to its new home :-)
+# Deploying an image file on a target block device is a streaming
+# copy operation. Enable the direct I/O flag on the output fd to 
+# avoid polluting the host cache with useless data.
+$MONITOR dd bs=4M if=$IMAGE_FILE of=$root_dev oflag=direct
+
+#Invoke the helper vm to do the dirty job...
+
+# Execute cleanups
+cleanup
+trap - EXIT
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
