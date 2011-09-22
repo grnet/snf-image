@@ -123,7 +123,7 @@ get_api20_arguments() {
     IMG_FORMAT=$OSP_IMG_FORMAT
     IMG_PASSWD=$OSP_IMG_PASSWD
 }
-
+er
 map_disk0() {
     blockdev="$1"
     filesystem_dev_base=`$KPARTX -l -p- $blockdev | \
@@ -160,6 +160,25 @@ format_disk0() {
     $sfdisk_cmd > /dev/null <<EOF
 2048,,${part_id["$image_type"]},*
 EOF
+}
+
+create_floppy() {
+    local img=$1
+
+    local target=`mktemp -d` || exit 1
+    CLEANUP+=("rmdir $target")
+
+    dd bs=512 count=2880 if=/dev/zero of=$img
+    mkfs.ext2 -F $img > /dev/null
+    mount $img $target -o loop
+    sed \
+         -e 's|@IMAGE_TYPE[@]|$(IMAGE_TYPE)|g' \
+         -e 's|@PASSWORD[@]|$(IMG_PASSWD)|g' \
+         -e 's|@HOSTNAME[@]|$(instance)|g' \
+         -e 's|@SSH_KEY[@]|$(IMG_SSH_KEY)|g' \
+         rules.template > $target/rules
+
+    umount $target
 }
 
 cleanup() {

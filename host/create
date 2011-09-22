@@ -62,7 +62,7 @@ if [ ! -b $blockdev ]; then
     CLEANUP+=("$LOSETUP -d $blockdev")
 fi
 
-${IMAGE_TYPE}_format_disk0 $blockdev
+format_disk0 $blockdev ${IMAGE_TYPE}
 
 filesystem_dev=$(map_disk0 $blockdev)
 CLEANUP+=("unmap_disk0 $blockdev")
@@ -74,6 +74,12 @@ root_dev="${filesystem_dev}-1"
 # copy operation. Enable the direct I/O flag on the output fd to 
 # avoid polluting the host cache with useless data.
 $MONITOR dd bs=4M if=$IMAGE_FILE of=$root_dev oflag=direct
+
+# Create a floppy image
+floppy=`mktemp floppy.XXXXXXXX` || exit 1
+CLEANUP+=("rm -f $floppy")
+
+create_floppy $floppy
 
 #Invoke the helper vm to do the dirty job...
 

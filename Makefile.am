@@ -4,6 +4,7 @@ else
 progress_monitor_support=no
 endif
 
+osname=$(PACKAGE)
 osdir=$(OS_DIR)/$(osname)
 defaultdir=$(DEFAULT_DIR)
 variantsdir=$(DESTDIR)${sysconfdir}/ganeti/snf-image/variants
