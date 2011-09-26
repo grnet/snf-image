@@ -7,9 +7,10 @@ endif
 osname=$(PACKAGE)
 osdir=$(OS_DIR)/$(osname)
 defaultdir=$(DEFAULT_DIR)
-variantsdir=$(DESTDIR)${sysconfdir}/ganeti/snf-image/variants
+variantsdir=${sysconfdir}/ganeti/snf-image/variants
 
-dist_os_SCRIPTS = host/create
+dist_os_SCRIPTS = ${srcdir}/host/create ${srcdir}/host/import \
+	${srcdir}/host/export ${srcdir}/host/rename ${srcdir}/host/verify
 dist_os_DATA = ${srcdir}/host/ganeti_api_version ${srcdir}/host/parameters.list \
                ${srcdir}/host/variants.list
 
@@ -40,5 +41,11 @@ host/common.sh: Makefile
 		   test -f ./$@.in || srcdir=$(srcdir)/; \
 		   $(edit) $${srcdir}$@.in >$@.tmp
 	mv $@.tmp $@
+
+install-exec-local:
+	@mkdir_p@ "$(DESTDIR)$(osdir)"
+	@mkdir_p@ "$(DESTDIR)$(variantsdir)"
+	touch "$(DESTDIR)$(variantsdir)/default.conf"
+	
 
 CLEANFILES = $(os_DATA)

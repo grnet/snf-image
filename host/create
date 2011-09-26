@@ -76,8 +76,12 @@ root_dev="${filesystem_dev}-1"
 $MONITOR dd bs=4M if=$IMAGE_FILE of=$root_dev oflag=direct
 
 # Create a floppy image
-floppy=`mktemp floppy.XXXXXXXX` || exit 1
+floppy=$(mktemp --tmpdir floppy.XXXXXXXX) || exit 1
 CLEANUP+=("rm -f $floppy")
+
+snf_export_FORMAT=${IMG_FORMAT}
+snf_export_PASSWORD=${IMG_PASSWD}
+snf_export_HOSTNAME=${instance}
 
 create_floppy $floppy
 
