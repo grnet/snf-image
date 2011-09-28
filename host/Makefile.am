@@ -15,7 +15,7 @@ dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list
 
-os_DATA = host/common.sh
+os_DATA = common.sh
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
@@ -23,6 +23,7 @@ edit = sed \
 	   -e 's|@osdir[@]|$(osdir)|g' \
 	   -e 's|@osname[@]|$(osname)|g' \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
+	   -e 's|@HELPER[@]|$(HELPER)|g' \
 	   -e 's|@AWK[@]|$(AWK)|g' \
 	   -e 's|@MKDIR_P[@]|$(MKDIR_P)|g' \
 	   -e 's|@DUMP[@]|$(DUMP)|g' \

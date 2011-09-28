@@ -32,7 +32,7 @@ AC_ARG_WITH([helper],
     )],
     [helper="$withval"],
     [helper="$localstatedir/lib/snf-image/helper.img"])
-AC_SUBST(DEFAULT_DIR, $helper)
+AC_SUBST(HELPER, $helper)
 
 
 
