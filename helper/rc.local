@@ -50,6 +50,7 @@ if [ -f $floppy/rules ]; then
     source $floppy/rules
 else
     log_error "Floppy does not contain \`rules\' file"
+fi
 
 # Image mount point...
 target=$(mktemp -d --tmpdir target.XXXXXXXX) || exit 1
