@@ -25,12 +25,21 @@ AC_ARG_WITH([progress-monitor],
 
 AM_CONDITIONAL(PROGMONSUPPORT, [test -n "$PROGRESS_MONITOR"])
 
+# --with-helper..
+AC_ARG_WITH([helper],
+    [AS_HELP_STRING([--with-helper=IMG_PATH],
+        [Path to helper VM image [LOCALSTATEDIR/lib/snf-image/helper.img]]
+    )],
+    [helper="$withval"],
+    [helper="$localstatedir/lib/snf-image/helper.img"])
+AC_SUBST(DEFAULT_DIR, $helper)
+
+
 
 # --with-os-dir=...
 AC_ARG_WITH([os-dir],
     [AS_HELP_STRING([--with-os-dir=DIR],
-        [top-level OS directory under which to install]
-        [ (default is $datadir/ganeti/os)]
+        [top-level OS directory under which to install [DATADIR/ganeti/os]]
     )],
     [os_dir="$withval"],
     [os_dir="$datadir/ganeti/os"])
@@ -40,7 +49,7 @@ AC_SUBST(OS_DIR, $os_dir)
 AC_ARG_WITH([default-dir],
     [AS_HELP_STRING([--with-default-dir=DIR],
         [top-level default config directory under which to install]
-        [ (default is $sysconfdir/default)]
+        [ [SYSCONFDIR/default]]
     )],
     [default_dir="$withval"],
     [default_dir="$sysconfdir/default"])

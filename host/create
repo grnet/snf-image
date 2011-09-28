@@ -91,7 +91,7 @@ CLEANUP+=("rm -f $syslog")
 result=$(mktemp --tmpdir result.XXXXXXXX) || exit 1
 CLEANUP+=("rm -f $result")
 
-#kvm -drive file=snf-image-helper.img,snapshot=on,format=raw,if=virtio,boot=on \
+#kvm -drive file=${HELPER},snapshot=on,format=raw,if=virtio,boot=on \
 #    -boot c -serial stdout -serial $syslog -serial $result -fda $floppy
 
 # Execute cleanups

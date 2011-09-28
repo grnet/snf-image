@@ -9,10 +9,11 @@ osdir=$(OS_DIR)/$(osname)
 defaultdir=$(DEFAULT_DIR)
 variantsdir=${sysconfdir}/ganeti/snf-image/variants
 
-dist_os_SCRIPTS = ${srcdir}/host/create ${srcdir}/host/import \
-	${srcdir}/host/export ${srcdir}/host/rename ${srcdir}/host/verify
-dist_os_DATA = ${srcdir}/host/ganeti_api_version ${srcdir}/host/parameters.list \
-               ${srcdir}/host/variants.list
+dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
+			${srcdir}/rename ${srcdir}/verify
+	
+dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
+               ${srcdir}/variants.list
 
 os_DATA = host/common.sh
 
@@ -34,8 +35,7 @@ edit = sed \
 	   -e 's|@INSTALL_MBR[@]|$(INSTALL_MBR)|g' \
 	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g'
 
-host/common.sh: Makefile
-	@mkdir_p@ host
+common.sh: Makefile
 	rm -f $@ $@.tmp
 	srcdir=''; \
 		   test -f ./$@.in || srcdir=$(srcdir)/; \

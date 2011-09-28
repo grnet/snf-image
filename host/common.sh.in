@@ -32,6 +32,7 @@ KPARTX="kpartx"
 LOSETUP="losetup"
 SFDISK="sfdisk"
 PROGRESS_MONITOR="snf-progress-monitor"
+HELPER_VM=@HELPER@
 
 progress_monitor_support="@progress_monitor_support@"
 
