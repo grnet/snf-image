@@ -32,7 +32,7 @@ RESULT=/dev/ttyS2
 
 # Programs
 XMLSTARLET=xmlstarlet
-INSTALL_MBR=install-mbr
+RESIZE2FS=
 
 CLEANUP=( )
 
@@ -71,7 +71,7 @@ get_distro() {
         echo "$distro"
     elif [ -e "$root_dir/etc/fedora-release" ]; then
         echo "fedora"
-    elif [ -e "$root_dir/etc/centos-release" ]; thne
+    elif [ -e "$root_dir/etc/centos-release" ]; then
         echo "centos"
     elif [ -e "$root_dir/etc/redhat-release" ]; then
         echo "redhat"

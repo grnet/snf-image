@@ -34,8 +34,8 @@
 # terminate helper vm when the script exits
 CLEANUP+=("telinit 0")
 
-floppy=$(mktemp -d floppy.XXXXXXXX) || exit 1
-CLEANUP+=("rm -f $floppy")
+floppy=$(mktemp -d --tmpdir floppy.XXXXXXXX) || exit 1
+CLEANUP+=("rmdir $floppy")
 
 if [ -e /dev/fd0 ]; then
     mount /dev/fd0 $floppy
@@ -46,8 +46,8 @@ else
 fi
 
 # Mount the instance's partition
-target=$(mktemp -d target.XXXXXXXX) || exit 1
-CLEANUP+=("rm -f $target")
+target=$(mktemp -d --tmpdir target.XXXXXXXX) || exit 1
+CLEANUP+=("rmdir $target")
 mount /dev/sdb $target
 CLEANUP+=("umount $target")
 
