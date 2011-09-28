@@ -9,7 +9,7 @@
 set -e
 . /usr/share/snf-image/common.sh
 
-if [ -z "$SNF_IMAGE_DEV" ]; then
+if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`$SNF_IMAGE_DEV\' is not a block device"
 
 fi
