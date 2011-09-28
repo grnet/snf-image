@@ -29,10 +29,11 @@
 
 OUTPUT=/dev/ttyS0
 RESULT=/dev/ttyS2
+FLOPPY_DEV=/dev/fd0
 
 # Programs
 XMLSTARLET=xmlstarlet
-RESIZE2FS=
+RESIZE2FS=resize2fs
 
 CLEANUP=( )
 

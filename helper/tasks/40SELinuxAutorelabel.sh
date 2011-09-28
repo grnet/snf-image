@@ -2,7 +2,8 @@
 
 ### BEGIN TASK INFO
 # Provides:		SELinuxAutorelabel
-# Requires:
+# RunBefore:            UmountImage
+# RunAfter:             MountImage
 # Short-Description:	Force the system to relabel at next boot
 ### END TAST INFO
 

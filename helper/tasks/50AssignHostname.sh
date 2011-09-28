@@ -2,7 +2,8 @@
 
 ### BEGIN TASK INFO
 # Provides:		AssignHostname
-# Requires:		InstallUnattend
+# RunBefore:            UmountImage
+# RunAfter:		InstallUnattend
 # Short-Description:	Assign the Hostname of Computer Name in the instance
 ### END TAST INFO
 

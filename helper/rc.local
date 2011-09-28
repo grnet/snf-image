@@ -31,33 +31,40 @@
 
 . /usr/share/snf-image/common.sh
 
+set -e
+
 # terminate helper vm when the script exits
 CLEANUP+=("telinit 0")
 
-floppy=$(mktemp -d --tmpdir floppy.XXXXXXXX) || exit 1
-CLEANUP+=("rmdir $floppy")
-
-if [ -e /dev/fd0 ]; then
-    mount /dev/fd0 $floppy
-    source $floppy
-    umount $floppy
-else
-    log_error "Floppy Device is not present!"
+if [ ! -b $FLOPPY_DEV ]; then
+    log_error "Floppy device is not present!"
 fi
 
-# Mount the instance's partition
+floppy=$(mktemp -d --tmpdir floppy.XXXXXXXX)
+CLEANUP+=("rmdir $floppy")
+
+mount $FLOPPY_DEV $floppy
+CLEANUP+=("umount $floppy")
+
+if [ -f $floppy/rules ]; then
+    source $floppy/rules
+else
+    log_error "Floppy does not contain \`rules\' file"
+
+# Image mount point...
 target=$(mktemp -d --tmpdir target.XXXXXXXX) || exit 1
 CLEANUP+=("rmdir $target")
-mount /dev/sdb $target
-CLEANUP+=("umount $target")
 
+SNF_IMAGE_DEV=/dev/sdb
 SNF_IMAGE_TARGET=$target
+
+# Make sure all SNF_IMAGE_* variables are accessible by snf-image/tasks scripts
+set | egrep ^SNF_IMAGE_\\w+= | cut -d= -f1 | while read line; do
+    export $line
+done
 
 RUN_PARTS=`which run-parts`
 if [ -n "$RUN_PARTS" -a -n "/usr/lib/snf-image/tasks" ]; then
-    set | egrep ^SNF_IMAGE_\\w+= | cut -d= -f1 | while read line; do
-        export $line
-    done
     $RUN_PARTS "/usr/lib/snf-image/tasks"
 fi
 

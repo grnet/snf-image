@@ -2,7 +2,8 @@
 
 ### BEGIN TASK INFO
 # Provides:		ChangePassword
-# Requires:		InstallUnattend
+# RunBefore:            UmountImage
+# RunAfter:		InstallUnattend
 # Short-Description:	Changes Password for specified users
 ### END TAST INFO
 

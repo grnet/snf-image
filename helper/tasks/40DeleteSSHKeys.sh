@@ -2,7 +2,7 @@
 
 ### BEGIN TASK INFO
 # Provides:		DeleteSSHKeys
-# Requires:
+# Requires:             MountImage
 # Short-Description:	Remove ssh keys if present.
 ### END TAST INFO
 
