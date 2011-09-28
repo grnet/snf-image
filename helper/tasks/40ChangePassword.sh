@@ -1,0 +1,82 @@
+#! /bin/sh
+
+### BEGIN TASK INFO
+# Provides:		ChangePassword
+# Requires:		InstallUnattend
+# Short-Description:	Changes Password for specified users
+### END TAST INFO
+
+set -e
+. /usr/share/snf-image/common.sh
+
+windows_password() {
+    local target=$1
+    local password=$2
+
+    local tmp_unattend=`mktemp` || exit 1
+    CLEANUP+=("rm $tmp_unattend")
+
+    echo -n "Installing new admin password..."
+
+    local namespace="urn:schemas-microsoft-com:unattend"
+    
+    $XMLSTARLET ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:UserAccounts/x:AdministratorPassword/x:Value" -v $password "$target/Unattend.xml" > $tmp_unattend
+
+    cat $tmp_unattend > "$target/Unattend.xml"
+    echo done
+}
+
+linux_password() {
+    local target=$1
+    local password=$2
+
+    local hash=$(/usr/share/snf-image/snf-passtohash.py $password)
+    if [ ! -e ${target}/etc/shadow ]; then
+       log_error "No /etc/shadow found!" 
+    fi
+    
+    declare -a users=("root")
+
+    local distro=$(get_distro $target)
+
+    if [ "x$disto" = "xubuntu" -o \
+         "x$disto" + "xfedora" ] ; then
+        users+=("user")
+    fi
+
+    for i in $(seq 0 1 $((${#users[@]}-1))); do
+        local tmp_shadow=$(mktemp)
+        CLEANUP+=("rm $tmp_shadow")
+
+        echo -n "Setting ${users[$i]} password..."
+    
+        echo "${users[$i]}:$hash:15103:0:99999:7:::" > $tmp_shadow
+        grep -v "${users[$i]}" ${TARGET}/etc/shadow >> $tmp_shadow
+        cat $tmp_shadow > ${target}/etc/shadow
+        echo "done"
+    done
+}
+
+if [ -z "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target dir is missing"	
+fi
+
+if [ -z "$SNF_IMAGE_PASSWORD" ]; then
+    log_error "Password is missing"
+fi
+
+if [ "$SNF_IMAGE_TYPE" = "ntfsdump" ]; then
+    windows_password $SNF_IMAGE_TARGET $SNF_IMAGE_PASSWORD
+elif [ "$SNF_IMAGE_TYPE" = "extdump" ]; then
+    linux_password $SNF_IMAGE_TARGET $SNF_IMAGE_PASSWORD
+fi
+
+echo "done"
+
+cleanup
+trap - EXIT
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
+
