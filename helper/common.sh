@@ -31,6 +31,8 @@ OUTPUT=/dev/ttyS0
 RESULT=/dev/ttyS2
 FLOPPY_DEV=/dev/fd0
 
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+
 # Programs
 XMLSTARLET=xmlstarlet
 RESIZE2FS=resize2fs
