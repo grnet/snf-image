@@ -10,8 +10,8 @@
 set -e
 . /usr/share/snf-image/common.sh
 
-if [ -z "$SNF_IMAGE_TARGET" ]; then
-	log_error "Target dir is missing"	
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+	log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
 fi
 
 if [ "$SNF_IMAGE_TYPE" != "ntfsdump" ]; then

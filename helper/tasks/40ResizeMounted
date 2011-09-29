@@ -11,7 +11,7 @@ set -e
 . /usr/share/snf-image/common.sh
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target directory \`$SNF_IMAGE_TARGET\' is missing"
+    log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
 fi
 
 # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will

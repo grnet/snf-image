@@ -54,8 +54,8 @@ linux_hostname() {
     sed -ie "s/^[[:blank:]]*127\.0\.1\.1[[:blank:]].\+$/127.0.1.1\t$hostname/" $target/etc/hosts
 }
 
-if [ -z "$SNF_IMAGE_TARGET" -o ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Missing target directory"	
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
 fi
 
 if [ -z "$SNF_IMAGE_HOSTNAME" ]; then
@@ -63,9 +63,9 @@ if [ -z "$SNF_IMAGE_HOSTNAME" ]; then
 fi
 
 if [ "$SNF_IMAGE_TYPE" = "ntfsdump" ]; then
-    windows_hostname $SNF_IMAGE_TARGET $SNF_IMAGE_PASSWORD
+    windows_hostname $SNF_IMAGE_TARGET $SNF_IMAGE_HOSTNAME
 elif [ "$SNF_IMAGE_TYPE" = "extdump" ]; then
-    linux_hostname $SNF_IMAGE_TARGET $SNF_IMAGE_PASSWORD
+    linux_hostname $SNF_IMAGE_TARGET $SNF_IMAGE_HOSTNAME
 fi
 
 echo "done"
