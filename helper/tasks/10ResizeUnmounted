@@ -22,4 +22,5 @@ if [ "$SNF_IMAGE_TYPE" = "extdump" ]; then
 fi	
 
 exit 0
+
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

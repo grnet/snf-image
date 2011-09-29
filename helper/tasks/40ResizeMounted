@@ -14,15 +14,17 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
 fi
 
-# Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
-# try to execute this script during the specialize pass.
-mkdir -p "$SNF_IMAGE_TARGET/Windows/SnfScripts"
-cat > "$SNF_IMAGE_TARGET/Windows/SnfScripts/ExtendFilesystem" <<EOF
+if [ "$SNF_IMAGE_TYPE" = "ntfsdump" ]; then
+    # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
+    # try to execute this script during the specialize pass.
+    mkdir -p "$SNF_IMAGE_TARGET/Windows/SnfScripts"
+    cat > "$SNF_IMAGE_TARGET/Windows/SnfScripts/ExtendFilesystem" <<EOF
 select disk 0
 select volume 1
 extend filesystem
 exit
 EOF
+fi
 
 cleanup
 trap - EXIT
@@ -30,4 +32,3 @@ trap - EXIT
 exit 0
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
-

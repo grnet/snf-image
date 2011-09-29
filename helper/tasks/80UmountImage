@@ -16,4 +16,10 @@ fi
 
 umount $SNF_IMAGE_TARGET
 
+cleanup
+trap - EXIT
+
 exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
+

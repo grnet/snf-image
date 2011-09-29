@@ -20,4 +20,5 @@ fi
 mount $SNF_IMAGE_DEV $SNF_IMAGE_TARGET
 
 exit 0
+
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
