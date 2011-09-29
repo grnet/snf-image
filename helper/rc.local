@@ -56,18 +56,20 @@ fi
 target=$(mktemp -d --tmpdir target.XXXXXXXX) || exit 1
 CLEANUP+=("rmdir $target")
 
-SNF_IMAGE_DEV=/dev/sdb
-SNF_IMAGE_TARGET=$target
+export SNF_IMAGE_DEV=/dev/sdb
+export SNF_IMAGE_TARGET=$target
 
-# Make sure all SNF_IMAGE_* variables are accessible by snf-image/tasks scripts
-set | egrep ^SNF_IMAGE_\\w+= | cut -d= -f1 | while read line; do
-    export $line
-done
-
-RUN_PARTS=`which run-parts`
-if [ -n "$RUN_PARTS" -a -n "/usr/lib/snf-image/tasks" ]; then
-    $RUN_PARTS "/usr/lib/snf-image/tasks"
+if [ ! -d "/usr/lib/snf-image/tasks" ]; then
+    log_error "snf-image/tasks directory is missing"
 fi
+
+RUN_PARTS=$(which run-parts)
+if [ -z "$RUN_PARTS" ]; then
+    log_error "run-parts programe is missing from the system"
+fi
+
+echo "Execute all snf-image tasks...." 
+$RUN_PARTS -v --exit-on-error "/usr/lib/snf-image/tasks"
 
 cleanup
 trap - EXIT
