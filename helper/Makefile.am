@@ -7,7 +7,7 @@ export base_name
 export commondir
 
 dist_doc_DATA = COPYING AUTHORS ChangeLog
-dist_init_SCRIPTS = rc.local snf-passtohash.py
+dist_init_SCRIPTS = rc.local
 dist_common_SCRIPTS= snf-passtohash.py
 dist_common_DATA = common.sh
 
