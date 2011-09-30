@@ -56,7 +56,6 @@ fi
 target=$(mktemp -d --tmpdir target.XXXXXXXX) || exit 1
 CLEANUP+=("rmdir $target")
 
-export SNF_IMAGE_DEV=/dev/sdb
 export SNF_IMAGE_TARGET=$target
 
 if [ ! -d "/usr/lib/snf-image/tasks" ]; then
