@@ -94,6 +94,9 @@ CLEANUP+=("rm -f $result")
 #kvm -drive file=${HELPER},snapshot=on,format=raw,if=virtio,boot=on \
 #    -boot c -serial stdout -serial $syslog -serial $result -fda $floppy
 
+# Install a new MBR
+$INSTALL_MBR -p 1 -i n ${blockdev}
+
 # Execute cleanups
 cleanup
 trap - EXIT
