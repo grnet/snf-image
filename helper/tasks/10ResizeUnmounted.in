@@ -7,7 +7,7 @@
 ### END TAST INFO
 
 set -e
-. @datarootdir@/@base_name@/common.sh
+. @commondir@/common.sh
 
 if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"

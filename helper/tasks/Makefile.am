@@ -1,6 +1,5 @@
-base_name=$(subst -helper,,$(PACKAGE))
-
 tasksdir=${libdir}/$(base_name)/tasks
+
 dist_tasks_SCRIPTS = \
 		10ResizeUnmounted \
 		30MountImage \
@@ -18,7 +17,7 @@ edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
 	   -e 's|@localstatedir[@]|$(localstatedir)|g' \
 	   -e 's|@datarootdir[@]|$(datarootdir)|g' \
-	   -e 's|@base_name[@]|$(base_name)|g'
+	   -e 's|@commondir[@]|$(commondir)|g'
 
 %:%.in Makefile
 	rm -f $@ $@.tmp

@@ -8,7 +8,7 @@
 ### END TAST INFO
 
 set -e
-. @datarootdir@/@base_name@/common.sh
+. @commondir@/common.sh
 
 if [ -z "$SNF_IMAGE_TARGET" ]; then
 	log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	

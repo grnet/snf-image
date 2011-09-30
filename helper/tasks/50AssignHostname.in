@@ -8,7 +8,7 @@
 ### END TAST INFO
 
 set -e
-. @datarootdir@/@base_name@/common.sh
+. @commondir@/common.sh
 
 windows_hostname() {
     local target=$1
