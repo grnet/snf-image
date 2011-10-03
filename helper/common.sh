@@ -27,8 +27,7 @@
 # those of the authors and should not be interpreted as representing official
 # policies, either expressed or implied, of GRNET S.A.
 
-OUTPUT=/dev/ttyS0
-RESULT=/dev/ttyS2
+RESULT=/dev/ttyS1
 FLOPPY_DEV=/dev/fd0
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
@@ -40,7 +39,7 @@ RESIZE2FS=resize2fs
 CLEANUP=( )
 
 log_error() {
-    echo "$@" >&2
+    echo "ERROR: $@" | tee $RESULT >&2
     exit 1
 }
 
@@ -118,8 +117,5 @@ cleanup() {
 }
 
 trap cleanup EXIT
-
-# Redirect stdout and stderr
-exec &> $OUTPUT
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
