@@ -24,7 +24,7 @@ def timestamp():
 
 
 def main():
-    if os.environ.has_key('OSP_IMG_PERSONALITY'):
+    if os.environ.has_key('SNF_IMAGE_PERSONALITY'):
         osp_img_personality = os.environ['SNF_IMAGE_PERSONALITY']
         files = json.loads(osp_img_personality)
         for f in files:
