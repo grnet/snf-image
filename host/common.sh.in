@@ -174,7 +174,7 @@ create_floppy() {
     mount $img $target -o loop
     set | egrep ^snf_export_\\w+=|sed -e 's/^snf_export_/SNF_IMAGE_/' | \
     while read line; do
-        echo "export $line" > $target/rules
+        echo "export $line" >> $target/rules
     done
     umount $target
 }
