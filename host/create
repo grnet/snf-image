@@ -90,19 +90,24 @@ fi
 create_floppy $floppy
 
 # Invoke the helper vm to do the dirty job...
-syslog=$(mktemp --tmpdir syslog.XXXXXXXX)
-CLEANUP+=("rm -f $syslog")
-result=$(mktemp --tmpdir result.XXXXXXXX)
-CLEANUP+=("rm -f $result")
+result_file=$(mktemp --tmpdir result.XXXXXXXX)
+CLEANUP+=("rm -f $result_file")
 
 kvm -drive file=${HELPER},snapshot=on \
     -drive=$root_dev,format=raw,if=virtio,cache=none \
-    -boot c -serial $result -fda $floppy \
+    -boot c -serial stdio -serial file:$result_file -fda $floppy \
     -vga none -nographic -parallel none -monitor null -nographic\
     -kernel ${HELPER_KERNEL} -initrd ${HELPER_INITRD} \
     -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8" \
     2>&1 | sed 's|^|HELPER: |g'
- 
+
+result=$(cat $result_file)
+
+if [ "x$result" != "xSUCCESS" ]; then
+    log_error "Helper VM returned error: \`$result'"
+    exit 1
+fi
+
 # Install a new MBR
 $INSTALL_MBR -p 1 -i n ${blockdev}
 
