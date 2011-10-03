@@ -18,7 +18,13 @@
 # IMAGE_DEBUG=0
 
 # HELPER: path to the image file of the helper vm
-# HELPER="srv/okeanos/helper.img"
+# HELPER="var/lib/snf-image/helper.img"
+
+# HELPER_KERNEL: path to the kernel, kvm should use to run the helper image
+# HELPER_KERNEL="/var/lib/snf-image/helper-kernel"
+
+# HELPER_INITRD: path to the init ramdisk the helper vm should use.
+# HELPER_INITRD="/var/lib/snf-image/helper-initrd"
 
 # Paths for needed programs. Uncommend and change the variables below, if you
 # don't want to use the default one.

@@ -34,6 +34,26 @@ AC_ARG_WITH([helper],
     [helper="$localstatedir/lib/snf-image/helper.img"])
 AC_SUBST(HELPER, $helper)
 
+# --with-helper-kernel
+AC_ARG_WITH([helper_kernel],
+    [AS_HELP_STRING([--with-helper-kernel=KERNEL_PATH],
+        [Path to a kernel to use to boot the helper VM image 
+        [LOCALSTATEDIR/lib/snf-image/helper-kernel]]
+    )],
+    [helper_ernel="$withval"],
+    [helper_kernel="$localstatedir/lib/snf-image/helper-kernel"])
+AC_SUBST(HELPER_KERNEL, ${helper_kernel})
+
+# --with-helper-initrd..
+AC_ARG_WITH([helper_initrd],
+    [AS_HELP_STRING([--with-helper-initrd=INITRD_PATH],
+        [Path to an initial ramdisk to use to boot the helper VM image
+        [LOCALSTATEDIR/lib/snf-image/helper-initrd]]
+    )],
+    [helper_initrd="$withval"],
+    [helper_initrd="$localstatedir/lib/snf-image/helper-initrd"])
+AC_SUBST(HELPER_INITRD, ${helper_initrd})
+
 
 
 # --with-os-dir=...

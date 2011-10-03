@@ -92,9 +92,14 @@ CLEANUP+=("rm -f $syslog")
 result=$(mktemp --tmpdir result.XXXXXXXX)
 CLEANUP+=("rm -f $result")
 
-#kvm -drive file=${HELPER},snapshot=on,format=raw,if=virtio,boot=on \
-#    -boot c -serial stdout -serial $syslog -serial $result -fda $floppy
-
+kvm -drive file=${HELPER},snapshot=on \
+    -drive=$root_dev,format=raw,if=virtio,cache=none \
+    -boot c -serial $result -fda $floppy \
+    -vga none -nographic -parallel none -monitor null -nographic\
+    -kernel ${HELPER_KERNEL} -initrd ${HELPER_INITRD} \
+    -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8" \
+    2>&1 | sed 's|^|HELPER: |g'
+ 
 # Install a new MBR
 $INSTALL_MBR -p 1 -i n ${blockdev}
 

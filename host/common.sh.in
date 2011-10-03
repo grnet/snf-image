@@ -200,6 +200,8 @@ fi
 : ${VARIANTS_DIR:="@sysconfdir@/ganeti/snf-image/variants"}
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
 : ${HELPER:="@HELPER@"}
+: #{HELPER_KERNEL:="@HELPER_KERNEL@"}
+: #{HELPER_INITRD:="@HELPER_INITRD@"}
 
 SCRIPT_NAME=$(basename $0)
 
