@@ -33,7 +33,6 @@ LOSETUP="losetup"
 SFDISK="sfdisk"
 PROGRESS_MONITOR="snf-progress-monitor"
 INSTALL_MBR="install-mbr"
-HELPER_VM=@HELPER@
 
 progress_monitor_support="@progress_monitor_support@"
 
@@ -198,9 +197,9 @@ if [ -f "$DEFAULT_FILE" ]; then
 fi
 
 : ${ARCH:="x86_64"}
-: ${CUSTOMIZE_DIR:="@sysconfdir@/ganeti/snf-image/hooks"}
 : ${VARIANTS_DIR:="@sysconfdir@/ganeti/snf-image/variants"}
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
+: ${HELPER:="@HELPER@"}
 
 SCRIPT_NAME=$(basename $0)
 

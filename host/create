@@ -76,7 +76,7 @@ root_dev="${filesystem_dev}-1"
 $MONITOR dd bs=4M if=$IMAGE_FILE of=$root_dev oflag=direct
 
 # Create a floppy image
-floppy=$(mktemp --tmpdir floppy.XXXXXXXX) || exit 1
+floppy=$(mktemp --tmpdir floppy.XXXXXXXX)
 CLEANUP+=("rm -f $floppy")
 
 snf_export_DEV=/dev/vda
@@ -87,9 +87,9 @@ snf_export_HOSTNAME=${instance}
 create_floppy $floppy
 
 # Invoke the helper vm to do the dirty job...
-syslog=$(mktemp --tmpdir syslog.XXXXXXXX) || exit 1
+syslog=$(mktemp --tmpdir syslog.XXXXXXXX)
 CLEANUP+=("rm -f $syslog")
-result=$(mktemp --tmpdir result.XXXXXXXX) || exit 1
+result=$(mktemp --tmpdir result.XXXXXXXX)
 CLEANUP+=("rm -f $result")
 
 #kvm -drive file=${HELPER},snapshot=on,format=raw,if=virtio,boot=on \
