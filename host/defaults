@@ -33,6 +33,11 @@
 # HELPER_SOFT_TIMEOUT="120"
 # HELPER_HARD_TIMEOUT="15"
 
+# HELPER_USR: For security reasons, the helper vm is not adviced to to run as
+# root. It should drop privileges just before the guest execution starts. The
+# user the helper vm should run as is specifies by HELPER_USR variable.
+# HELPER_USR="nobody"
+
 # Paths for needed programs. Uncommend and change the variables below, if you
 # don't want to use the default one.
 # LOSETUP="losetup"
