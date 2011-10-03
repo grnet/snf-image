@@ -54,8 +54,6 @@ AC_ARG_WITH([helper_initrd],
     [helper_initrd="$localstatedir/lib/snf-image/helper-initrd"])
 AC_SUBST(HELPER_INITRD, ${helper_initrd})
 
-
-
 # --with-os-dir=...
 AC_ARG_WITH([os-dir],
     [AS_HELP_STRING([--with-os-dir=DIR],
@@ -83,17 +81,22 @@ AC_PROG_MKDIR_P
 
 AC_PATH_PROG(LOSETUP, [losetup], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$LOSETUP" ; then
-  AC_MSG_ERROR([losetup not found in $PATH])
+  AC_MSG_ERROR([losetup not found in $PATH:/usr/sbin:/sbin])
 fi
 
 AC_PATH_PROG(KPARTX, [kpartx], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$KPARTX" ; then
-  AC_MSG_ERROR([kpartx not found in $PATH])
+  AC_MSG_ERROR([kpartx not found in $PATH:/usr/sbin:/sbin])
 fi
 
 AC_PATH_PROG(SFDISK, [sfdisk], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$SFDISK" ; then
-  AC_MSG_ERROR([sfdisk not found in $PATH])
+  AC_MSG_ERROR([sfdisk not found in $PATH:/usr/sbin:/sbin])
+fi
+
+AC_PATH_PROG(TIMELIMIT, [timelimit], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$TIMELIMIT" ; then
+  AC_MSG_ERROR([timelimit not found in $PATH:/usr/sbin:/sbin])
 fi
 
 AC_CONFIG_FILES([

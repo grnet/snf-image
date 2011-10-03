@@ -33,6 +33,7 @@ LOSETUP="losetup"
 SFDISK="sfdisk"
 PROGRESS_MONITOR="snf-progress-monitor"
 INSTALL_MBR="install-mbr"
+TIMELIMIT="timelimit"
 
 progress_monitor_support="@progress_monitor_support@"
 
@@ -203,8 +204,10 @@ fi
 : ${VARIANTS_DIR:="@sysconfdir@/ganeti/snf-image/variants"}
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
 : ${HELPER:="@HELPER@"}
-: #{HELPER_KERNEL:="@HELPER_KERNEL@"}
-: #{HELPER_INITRD:="@HELPER_INITRD@"}
+: ${HELPER_KERNEL:="@HELPER_KERNEL@"}
+: ${HELPER_INITRD:="@HELPER_INITRD@"}
+: ${HELPER_SOFT_TIMEOUT=120}
+: ${HELPER_HARD_TIMEOUT=15}
 
 SCRIPT_NAME=$(basename $0)
 

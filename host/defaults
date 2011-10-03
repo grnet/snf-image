@@ -26,12 +26,20 @@
 # HELPER_INITRD: path to the init ramdisk the helper vm should use.
 # HELPER_INITRD="/var/lib/snf-image/helper-initrd"
 
+# HELPER_TIMOUT: Soft and hard timeout limits for helper instance.
+# Helper instance will be terminated after a given time if it hasn't exited by
+# itself. The time to wait before killing the process is specified by those
+# variables. When soft/hard limit expires, a SIGTERM/SIGKILL is sent.
+# HELPER_SOFT_TIMEOUT="120"
+# HELPER_HARD_TIMEOUT="15"
+
 # Paths for needed programs. Uncommend and change the variables below, if you
 # don't want to use the default one.
 # LOSETUP="losetup"
 # KPARTX="kpartx"
 # SFDISK="sfdisk"
 # INSTALL_MBR="install-mbr"
+# TIMELIMIT="timelimit"
 # if [ "$windows_support" = "yes" ] ; then
 #     PROGRESS_MONITOR="snf-progress-monitor"
 # fi
