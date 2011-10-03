@@ -123,7 +123,7 @@ get_api20_arguments() {
     IMG_ID=$OSP_IMG_ID
     IMG_FORMAT=$OSP_IMG_FORMAT
     IMG_PASSWD=$OSP_IMG_PASSWD
-    if [ -e "$OSP_IMG_PERSONALITY" ]; then
+    if [ -n "$OSP_IMG_PERSONALITY" ]; then
         IMG_PERSONALITY=$OSP_IMG_PERSONALITY
     fi
 }
