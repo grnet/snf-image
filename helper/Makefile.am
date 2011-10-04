@@ -1,9 +1,7 @@
 commondir=$(datarootdir)/$(PACKAGE)
 scriptsdir=$(libdir)/$(PACKAGE)
 tasksdir=$(scriptsdir)/tasks
-export commondir
-export scriptsdir
-export tasksdir
+export commondir scriptsdir tasksdir
 
 SUBDIRS = tasks
 
@@ -13,10 +11,9 @@ dist_scripts_SCRIPTS= snf-passtohash.py
 dist_common_DATA = common.sh
 
 edit = sed \
-	-e 's|@sysconfdir[@]|$(sysconfdir)|g' \
-	-e 's|@localstatedir[@]|$(localstatedir)|g' \
-	-e 's|@datarootdir[@]|$(datarootdir)|g' \
 	-e 's|@commondir[@]|$(commondir)|g' \
+	-e 's|@scriptsdir[@]|$(scriptsdir)|g' \
+	-e 's|@tasksdir[@]|$(tasksdir)|g' \
 	-e 's|@RESIZE2FS[@]|$(RESIZE2FS)|g' \
 	-e 's|@XMLSTARLET[@]|$(XMLSTARLET)|g'
 
