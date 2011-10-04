@@ -35,9 +35,9 @@ set -e
 
 case "$IMAGE_TYPE" in
     extdump)
-	IMAGE_FILE="${IMAGE_DIR}/${IMAGE_NAME}-${ARCH}-root.extdump";;
+	IMAGE_FILE="${IMAGE_DIR}/${IMAGE_NAME}-${ARCH}.extdump";;
     ntfsdump)
-        IMAGE_FILE="${IMAGE_DIR}/${IMAGE_NAME}-${ARCH}-root.ntfsdump";;
+        IMAGE_FILE="${IMAGE_DIR}/${IMAGE_NAME}-${ARCH}.ntfsdump";;
     *)
         log_error "Unknown image type: \`$IMAGE_TYPE'.";
         exit 1
