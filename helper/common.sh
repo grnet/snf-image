@@ -113,7 +113,6 @@ cleanup() {
         test $? -eq 1 && { echo "Giving Up..."; exit 1; }
     done
   fi
-  echo "Clean UP executed"
 }
 
 trap cleanup EXIT
