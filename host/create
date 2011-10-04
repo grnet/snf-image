@@ -95,7 +95,7 @@ CLEANUP+=("rm -f $result_file")
 
 $TIMELIMIT -t $HELPER_SOFT_TIMEOUT -T $HELPER_HARD_TIMEOUT \
     kvm -runas $HELPER_USR -drive file=${HELPER},snapshot=on \
-    -drive=$root_dev,format=raw,if=virtio,cache=none \
+    -drive file=$root_dev,format=raw,if=virtio,cache=none \
     -boot c -serial stdio -serial file:$result_file -fda $floppy \
     -vga none -nographic -parallel none -monitor null -nographic \
     -kernel ${HELPER_KERNEL} -initrd ${HELPER_INITRD} \
@@ -109,7 +109,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-result=$(cat $result_file)
+# Read the first line. This will remove \r and \n chars
+result=$(sed 's|\r||g' $result_file | xargs echo)
 
 if [ "x$result" != "xSUCCESS" ]; then
     log_error "Helper VM returned error"
