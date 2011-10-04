@@ -1,4 +1,4 @@
-tasksdir=${libdir}/$(base_name)/tasks
+tasksdir=$(libdir)/$(PACKAGE)/tasks
 
 dist_tasks_SCRIPTS = \
 		10ResizeUnmounted \
@@ -11,7 +11,6 @@ dist_tasks_SCRIPTS = \
 		50AssignHostname \
 		50ChangePassword \
 		80UmountImage
-
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \

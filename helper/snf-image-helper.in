@@ -29,7 +29,7 @@
 # those of the authors and should not be interpreted as representing official
 # policies, either expressed or implied, of GRNET S.A.
 
-. @datarootdir@/@base_name@/common.sh
+. @commondir@/common.sh
 
 set -e
 
@@ -53,7 +53,7 @@ else
 fi
 
 # Image mount point...
-target=$(mktemp -d --tmpdir target.XXXXXXXX) || exit 1
+target=$(mktemp -d --tmpdir target.XXXXXXXX)
 CLEANUP+=("rmdir $target")
 
 export SNF_IMAGE_TARGET=$target
@@ -68,7 +68,7 @@ if [ -z "$RUN_PARTS" ]; then
 fi
 
 echo "Execute all snf-image tasks...." 
-$RUN_PARTS -v --exit-on-error "/usr/lib/snf-image/tasks"
+$RUN_PARTS -v --exit-on-error "@tasksdir@"
 
 echo "SUCCESS" > $RESULT
 
