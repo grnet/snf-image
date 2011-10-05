@@ -102,6 +102,11 @@ if test -z "$SFDISK" ; then
   AC_MSG_ERROR([sfdisk not found in $PATH:/usr/sbin:/sbin])
 fi
 
+AC_PATH_PROG(INSTALL_MBR, [install-mbr], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$INSTALL_MBR" ; then
+  AC_MSG_ERROR([install-mbr not found in $PATH:/usr/sbin:/sbin])
+fi
+
 AC_PATH_PROG(TIMELIMIT, [timelimit], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$TIMELIMIT" ; then
   AC_MSG_ERROR([timelimit not found in $PATH:/usr/sbin:/sbin])
