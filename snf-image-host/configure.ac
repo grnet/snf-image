@@ -25,33 +25,41 @@ AC_ARG_WITH([progress-monitor],
 
 AM_CONDITIONAL(PROGMONSUPPORT, [test -n "$PROGRESS_MONITOR"])
 
-# --with-helper..
-AC_ARG_WITH([helper],
-    [AS_HELP_STRING([--with-helper=IMG_PATH],
-        [Path to helper VM image [LOCALSTATEDIR/lib/snf-image/helper.img]]
+# --with-helper-dir
+AC_ARG_WITH([helper-dir],
+    [AS_HELP_STRING([--with-helper-dir=DIR],
+        [top-level directory to host the helper VM
+        [LOCALSTATEDIR/lib/snf-image/helper]]
     )],
-    [helper="$withval"],
-    [helper="$localstatedir/lib/snf-image/helper.img"])
-AC_SUBST(HELPER, $helper)
+    [helper_dir="$withval"],
+    [helper_dir="$localstatedir/lib/snf-image/helper"])
+AC_SUBST(HELPER_DIR, $helper_dir)
+
+# --with-helper-img
+AC_ARG_WITH([helper-img],
+    [AS_HELP_STRING([--with-helper-img=IMG_PATH],
+        [Path to helper VM image [HELPERDIR/image]]
+    )],
+    [helper_img="$withval"],
+    [helper_img="$helper_dir/image"])
+AC_SUBST(HELPER_IMG, $helper_img)
 
 # --with-helper-kernel
-AC_ARG_WITH([helper_kernel],
+AC_ARG_WITH([helper-kernel],
     [AS_HELP_STRING([--with-helper-kernel=KERNEL_PATH],
-        [Path to a kernel to use to boot the helper VM image 
-        [LOCALSTATEDIR/lib/snf-image/helper-kernel]]
+        [Path to the helper VM kernel [HELPERDIR/kernel]]
     )],
     [helper_ernel="$withval"],
-    [helper_kernel="$localstatedir/lib/snf-image/helper-kernel"])
+    [helper_kernel="$helper_dir/kernel"])
 AC_SUBST(HELPER_KERNEL, ${helper_kernel})
 
 # --with-helper-initrd..
-AC_ARG_WITH([helper_initrd],
+AC_ARG_WITH([helper-initrd],
     [AS_HELP_STRING([--with-helper-initrd=INITRD_PATH],
-        [Path to an initial ramdisk to use to boot the helper VM image
-        [LOCALSTATEDIR/lib/snf-image/helper-initrd]]
+        [Path to the helper VM initial ramdist [HELPERDIR/initrd]]
     )],
     [helper_initrd="$withval"],
-    [helper_initrd="$localstatedir/lib/snf-image/helper-initrd"])
+    [helper_initrd="$helper_dir/initrd"])
 AC_SUBST(HELPER_INITRD, ${helper_initrd})
 
 # --with-os-dir=...

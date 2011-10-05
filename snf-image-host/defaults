@@ -17,14 +17,20 @@
 # IMAGE_DEBUG: turn on debugging output for the scripts
 # IMAGE_DEBUG=0
 
-# HELPER: path to the image file of the helper vm
-# HELPER="var/lib/snf-image/helper.img"
+# HELPER_DIR: Directory hosting the helper files
+# HELPER_DIR: /var/lib/snf-image/helper/
 
-# HELPER_KERNEL: path to the kernel, kvm should use to run the helper image
-# HELPER_KERNEL="/var/lib/snf-image/helper-kernel"
+# HELPER_IMG: Path to the helper VM image
+# HELPER_IMG="$(HELPER_DIR)/image"
 
-# HELPER_INITRD: path to the init ramdisk the helper vm should use.
-# HELPER_INITRD="/var/lib/snf-image/helper-initrd"
+# HELPER_KERNEL: Path to the helper VM kernel
+# HELPER_KERNEL="$(HELPER_DIR)/kernel"
+
+# HELPER_PKG: Path to the snf-image-helper package
+# HELPER_PKG="$(HELPER_DIR)/snf-image-helper.deb"
+
+# HELPER_INITRD: Path to the helper VM initial ramdisk
+# HELPER_INITRD="$(HELPER_DIR)/initrd"
 
 # HELPER_TIMOUT: Soft and hard timeout limits for helper instance.
 # Helper instance will be terminated after a given time if it hasn't exited by
@@ -36,7 +42,7 @@
 # HELPER_USR: For security reasons, the helper vm is not adviced to to run as
 # root. It should drop privileges just before the guest execution starts. The
 # user the helper vm should run as is specifies by HELPER_USR variable.
-# HELPER_USR="nobody"
+# HELPER_USER="nobody"
 
 # Paths for needed programs. Uncommend and change the variables below, if you
 # don't want to use the default one.

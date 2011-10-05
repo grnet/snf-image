@@ -33,6 +33,8 @@ set -e
 
 . common.sh
 
+ganeti_os_main
+
 case "$IMAGE_TYPE" in
     extdump)
 	IMAGE_FILE="${IMAGE_DIR}/${IMAGE_NAME}-${ARCH}.extdump";;
@@ -94,7 +96,7 @@ result_file=$(mktemp --tmpdir result.XXXXXXXX)
 CLEANUP+=("rm -f $result_file")
 
 $TIMELIMIT -t $HELPER_SOFT_TIMEOUT -T $HELPER_HARD_TIMEOUT \
-    kvm -runas $HELPER_USR -drive file=${HELPER},snapshot=on \
+    kvm -runas $HELPER_USER -drive file=${HELPER_IMG},snapshot=on \
     -drive file=$root_dev,format=raw,if=virtio,cache=none \
     -boot c -serial stdio -serial file:$result_file -fda $floppy \
     -vga none -nographic -parallel none -monitor null -nographic \

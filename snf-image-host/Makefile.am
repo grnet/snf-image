@@ -15,6 +15,8 @@ dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list
 
+dist_bin_SCRIPTS = snf-image-update-helper
+
 os_DATA = common.sh
 
 edit = sed \
@@ -23,9 +25,11 @@ edit = sed \
 	   -e 's|@osdir[@]|$(osdir)|g' \
 	   -e 's|@osname[@]|$(osname)|g' \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
-	   -e 's|@HELPER[@]|$(HELPER)|g' \
+	   -e 's|@HELPER_DIR[@]|$(HELPER_DIR)|g' \
+	   -e 's|@HELPER_IMG[@]|$(HELPER_IMG)|g' \
 	   -e 's|@HELPER_KERNEL[@]|$(HELPER_KERNEL)|g' \
 	   -e 's|@HELPER_INITRD[@]|$(HELPER_INITRD)|g' \
+	   -e 's|@HELPER_PKG[@]|$(HELPER_PKG)|g' \
 	   -e 's|@AWK[@]|$(AWK)|g' \
 	   -e 's|@MKDIR_P[@]|$(MKDIR_P)|g' \
 	   -e 's|@LOSETUP[@]|$(LOSETUP)|g' \
@@ -35,7 +39,7 @@ edit = sed \
 	   -e 's|@progress_monitor_support[@]|$(progress_monitor_support)|g' \
 	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g'
 
-common.sh: Makefile
+%:%.in Makefile
 	rm -f $@ $@.tmp
 	srcdir=''; \
 		   test -f ./$@.in || srcdir=$(srcdir)/; \
@@ -48,4 +52,4 @@ install-exec-local:
 	touch "$(DESTDIR)$(variantsdir)/default.conf"
 	
 
-CLEANFILES = $(os_DATA)
+CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS)

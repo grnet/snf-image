@@ -183,14 +183,77 @@ create_floppy() {
     umount $target
 }
 
+# this one is only to be called by create
+ganeti_os_main() {
+    if [ -z "$OS_API_VERSION" -o "$OS_API_VERSION" = "5" ]; then
+        OS_API_VERSION=5
+        GETOPT_RESULT=`getopt -o o:n:i:b:s: -n '$0' -- "$@"`
+        if [ $? != 0 ] ; then log_error "Terminating..."; exit 1 ; fi
+        get_api5_arguments $GETOPT_RESULT
+    elif [ "$OS_API_VERSION" = "10" -o "$OS_API_VERSION" = "15" ]; then
+        get_api10_arguments
+    elif [ "$OS_API_VERSION" = "20" ]; then
+        get_api20_arguments
+        IMAGE_NAME=$IMG_ID
+        IMAGE_TYPE=$IMG_FORMAT
+    else
+        log_error "Unknown OS API VERSION $OS_API_VERSION"
+        exit 1
+    fi
+    
+    if [ -n "$OS_VARIANT" ]; then
+        if [ ! -d "$VARIANTS_DIR" ]; then
+            log_error "OS Variants directory $VARIANTS_DIR doesn't exist"
+            exit 1
+        fi
+        VARIANT_CONFIG="$VARIANTS_DIR/$OS_VARIANT.conf"
+        if [ -f "$VARIANT_CONFIG" ]; then
+            . "$VARIANT_CONFIG"
+        else
+            if grep -qxF "$OS_VARIANT" variants.list; then
+                log_error "ERROR: instance-image configuration error"
+                log_error "  Published variant $OS_VARIANT is missing its config" \
+                          "file"
+                log_error "  Please create $VARIANT_CONFIG or unpublish the variant"
+                log_error "  (by removing $OS_VARIANT from variants.list)"
+            else
+                log_error "Unofficial variant $OS_VARIANT is unsupported"
+                log_error "Most probably this is a user error, forcing a wrong name"
+                log_error "To support this variant please create file" \
+                            "$VARIANT_CONFIG"
+            fi
+            exit 1
+        fi
+    fi
+
+}
+
 cleanup() {
+# if something fails here, it souldn't call cleanup again...
+    trap - EXIT
     if [ ${#CLEANUP[*]} -gt 0 ]; then
         LAST_ELEMENT=$((${#CLEANUP[*]}-1))
         REVERSE_INDEXES=$(seq ${LAST_ELEMENT} -1 0)
         for i in $REVERSE_INDEXES; do
-            ${CLEANUP[$i]}
+            # If something fails here, it's better to retry it for a few times
+            # before we give up with an error. This is needed for kpartx when
+            # dealing with ntfs partitions mounted through fuse. umount is not
+            # synchronous and may return while the partition is still busy. A
+            # premature attempt to delete partition mappings through kpartx on a
+            # device that hosts previously mounted ntfs partition may fail with
+            # an  `device-mapper: remove ioctl failed: Device or resource busy'
+            # error. A sensible workaround for this is to wait for a while and
+            # then try again.
+            local cmd=${CLEANUP[$i]}
+            $cmd || for interval in 0.25 0.5 1 2 4; do
+            echo "Command $cmd failed!"
+            echo "I'll wait for $interval secs and will retry..."
+            sleep $interval
+            $cmd && break
         done
-    fi
+        test $? -eq 1 && { echo "Giving Up..."; exit 1; }
+    done
+  fi
 }
 
 trap cleanup EXIT
@@ -203,12 +266,13 @@ fi
 : ${ARCH:="x86_64"}
 : ${VARIANTS_DIR:="@sysconfdir@/ganeti/snf-image/variants"}
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
-: ${HELPER:="@HELPER@"}
+: ${HELPER_DIR:="@HELPER_DIR@"}
+: ${HELPER_IMG:="@HELPER_IMG@"}
 : ${HELPER_KERNEL:="@HELPER_KERNEL@"}
 : ${HELPER_INITRD:="@HELPER_INITRD@"}
 : ${HELPER_SOFT_TIMEOUT=120}
 : ${HELPER_HARD_TIMEOUT=15}
-: ${HELPER_USR="nobody"}
+: ${HELPER_USER="nobody"}
 
 SCRIPT_NAME=$(basename $0)
 
@@ -227,48 +291,6 @@ fi
 if [ -z "$VOL_ID" ]; then
     log_error "vol_id or blkid not found, please install udev or util-linux"
     exit 1
-fi
-
-
-if [ -z "$OS_API_VERSION" -o "$OS_API_VERSION" = "5" ]; then
-    OS_API_VERSION=5
-    GETOPT_RESULT=`getopt -o o:n:i:b:s: -n '$0' -- "$@"`
-    if [ $? != 0 ] ; then log_error "Terminating..."; exit 1 ; fi
-    get_api5_arguments $GETOPT_RESULT
-elif [ "$OS_API_VERSION" = "10" -o "$OS_API_VERSION" = "15" ]; then
-    get_api10_arguments
-elif [ "$OS_API_VERSION" = "20" ]; then
-    get_api20_arguments
-    IMAGE_NAME=$IMG_ID
-    IMAGE_TYPE=$IMG_FORMAT
-else
-    log_error "Unknown OS API VERSION $OS_API_VERSION"
-    exit 1
-fi
-
-if [ -n "$OS_VARIANT" ]; then
-    if [ ! -d "$VARIANTS_DIR" ]; then
-        log_error "OS Variants directory $VARIANTS_DIR doesn't exist"
-        exit 1
-    fi
-    VARIANT_CONFIG="$VARIANTS_DIR/$OS_VARIANT.conf"
-    if [ -f "$VARIANT_CONFIG" ]; then
-        . "$VARIANT_CONFIG"
-    else
-        if grep -qxF "$OS_VARIANT" variants.list; then
-            log_error "ERROR: instance-image configuration error"
-            log_error "  Published variant $OS_VARIANT is missing its config" \
-                      "file"
-            log_error "  Please create $VARIANT_CONFIG or unpublish the variant"
-            log_error "  (by removing $OS_VARIANT from variants.list)"
-        else
-            log_error "Unofficial variant $OS_VARIANT is unsupported"
-            log_error "Most probably this is a user error, forcing a wrong name"
-            log_error "To support this variant please create file" \
-                        "$VARIANT_CONFIG"
-        fi
-        exit 1
-    fi
 fi
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

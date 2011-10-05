@@ -1,0 +1,84 @@
+#!/bin/bash
+
+set -e
+set -x
+
+. @osdir@/common.sh
+
+CACHE_FILE="$HELPER_DIR/cache.tar"
+ARCH=amd64
+EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,xmlstarlet"
+
+helper_img=$(mktemp $HELPER_DIR/image.XXXXXXXX)
+
+dd if=/dev/zero of=$helper_img bs=1k count=400000
+blockdev=$(losetup -sf $helper_img)
+CLEANUP+=("losetup -d $blockdev")
+
+format_disk0 $blockdev "extdump"
+
+root_dev=$(map_disk0 $blockdev)-1
+CLEANUP+=("unmap_disk0 $blockdev")
+
+mkfs.ext3 $root_dev
+
+TMPDIR=$(mktemp -d)
+CLEANUP+=("rmdir $TMPDIR")
+
+mount $root_dev $TMPDIR
+CLEANUP+=("umount $root_dev")
+
+if [  -f "$CACHE_FILE" ]; then
+    tar xf "$CACHE_FILE" -C $TMPDIR
+else
+    debootstrap --arch "$ARCH" --include $EXTRA_PKGS --variant=minbase \
+	    squeeze $TMPDIR
+
+    # remove the downloaded debs, as they are no longer needed
+    find "$TMPDIR/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
+        xargs -r0 rm -f
+
+    TMP_CACHE=$(mktemp "${CACHE_FILE}.XXXXXX")
+    tar cf "$TMP_CACHE" -C $TMPDIR .
+    mv -f "$TMP_CACHE" "$CACHE_FILE"
+fi
+
+echo helper > $TMPDIR/etc/hostname
+
+cat > $TMPDIR/etc/fstab <<EOF
+# /etc/fstab: static file system information.
+#
+# <file system>   <mount point>   <type>  <options>       <dump>  <pass>
+/dev/sda1         /               ext3    defaults        0       1
+proc              /proc           proc    defaults        0       0
+EOF
+
+if [ ! -L "$TMPDIR/vmlinuz" -o ! -L "$TMPDIR/vmlinuz" ]; then
+
+	log_error "vmlinuz or initrd.img link in root is missing."
+	log_error "I don't know how to find a usable kernel/initrd pair."
+	exit 1
+fi
+
+kernel=$(readlink -en $TMPDIR/vmlinuz)
+initrd=$(readlink -en $TMPDIR/initrd.img)
+
+echo "Moving $(basename $kernel) and $(basename $initrd) to $HELPER_DIR"
+mv $kernel $initrd $HELPER_DIR
+
+kernel=$(basename $kernel)
+initrd=$(basename $initrd)
+
+(cd $HELPER_DIR; ln -fs $kernel kernel; ln -fs $initrd initrd)
+
+rm $TMPDIR/vmlinuz $TMPDIR/initrd.img
+
+cleanup
+
+mv $helper_img $HELPER_DIR/image
+
+trap - EXIT
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
