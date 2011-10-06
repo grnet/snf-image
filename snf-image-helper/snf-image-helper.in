@@ -58,7 +58,7 @@ CLEANUP+=("rmdir $target")
 
 export SNF_IMAGE_TARGET=$target
 
-if [ ! -d "/usr/lib/snf-image/tasks" ]; then
+if [ ! -d "@tasksdir@" ]; then
     log_error "snf-image/tasks directory is missing"
 fi
 
