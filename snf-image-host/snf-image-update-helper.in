@@ -44,13 +44,15 @@ CLEANUP+=("losetup -d $blockdev")
 sleep 1 # sometimes losetup returns and the device is still busy..
 
 echo -n "Creating partitions..."
-format_disk0 $blockdev "extdump"
+format_disk0 $blockdev "extdump" 
 echo "done"
 
 root_dev=$(map_disk0 $blockdev)-1
 CLEANUP+=("unmap_disk0 $blockdev")
 
 mkfs.ext3 $root_dev
+# The helper vm should never do filesystem checks...
+tune2fs -i 0 -c 0 $root_dev
 
 TMPDIR=$(mktemp -d)
 CLEANUP+=("rmdir $TMPDIR")
