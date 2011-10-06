@@ -251,7 +251,10 @@ cleanup() {
             sleep $interval
             $cmd && break
         done
-        test $? -eq 1 && { echo "Giving Up..."; exit 1; }
+        if [ "$?" != "0" ]; then
+            echo "Giving Up..."
+            exit 1;
+        fi
     done
   fi
 }
@@ -270,6 +273,7 @@ fi
 : ${HELPER_IMG:="@HELPER_IMG@"}
 : ${HELPER_KERNEL:="@HELPER_KERNEL@"}
 : ${HELPER_INITRD:="@HELPER_INITRD@"}
+: ${HELPER_PKG:="@HELPER_DIR@/snf-image-helper.deb"}
 : ${HELPER_SOFT_TIMEOUT=120}
 : ${HELPER_HARD_TIMEOUT=15}
 : ${HELPER_USER="nobody"}
