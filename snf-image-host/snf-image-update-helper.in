@@ -1,21 +1,51 @@
 #!/bin/bash
 
 set -e
-set -x
 
 . @osdir@/common.sh
 
 CACHE_FILE="$HELPER_DIR/cache.tar"
 ARCH=amd64
-EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,xmlstarlet"
+EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python"
 
+if [ ! -e "$HELPER_PKG" ]; then
+    log_error "Helper package \`$HELPER_PKG' not found."
+    log_error "You need to provide this for the script to work"
+    exit 1
+fi
+cat >&1 <<EOF
+This program will overwrite the following files:
+  \`$HELPER_DIR/initrd'
+  \`$HELPER_DIR/kernel'
+  \`$HELPER_DIR/image'
+EOF
+
+while [[ 1 ]]; do
+    echo -n "Do you want to continue [y/N]?"
+    read answer
+    [ "$(echo -n "$answer" | tr [A-Z] [a-z])" = "y" ] && break
+    if [ -z "$answer" -o "$(echo -n "$answer" | tr [A-Z] [a-z])" = "n" ]; then
+        log_error "Abord."
+        exit 1
+    fi
+done
+
+rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
+
+echo -n "Allocating space for helper disk image..."
 helper_img=$(mktemp $HELPER_DIR/image.XXXXXXXX)
 
-dd if=/dev/zero of=$helper_img bs=1k count=400000
+dd if=/dev/zero of=$helper_img bs=1k count=400000 &> /dev/null
+echo "done"
+
 blockdev=$(losetup -sf $helper_img)
 CLEANUP+=("losetup -d $blockdev")
 
+sleep 1 # sometimes losetup returns and the device is still busy..
+
+echo -n "Creating partitions..."
 format_disk0 $blockdev "extdump"
+echo "done"
 
 root_dev=$(map_disk0 $blockdev)-1
 CLEANUP+=("unmap_disk0 $blockdev")
@@ -28,9 +58,13 @@ CLEANUP+=("rmdir $TMPDIR")
 mount $root_dev $TMPDIR
 CLEANUP+=("umount $root_dev")
 
+echo "Checking for cached root filesystem file \`$CACHE_FILE'..." 
 if [  -f "$CACHE_FILE" ]; then
+    echo "found"
     tar xf "$CACHE_FILE" -C $TMPDIR
 else
+    echo "not found"
+    echo "Debootstraping to create a new root filesystem:"
     debootstrap --arch "$ARCH" --include $EXTRA_PKGS --variant=minbase \
 	    squeeze $TMPDIR
 
@@ -43,6 +77,7 @@ else
     mv -f "$TMP_CACHE" "$CACHE_FILE"
 fi
 
+echo -n "Configureing filesystem..."
 echo helper > $TMPDIR/etc/hostname
 
 cat > $TMPDIR/etc/fstab <<EOF
@@ -52,13 +87,16 @@ cat > $TMPDIR/etc/fstab <<EOF
 /dev/sda1         /               ext3    defaults        0       1
 proc              /proc           proc    defaults        0       0
 EOF
+echo "done"
 
+echo -n "Extracting kernel..."
 if [ ! -L "$TMPDIR/vmlinuz" -o ! -L "$TMPDIR/vmlinuz" ]; then
 
 	log_error "vmlinuz or initrd.img link in root is missing."
 	log_error "I don't know how to find a usable kernel/initrd pair."
 	exit 1
 fi
+echo "done"
 
 kernel=$(readlink -en $TMPDIR/vmlinuz)
 initrd=$(readlink -en $TMPDIR/initrd.img)
@@ -72,6 +110,13 @@ initrd=$(basename $initrd)
 (cd $HELPER_DIR; ln -fs $kernel kernel; ln -fs $initrd initrd)
 
 rm $TMPDIR/vmlinuz $TMPDIR/initrd.img
+
+echo "Installing snf-image-helper pkg in the new image..."
+cp $HELPER_PKG $TMPDIR/tmp/
+pkg_name=$(basename "$HELPER_PKG")  
+CLEANUP+=("rm $TMPDIR/tmp/$pkg_name")
+chroot ${TMPDIR} dpkg -i /tmp/$pkg_name
+echo "done"
 
 cleanup
 
