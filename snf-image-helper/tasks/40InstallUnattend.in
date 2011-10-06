@@ -11,15 +11,17 @@ set -e
 . @commondir@/common.sh
 
 if [ -z "$SNF_IMAGE_TARGET" ]; then
-	log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
 fi
 
 if [ "$SNF_IMAGE_TYPE" != "ntfsdump" ]; then
-	exit 0
+    exit 0
 fi
 
-if [ -e /usr/share/snf-image/unattend.xml ]; then
-	cat /usr/share/snf-image/unattend.xml > $SNF_IMAGE_TARGET/Unattend.xml
+if [ -f @commondir@/unattend.xml ]; then
+    cat @commondir@/unattend.xml > $SNF_IMAGE_TARGET/Unattend.xml
+else
+    log_error "File \`@commondir@/unattend.xml' is missing."
 fi
 
 exit 0

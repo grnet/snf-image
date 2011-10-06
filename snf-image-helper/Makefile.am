@@ -8,7 +8,7 @@ SUBDIRS = tasks
 dist_doc_DATA = COPYING AUTHORS ChangeLog
 dist_bin_SCRIPTS = snf-image-helper
 dist_scripts_SCRIPTS= snf-passtohash.py
-dist_common_DATA = common.sh
+dist_common_DATA = common.sh unattend.xml
 
 edit = sed \
 	-e 's|@commondir[@]|$(commondir)|g' \
