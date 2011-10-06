@@ -116,6 +116,28 @@ cp $HELPER_PKG $TMPDIR/tmp/
 pkg_name=$(basename "$HELPER_PKG")  
 CLEANUP+=("rm $TMPDIR/tmp/$pkg_name")
 chroot ${TMPDIR} dpkg -i /tmp/$pkg_name
+
+cat > ${TMPDIR}/etc/rc.local <<EOF
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+/usr/bin/snf-image-helper
+
+exit 0
+EOF
+
+chmod +x ${TMPDIR}/etc/rc.local
+
 echo "done"
 
 cleanup
