@@ -95,8 +95,13 @@ create_floppy $floppy
 result_file=$(mktemp --tmpdir result.XXXXXXXX)
 CLEANUP+=("rm -f $result_file")
 
+image_file=$(mktemp --tmpdir helperXXXXXXXX.img)
+CLEANUP+=("rm -f $image_file")
+
+$QEMU_IMG create -f qcow2 -b ${HELPER_IMG} $image_file
+
 $TIMELIMIT -t $HELPER_SOFT_TIMEOUT -T $HELPER_HARD_TIMEOUT \
-    kvm -runas $HELPER_USER -drive file=${HELPER_IMG},snapshot=on \
+    kvm -runas $HELPER_USER -drive file=${image_file} \
     -drive file=$root_dev,format=raw,if=virtio,cache=none \
     -boot c -serial stdio -serial file:$result_file -fda $floppy \
     -vga none -nographic -parallel none -monitor null -nographic \

@@ -35,9 +35,10 @@ edit = sed \
 	   -e 's|@LOSETUP[@]|$(LOSETUP)|g' \
 	   -e 's|@KPARTX[@]|$(KPARTX)|g' \
 	   -e 's|@SFDISK[@]|$(SFDISK)|g' \
+	   -e 's|@QEMU_IMG[@]|$(QEMU_IMG)|g' \
 	   -e 's|@INSTALL_MBR[@]|$(INSTALL_MBR)|g' \
-	   -e 's|@progress_monitor_support[@]|$(progress_monitor_support)|g' \
-	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g'
+	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g' \
+	   -e 's|@progress_monitor_support[@]|$(progress_monitor_support)|g'
 
 %:%.in Makefile
 	rm -f $@ $@.tmp

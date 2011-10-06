@@ -49,6 +49,7 @@
 # LOSETUP="losetup"
 # KPARTX="kpartx"
 # SFDISK="sfdisk"
+# QEMU_IMG="qemu-img"
 # INSTALL_MBR="install-mbr"
 # TIMELIMIT="timelimit"
 # if [ "$windows_support" = "yes" ] ; then
