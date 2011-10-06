@@ -16,7 +16,9 @@ edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
 	   -e 's|@localstatedir[@]|$(localstatedir)|g' \
 	   -e 's|@datarootdir[@]|$(datarootdir)|g' \
-	   -e 's|@commondir[@]|$(commondir)|g'
+	   -e 's|@commondir[@]|$(commondir)|g' \
+	   -e 's|@scriptsdir[@]|$(scriptsdir)|g'
+
 
 %:%.in Makefile
 	rm -f $@ $@.tmp
