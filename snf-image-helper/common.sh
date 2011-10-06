@@ -110,7 +110,10 @@ cleanup() {
             sleep $interval
             $cmd && break
         done
-        test $? -eq 1 && { echo "Giving Up..."; exit 1; }
+	if [ "$?" != "0" ]; then
+            echo "Giving Up..."
+            exit 1;
+        fi
     done
   fi
 }
