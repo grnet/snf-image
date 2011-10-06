@@ -36,8 +36,8 @@
 # Helper instance will be terminated after a given time if it hasn't exited by
 # itself. The time to wait before killing the process is specified by those
 # variables. When soft/hard limit expires, a SIGTERM/SIGKILL is sent.
-# HELPER_SOFT_TIMEOUT="120"
-# HELPER_HARD_TIMEOUT="15"
+# HELPER_SOFT_TIMEOUT="15"
+# HELPER_HARD_TIMEOUT="5"
 
 # HELPER_USR: For security reasons, the helper vm is not adviced to to run as
 # root. It should drop privileges just before the guest execution starts. The
