@@ -67,6 +67,10 @@ if [ -z "$RUN_PARTS" ]; then
     log_error "run-parts programe is missing from the system"
 fi
 
+# If something goes wrong with the tasks, try to umount the target filesystem
+# in case it is left mounted...
+trap '{ umount $target; }' ERR
+
 echo "Execute all snf-image tasks...." 
 $RUN_PARTS -v --exit-on-error "@tasksdir@"
 
