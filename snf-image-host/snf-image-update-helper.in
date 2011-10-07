@@ -21,11 +21,11 @@ This program will overwrite the following files:
 EOF
 
 while [[ 1 ]]; do
-    echo -n "Do you want to continue [y/N]?"
+    echo -n "Do you want to continue [y/N]? "
     read answer
     [ "$(echo -n "$answer" | tr [A-Z] [a-z])" = "y" ] && break
     if [ -z "$answer" -o "$(echo -n "$answer" | tr [A-Z] [a-z])" = "n" ]; then
-        log_error "Abord."
+        log_error "Abort."
         exit 1
     fi
 done
