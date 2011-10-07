@@ -43,16 +43,16 @@ CLEANUP+=("losetup -d $blockdev")
 
 sleep 1 # sometimes losetup returns and the device is still busy..
 
-echo -n "Creating partitions..."
-format_disk0 $blockdev "extdump" 
-echo "done"
+echo "Creating partitions..."
+format_disk0 $blockdev "extdump"  2>&1 | sed -e 's/^/CFDISK: /g'
 
 root_dev=$(map_disk0 $blockdev)-1
 CLEANUP+=("unmap_disk0 $blockdev")
 
-mkfs.ext3 $root_dev
+echo Creating and configuring filesystem...
+mkfs.ext3 $root_dev 2>&1 | sed -e 's/^/MKFS.EXT3: /g'
 # The helper vm should never do filesystem checks...
-tune2fs -i 0 -c 0 $root_dev
+tune2fs -i 0 -c 0 $root_dev 2>&1 | sed -e 's/^/TUNE2FS: /g'
 
 TMPDIR=$(mktemp -d)
 CLEANUP+=("rmdir $TMPDIR")
@@ -60,7 +60,7 @@ CLEANUP+=("rmdir $TMPDIR")
 mount $root_dev $TMPDIR
 CLEANUP+=("umount $root_dev")
 
-echo "Checking for cached root filesystem file \`$CACHE_FILE'..." 
+echo -n "Checking for cached root filesystem file \`$CACHE_FILE'..." 
 if [  -f "$CACHE_FILE" ]; then
     echo "found"
     tar xf "$CACHE_FILE" -C $TMPDIR
@@ -68,7 +68,7 @@ else
     echo "not found"
     echo "Debootstraping to create a new root filesystem:"
     debootstrap --arch "$ARCH" --include $EXTRA_PKGS --variant=minbase \
-	    squeeze $TMPDIR
+	    squeeze $TMPDIR 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
 
     # remove the downloaded debs, as they are no longer needed
     find "$TMPDIR/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
@@ -79,8 +79,8 @@ else
     mv -f "$TMP_CACHE" "$CACHE_FILE"
 fi
 
-echo -n "Configureing filesystem..."
-echo helper > $TMPDIR/etc/hostname
+echo -n "Configuring the helper image..."
+echo snf-image-helper > $TMPDIR/etc/hostname
 
 cat > $TMPDIR/etc/fstab <<EOF
 # /etc/fstab: static file system information.
@@ -117,7 +117,7 @@ echo "Installing snf-image-helper pkg in the new image..."
 cp $HELPER_PKG $TMPDIR/tmp/
 pkg_name=$(basename "$HELPER_PKG")  
 CLEANUP+=("rm $TMPDIR/tmp/$pkg_name")
-chroot ${TMPDIR} dpkg -i /tmp/$pkg_name
+chroot ${TMPDIR} dpkg -i /tmp/$pkg_name 2>&1 | sed -e 's/^/DPKG: /g'
 
 cat > ${TMPDIR}/etc/rc.local <<EOF
 #!/bin/sh -e
@@ -148,6 +148,7 @@ mv $helper_img $HELPER_DIR/image
 
 trap - EXIT
 
+echo "Files in \`$HELPER_DIR' were updated successfully"
 exit 0
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
