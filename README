@@ -1,0 +1,25 @@
+Introduction
+============
+
+This is snf-image, a Ganeti OS provider primarily used by the
+Synnefo cloud management software to deploy VM instances from 
+predefined or custom Images.
+
+It comprises two distinct components:
+* snf-image-host, which executes as a privileged process on the Ganeti host
+* snf-image-helper, which executes inside a helper VM and undertakes all
+  security-sensitive customization of a Ganeti VM.
+
+For more information on installing and configuring the software please see:
+
+https://code.grnet.gr/projects/snf-image/wiki/Wiki
+
+and the Synnefo homepage:
+
+https://code.grnet.gr/projects/synnefo
+
+License
+=======
+
+snf-image is licensed under a 2-clause BSD license, please see
+snf-image-{host,helper}/COPYING for the full text.
