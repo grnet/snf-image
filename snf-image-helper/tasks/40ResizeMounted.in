@@ -8,7 +8,7 @@
 ### END TAST INFO
 
 set -e
-. @commondir@/common.sh
+. "@commondir@/common.sh"
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"

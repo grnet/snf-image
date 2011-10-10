@@ -38,6 +38,12 @@ RESIZE2FS=resize2fs
 
 CLEANUP=( )
 
+add_cleanup() {
+    local cmd=""
+    for arg; do cmd+=$(printf "%q " "$arg"); done
+    CLEANUP+=("$cmd")
+}
+
 log_error() {
     echo "ERROR: $@" | tee $RESULT >&2
     exit 1

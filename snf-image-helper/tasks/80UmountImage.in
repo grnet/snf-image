@@ -8,13 +8,13 @@
 ### END TAST INFO
 
 set -e
-. @commondir@/common.sh
+. "@commondir@/common.sh"
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
 	log_error "Target dir:\`$SNF_IMAGE_TARGET' is missing"
 fi
 
-umount $SNF_IMAGE_TARGET
+umount "$SNF_IMAGE_TARGET"
 
 cleanup
 trap - EXIT

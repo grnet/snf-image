@@ -7,7 +7,7 @@
 ### END TAST INFO
 
 set -e
-. @commondir@/common.sh
+. "@commondir@/common.sh"
 
 if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
@@ -18,7 +18,7 @@ if [ -z "$SNF_IMAGE_TYPE" ]; then
 fi
 
 if [ "$SNF_IMAGE_TYPE" = "extdump" ]; then
-    $RESIZE2FS $SNF_IMAGE_DEV
+    "$RESIZE2FS" "$SNF_IMAGE_DEV"
 fi	
 
 exit 0

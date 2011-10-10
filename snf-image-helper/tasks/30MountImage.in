@@ -7,7 +7,7 @@
 ### END TAST INFO
 
 set -e
-. @commondir@/common.sh
+. "@commondir@/common.sh"
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir:\`$SNF_IMAGE_TARGET' is missing"
@@ -17,7 +17,7 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`$SNF_IMAGE_DEV' is not a block device"
 fi
 
-mount $SNF_IMAGE_DEV $SNF_IMAGE_TARGET
+mount "$SNF_IMAGE_DEV" "$SNF_IMAGE_TARGET"
 
 exit 0
 

@@ -8,7 +8,7 @@
 ### END TAST INFO
 
 set -e
-. @commondir@/common.sh
+. "@commondir@/common.sh"
 
 if [ -z "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
@@ -18,8 +18,8 @@ if [ "$SNF_IMAGE_TYPE" != "ntfsdump" ]; then
     exit 0
 fi
 
-if [ -f @commondir@/unattend.xml ]; then
-    cat @commondir@/unattend.xml > $SNF_IMAGE_TARGET/Unattend.xml
+if [ -f "@commondir@/unattend.xml" ]; then
+    cat "@commondir@/unattend.xml" > "$SNF_IMAGE_TARGET/Unattend.xml"
 else
     log_error "File \`@commondir@/unattend.xml' is missing."
 fi

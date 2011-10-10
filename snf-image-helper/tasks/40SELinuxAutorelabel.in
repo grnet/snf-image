@@ -8,7 +8,7 @@
 ### END TAST INFO
 
 set -e
-. @commondir@/common.sh
+. "@commondir@/common.sh"
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
 	log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
@@ -21,7 +21,7 @@ if [ "$SNF_IMAGE_TYPE" = "extdump" ]; then
         # we have to force a filesystem relabeling for SELinux after messing
         # around with the filesystem in redhat derived OSs
         echo "Enforce an automatic relabeling in the initial boot process..."
-        touch $SNF_IMAGE_TARGET/.autorelabel
+        touch "$SNF_IMAGE_TARGET/.autorelabel"
     fi
 fi
 

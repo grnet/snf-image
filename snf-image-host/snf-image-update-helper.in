@@ -1,18 +1,16 @@
 #!/bin/bash
 
 set -e
+set -o pipefail
 
 . @osdir@/common.sh
-
-CACHE_FILE="$HELPER_DIR/cache.tar"
-ARCH=amd64
-EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python"
 
 if [ ! -e "$HELPER_PKG" ]; then
     log_error "Helper package \`$HELPER_PKG' not found."
     log_error "You need to provide this for the script to work"
     exit 1
 fi
+
 cat >&1 <<EOF
 This program will overwrite the following files:
   \`$HELPER_DIR/initrd'
@@ -33,56 +31,56 @@ done
 rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
 
 echo -n "Allocating space for helper disk image..."
-helper_img=$(mktemp $HELPER_DIR/image.XXXXXXXX)
+helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
 
-dd if=/dev/zero of=$helper_img bs=1k count=400000 &> /dev/null
+dd if=/dev/zero of="$helper_img" bs=1k count=400000 &> /dev/null
 echo "done"
 
+echo "Creating partitions..."
 blockdev=$(losetup -sf $helper_img)
-CLEANUP+=("losetup -d $blockdev")
+add_cleanup losetup -d "$blockdev"
 
 sleep 1 # sometimes losetup returns and the device is still busy..
 
-echo "Creating partitions..."
-format_disk0 $blockdev "extdump"  2>&1 | sed -e 's/^/CFDISK: /g'
+format_disk0 "$blockdev" "extdump"  2>&1 | sed -e 's/^/CFDISK: /g'
 
-root_dev=$(map_disk0 $blockdev)-1
-CLEANUP+=("unmap_disk0 $blockdev")
+root_dev=$(map_disk0 "$blockdev")-1
+add_cleanup unmap_disk0 "$blockdev"
 
 echo Creating and configuring filesystem...
-mkfs.ext3 $root_dev 2>&1 | sed -e 's/^/MKFS.EXT3: /g'
+mkfs.ext3 "$root_dev" 2>&1 | sed -e 's/^/MKFS.EXT3: /g'
 # The helper vm should never do filesystem checks...
-tune2fs -i 0 -c 0 $root_dev 2>&1 | sed -e 's/^/TUNE2FS: /g'
+tune2fs -i 0 -c 0 "$root_dev" 2>&1 | sed -e 's/^/TUNE2FS: /g'
 
-TMPDIR=$(mktemp -d)
-CLEANUP+=("rmdir $TMPDIR")
+target=$(mktemp -d)
+add_cleanup rmdir "$target"
 
-mount $root_dev $TMPDIR
-CLEANUP+=("umount $root_dev")
+mount "$root_dev" "$target"
+add_cleanup umount "$root_dev"
 
-echo -n "Checking for cached root filesystem file \`$CACHE_FILE'..." 
-if [  -f "$CACHE_FILE" ]; then
+echo -n "Checking for cached root filesystem file \`$HELPER_CACHE_FILE'..." 
+if [  -f "$HELPER_CACHE_FILE" ]; then
     echo "found"
-    tar xf "$CACHE_FILE" -C $TMPDIR
+    tar xf "$HELPER_CACHE_FILE" -C "$target"
 else
     echo "not found"
     echo "Debootstraping to create a new root filesystem:"
-    debootstrap --arch "$ARCH" --include $EXTRA_PKGS --variant=minbase \
-	    squeeze $TMPDIR 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
+    debootstrap --arch amd64 --include "$HELPER_EXTRA_PKGS" \
+        --variant=minbase squeeze "$target" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
 
     # remove the downloaded debs, as they are no longer needed
-    find "$TMPDIR/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
+    find "$target/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
         xargs -r0 rm -f
 
-    TMP_CACHE=$(mktemp "${CACHE_FILE}.XXXXXX")
-    tar cf "$TMP_CACHE" -C $TMPDIR .
-    mv -f "$TMP_CACHE" "$CACHE_FILE"
+    tmp_cache=$(mktemp "$HELPER_CACHE_FILE.XXXXXX")
+    tar cf "$tmp_cache" -C "$target" . || { rm "$tmp_cache"; false; }
+    mv -f "$tmp_cache" "$HELPER_CACHE_FILE"
 fi
 
 echo -n "Configuring the helper image..."
-echo snf-image-helper > $TMPDIR/etc/hostname
+echo snf-image-helper > "$target/etc/hostname"
 
-cat > $TMPDIR/etc/fstab <<EOF
+cat > "$target/etc/fstab" <<EOF
 # /etc/fstab: static file system information.
 #
 # <file system>   <mount point>   <type>  <options>       <dump>  <pass>
@@ -92,34 +90,34 @@ EOF
 echo "done"
 
 echo -n "Extracting kernel..."
-if [ ! -L "$TMPDIR/vmlinuz" -o ! -L "$TMPDIR/vmlinuz" ]; then
-
-	log_error "vmlinuz or initrd.img link in root is missing."
-	log_error "I don't know how to find a usable kernel/initrd pair."
-	exit 1
+if [ ! -L "$target/vmlinuz" -o ! -L "$target/vmlinuz" ]; then
+    echo -e "\033[1;31mfailed\033[0m"
+    log_error "vmlinuz or initrd.img link in root is missing."
+    log_error "I don't know how to find a usable kernel/initrd pair."
+    exit 1
 fi
 echo "done"
 
-kernel=$(readlink -en $TMPDIR/vmlinuz)
-initrd=$(readlink -en $TMPDIR/initrd.img)
+kernel=$(readlink -en "$target/vmlinuz")
+initrd=$(readlink -en "$target/initrd.img")
 
-echo "Moving $(basename $kernel) and $(basename $initrd) to $HELPER_DIR"
-mv $kernel $initrd $HELPER_DIR
+echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
+mv "$kernel" "$initrd" "$HELPER_DIR"
 
-kernel=$(basename $kernel)
-initrd=$(basename $initrd)
+kernel=$(basename "$kernel")
+initrd=$(basename "$initrd")
 
-(cd $HELPER_DIR; ln -fs $kernel kernel; ln -fs $initrd initrd)
+(cd "$HELPER_DIR"; ln -fs "$kernel" kernel; ln -fs "$initrd" initrd)
 
-rm $TMPDIR/vmlinuz $TMPDIR/initrd.img
+rm "$target/vmlinuz" "$target/initrd.img"
 
 echo "Installing snf-image-helper pkg in the new image..."
-cp $HELPER_PKG $TMPDIR/tmp/
-pkg_name=$(basename "$HELPER_PKG")  
-CLEANUP+=("rm $TMPDIR/tmp/$pkg_name")
-chroot ${TMPDIR} dpkg -i /tmp/$pkg_name 2>&1 | sed -e 's/^/DPKG: /g'
+cp "$HELPER_PKG" "$target/tmp/"
+pkg_name=$(basename "$HELPER_PKG")
+add_cleanup rm "$target/tmp/$pkg_name"
+chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
 
-cat > ${TMPDIR}/etc/rc.local <<EOF
+cat > "$target/etc/rc.local" <<EOF
 #!/bin/sh -e
 #
 # rc.local
@@ -138,13 +136,13 @@ cat > ${TMPDIR}/etc/rc.local <<EOF
 exit 0
 EOF
 
-chmod +x ${TMPDIR}/etc/rc.local
+chmod +x "$target/etc/rc.local"
 
 echo "done"
 
 cleanup
 
-mv $helper_img $HELPER_DIR/image
+mv "$helper_img" "$HELPER_DIR/image"
 
 trap - EXIT
 

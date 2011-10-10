@@ -40,6 +40,12 @@ progress_monitor_support="@progress_monitor_support@"
 
 CLEANUP=( )
 
+add_cleanup() {
+    local cmd=""
+    for arg; do cmd+=$(printf "%q " "$arg"); done
+    CLEANUP+=("$cmd")
+}
+
 log_error() {
     echo "$@" >&2
 }
@@ -139,7 +145,7 @@ map_disk0() {
         log_error "Cannot interpret kpartx output and get partition mapping"
         exit 1
     fi
-    $KPARTX -a -p- $blockdev > /dev/null
+    $KPARTX -a -p- "$blockdev" > /dev/null
     filesystem_dev="/dev/mapper/${filesystem_dev_base/%-1/}"
     if [ ! -b "/dev/mapper/$filesystem_dev_base" ]; then
         log_error "Can't find kpartx mapped partition:" \
@@ -150,7 +156,7 @@ map_disk0() {
 }
 
 unmap_disk0() {
-    $KPARTX -d -p- $1
+    $KPARTX -d -p- "$1"
 }
 
 format_disk0() {
@@ -171,17 +177,17 @@ EOF
 create_floppy() {
     local img=$1
 
-    local target=$(mktemp -d) || exit 1
-    CLEANUP+=("rmdir $target")
+    local target=$(mktemp -d)
+    add_cleanup rmdir "$target"
 
-    dd bs=512 count=2880 if=/dev/zero of=$img
-    mkfs.ext2 -F $img > /dev/null
-    mount $img $target -o loop
+    dd bs=512 count=2880 if=/dev/zero of="$img"
+    mkfs.ext2 -F "$img" > /dev/null
+    mount "$img" "$target" -o loop
     set | egrep ^snf_export_\\w+=|sed -e 's/^snf_export_/SNF_IMAGE_/' | \
     while read line; do
-        echo "export $line" >> $target/rules
+        echo "export $line" >> "$target/rules"
     done
-    umount $target
+    umount "$target"
 }
 
 # this one is only to be called by create
@@ -275,9 +281,12 @@ fi
 : ${HELPER_KERNEL:="@HELPER_KERNEL@"}
 : ${HELPER_INITRD:="@HELPER_INITRD@"}
 : ${HELPER_PKG:="@HELPER_DIR@/snf-image-helper.deb"}
-: ${HELPER_SOFT_TIMEOUT=15}
-: ${HELPER_HARD_TIMEOUT=5}
-: ${HELPER_USER="nobody"}
+: ${HELPER_SOFT_TIMEOUT:=15}
+: ${HELPER_HARD_TIMEOUT:=5}
+: ${HELPER_USER:="nobody"}
+: ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
+: ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python"}
+
 
 SCRIPT_NAME=$(basename $0)
 

@@ -43,6 +43,14 @@
 # user the helper vm should run as is specifies by HELPER_USR variable.
 # HELPER_USER="nobody"
 
+# HELPER_CACHE_FILE: Cache file update-helper script uses to avoid running
+# `debootstrap' all the time.
+# HELPER_CACHE_FILE=$(HELPER_DIR)/cache.tar
+
+# HELPER_EXTRA_PKGS: Extra packages that will need to be supplied to de supplied
+# to debootstrap to make the resulting helper image workable
+# HELPER_EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python"
+
 # Paths for needed programs. Uncommend and change the variables below, if you
 # don't want to use the default one.
 # LOSETUP="losetup"
