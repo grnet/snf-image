@@ -59,6 +59,4 @@
 # QEMU_IMG="qemu-img"
 # INSTALL_MBR="install-mbr"
 # TIMELIMIT="timelimit"
-# if [ "$windows_support" = "yes" ] ; then
-#     PROGRESS_MONITOR="snf-progress-monitor"
-# fi
+# PROGRESS_MONITOR="snf-progress-monitor"

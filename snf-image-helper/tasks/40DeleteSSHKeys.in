@@ -4,7 +4,7 @@
 # Provides:		DeleteSSHKeys
 # Requires:             MountImage
 # Short-Description:	Remove ssh keys if present.
-### END TAST INFO
+### END TASK INFO
 
 set -e
 . "@commondir@/common.sh"

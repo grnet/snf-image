@@ -5,7 +5,7 @@
 # RunBefore:
 # RunAfter:		MountImage
 # Short-Description:	Umount the partition that hosts the image
-### END TAST INFO
+### END TASK INFO
 
 set -e
 . "@commondir@/common.sh"

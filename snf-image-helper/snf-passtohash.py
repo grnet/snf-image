@@ -2,11 +2,11 @@
 #
 # Copyright (c) 2011 Greek Research and Technology Network
 #
-"""Generate a Hash from a given Password 
+"""Generate a hash from a given password
 
-This program takes a Password as an argument and
+This program takes a password as an argument and
 returns to standard output a hash followed by a newline.
-To do this, it generates internally a random salt.
+To do this, it generates a random salt internally.
 
 """
 

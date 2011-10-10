@@ -4,7 +4,7 @@
 # Provides:		ResizeUnmounted
 # RunBefore:		MountImage
 # Short-Description:	Resize filesystem to use all the available space
-### END TAST INFO
+### END TASK INFO
 
 set -e
 . "@commondir@/common.sh"

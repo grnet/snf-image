@@ -93,7 +93,7 @@ get_distro() {
 }
 
 cleanup() {
-# if something fails here, it souldn't call cleanup again...
+    # if something fails here, it shouldn't call cleanup again...
     trap - EXIT
 
     if [ ${#CLEANUP[*]} -gt 0 ]; then
@@ -106,7 +106,7 @@ cleanup() {
             # synchronous and may return while the partition is still busy. A
             # premature attempt to delete partition mappings through kpartx on a
             # device that hosts previously mounted ntfs partition may fail with
-            # an  `device-mapper: remove ioctl failed: Device or resource busy'
+            # a `device-mapper: remove ioctl failed: Device or resource busy'
             # error. A sensible workaround for this is to wait for a while and
             # then try again.
             local cmd=${CLEANUP[$i]}

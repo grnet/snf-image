@@ -5,7 +5,7 @@
 # RunBefore:            UmountImage
 # RunAfter:		InstallUnattend
 # Short-Description:	Assign the Hostname of Computer Name in the instance
-### END TAST INFO
+### END TASK INFO
 
 set -e
 . "@commondir@/common.sh"

@@ -5,7 +5,7 @@
 # RunBefore:		UmountImage
 # RunAfter:		MountImage
 # Short-Description:	Script that removes Unattend.xml after setup has finished
-### END TAST INFO
+### END TASK INFO
 
 set -e
 . "@commondir@/common.sh"
