@@ -53,7 +53,7 @@ fi
 
 monitor="" #Empty if progress monitor support is disabled
 if [ "$progress_monitor_support" = "yes" ]; then
-    image_size="$(stat -L -c %s "$IMAGE_FILE")"
+    image_size="$(stat -L -c %s "$image_file")"
     monitor="$(printf "%q" "$PROGRESS_MONITOR") \
         -i $(printf "%q" "$INSTANCE_NAME") -r $image_size"
 fi
@@ -77,7 +77,7 @@ root_dev="${filesystem_dev}-1"
 # Deploying an image file on a target block device is a streaming
 # copy operation. Enable the direct I/O flag on the output fd to 
 # avoid polluting the host cache with useless data.
-$monitor dd bs=4M if="$IMAGE_FILE" of="$root_dev" oflag=direct
+$monitor dd bs=4M if="$image_file" of="$root_dev" oflag=direct
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
