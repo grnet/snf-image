@@ -7,7 +7,7 @@ set -o pipefail
 
 if [ ! -e "$HELPER_PKG" ]; then
     log_error "Helper package \`$HELPER_PKG' not found."
-    log_error "You need to provide this for the script to work"
+    log_error "You need to provide this for the script to work."
     exit 1
 fi
 
@@ -66,7 +66,7 @@ else
     echo "not found"
     echo "Debootstraping to create a new root filesystem:"
     debootstrap --arch amd64 --include "$HELPER_EXTRA_PKGS" \
-        --variant=minbase squeeze "$target" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
+        --variant=minbase stable "$target" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
 
     # remove the downloaded debs, as they are no longer needed
     find "$target/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
@@ -131,7 +131,12 @@ cat > "$target/etc/rc.local" <<EOF
 #
 # By default this script does nothing.
 
-/usr/bin/snf-image-helper
+if ! grep -q snf_image_activate_helper /proc/cmdline; then
+    echo "WARNING: NOT calling snf-image-helper, add snf_image_activate_helper"
+    echo "to the kernel command line if you want to do so."
+else
+    /usr/bin/snf-image-helper --force
+fi
 
 exit 0
 EOF

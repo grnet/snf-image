@@ -34,6 +34,12 @@
 set -e
 set -o pipefail
 
+if [ "x$1" != "x--force" ]; then
+    log_error "WARNING: This will cause the system to halt."
+    log_error "Use --force if you know what you're doing."
+    exit 1
+fi
+
 # terminate helper vm when the script exits
 add_cleanup telinit 0
 
