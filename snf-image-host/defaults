@@ -32,22 +32,24 @@
 # HELPER_PKG="$(HELPER_DIR)/snf-image-helper.deb"
 
 # HELPER_TIMOUT: Soft and hard timeout limits for helper instance.
-# Helper instance will be terminated after a given time if it hasn't exited by
-# itself. The time to wait before killing the process is specified by those
-# variables. When soft/hard limit expires, a SIGTERM/SIGKILL is sent.
+# The helper instance will be terminated after a given time if it hasn't exited
+# by itself.
+#
+# When HELPER_SOFT_TIMEOUT seconds have passed, a SIGTERM is sent.
+# When HELPER_HARD_TIMEOUT seconds more have passed, a SIGKILL is sent.
 # HELPER_SOFT_TIMEOUT="15"
 # HELPER_HARD_TIMEOUT="5"
 
-# HELPER_USR: For security reasons, the helper vm is not adviced to to run as
-# root. It should drop privileges just before the guest execution starts. The
-# user the helper vm should run as is specifies by HELPER_USR variable.
+# HELPER_USER: For security reasons, it is recommended that the helper VM
+# runs as an unprivileged user. KVM drops root privileges and runs as
+# HELPER_USER imeddiately before starting execution of the helper VM.
 # HELPER_USER="nobody"
 
 # HELPER_CACHE_FILE: Cache file update-helper script uses to avoid running
 # `debootstrap' all the time.
 # HELPER_CACHE_FILE="$(HELPER_DIR)/cache.tar"
 
-# HELPER_EXTRA_PKGS: Extra packages that will need to be supplied to de supplied
+# HELPER_EXTRA_PKGS: Extra packages that will need to be supplied
 # to debootstrap to make the resulting helper image workable
 # HELPER_EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python"
 
