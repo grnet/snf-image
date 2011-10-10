@@ -37,8 +37,8 @@ dd if=/dev/zero of="$helper_img" bs=1k count=400000 &> /dev/null
 echo "done"
 
 echo "Creating partitions..."
-blockdev=$(losetup -sf $helper_img)
-add_cleanup losetup -d "$blockdev"
+blockdev=$("$LOSETUP" -sf $helper_img)
+add_cleanup "$LOSETUP" -d "$blockdev"
 
 sleep 1 # sometimes losetup returns and the device is still busy..
 
