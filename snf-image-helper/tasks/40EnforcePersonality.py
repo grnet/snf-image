@@ -24,20 +24,30 @@ def timestamp():
 
 
 def main():
+    if not os.environ.has_key('SNF_IMAGE_TARGET'):
+        sys.stderr.write('Error: SNF_IMAGE_TARGET variable is missing\n')
+        return 1
+
+    target = os.environ['SNF_IMAGE_TARGET']
+    if not os.path.isdir(target):
+        sys.stderr.write('Error: Target: `'+target+'\' is not a directory.\n')
+        return 2
+
     if os.environ.has_key('SNF_IMAGE_PERSONALITY'):
         osp_img_personality = os.environ['SNF_IMAGE_PERSONALITY']
         files = json.loads(osp_img_personality)
         for f in files:
-            if os.path.lexists(f['path']):
-                backup_file = f['path'] + '.bak.' + timestamp()
-                os.rename(f['path'],backup_file)
-            file = file(f['path'], 'w')
+            real_path = target + '/' + f['path']
+            if os.path.lexists(real_path):
+                backup_file = real_path + '.bak.' + timestamp()
+                os.rename(real_path, backup_file)
+            file = file(real_path, 'w')
             file.write(base64.b64decode(f['contents']))
             file.close()
-            os.chmod(f['path'],0440)
-        sys.stderr.write('Successful personalization of Image')
+            os.chmod(real_path, 0440)
+        sys.stderr.write('Successful personalization of Image\n')
     else:
-        sys.stderr.write('This Image has no personality (0 files to inject)')
+        sys.stderr.write('This Image has no personality (0 files to inject)\n')
     return 0
 
 
