@@ -108,7 +108,7 @@ add_cleanup rm "$snapshot"
     -boot c -serial stdio -serial file:"$result_file" \
     -fda "$floppy" -vga none -nographic -parallel none -monitor null \
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
-    -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8" \
+    -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper" \
     2>&1 | sed 's|^|HELPER: |g'
 
 if [ $? -ne 0 ]; then
