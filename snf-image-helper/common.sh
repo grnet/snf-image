@@ -71,7 +71,7 @@ get_distro() {
     if [ -e "$root_dir/etc/debian_version" ]; then
         distro="debian"
         if [ -e ${root_dir}/etc/lsb-release ]; then
-            ID=$(grep $DISTRIB_ID=${root_dir}/etc/lsb-release | cut -d= -f2)
+            ID=$(grep ^DISTRIB_ID= ${root_dir}/etc/lsb-release | cut -d= -f2)
             if [ "x$ID" = "xUbuntu" ]; then
                 distro="ubuntu"
             fi
