@@ -5,6 +5,7 @@ dist_tasks_SCRIPTS = \
 		30MountImage \
 		40AddDeleteUnattendScript \
 		40DeleteSSHKeys \
+		40EnforcePersonality.py \
 		40InstallUnattend \
 		40ResizeMounted \
 		40SELinuxAutorelabel \
