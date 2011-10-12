@@ -41,7 +41,7 @@ def main():
             if os.path.lexists(real_path):
                 backup_file = real_path + '.bak.' + timestamp()
                 os.rename(real_path, backup_file)
-            file = file(real_path, 'w')
+            file = open(real_path, 'w')
             file.write(base64.b64decode(f['contents']))
             file.close()
             os.chmod(real_path, 0440)
