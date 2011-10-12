@@ -5,13 +5,13 @@ dist_tasks_SCRIPTS = \
 		30MountImage \
 		40AddDeleteUnattendScript \
 		40DeleteSSHKeys \
-		40EnforcePersonality.py \
 		40InstallUnattend \
 		40ResizeMounted \
 		40SELinuxAutorelabel \
 		50AssignHostname \
 		50ChangePassword \
-		80UmountImage
+		80UmountImage \
+		${srcdir}/40EnforcePersonality.py
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
@@ -28,4 +28,14 @@ edit = sed \
 		   $(edit) $${srcdir}$@.in >$@.tmp
 	mv $@.tmp $@
 
-CLEANFILES = $(dist_tasks_SCRIPTS)
+CLEANFILES = 	10ResizeUnmounted \
+		30MountImage \
+		40AddDeleteUnattendScript \
+		40DeleteSSHKeys \
+		40InstallUnattend \
+		40ResizeMounted \
+		40SELinuxAutorelabel \
+		50AssignHostname \
+		50ChangePassword \
+		80UmountImage
+
