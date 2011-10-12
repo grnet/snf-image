@@ -13,17 +13,80 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing."
 fi
 
-if [ "$SNF_IMAGE_TYPE" = "extdump" ]; then
-    HOST_KEY="/etc/ssh/ssh_host_key"
-    RSA_KEY="/etc/ssh/ssh_host_rsa_key"
-    DSA_KEY="/etc/ssh/ssh_host_dsa_key"
+target="$SNF_IMAGE_TARGET"
 
-    for key in $HOST_KEY $RSA_KEY $DSA_KEY ; do
-        if [ -f "$SNF_IMAGE_TARGET/$key" ] ; then
-            rm -f "$SNF_IMAGE_TARGET"/$key*
-        fi
-    done
+if [ "$SNF_IMAGE_TYPE" != "extdump" ]; then
+    cleanup
+    trap - EXIT
+    exit 0
 fi
+
+distro=$(get_base_distro "$SNF_IMAGE_TARGET")
+
+HOST_KEY="/etc/ssh/ssh_host_key"
+RSA_KEY="/etc/ssh/ssh_host_rsa_key"
+DSA_KEY="/etc/ssh/ssh_host_dsa_key"
+ECDSA_KEY="/etc/ssh/ssh_host_ecdsa_key"
+
+
+#Remove the default keys
+for pair in "$HOST_KEY@rsa1" "$RSA_KEY@rsa" "$DSA_KEY@dsa" "$ECDSA_KEY@ecdsa"; do
+    key=$(echo $pair | cut -d@ -f1)
+    key_type=$(echo $pair | cut -d@ -f2)
+    if [ -e "$target/$key" ]; then
+        rm -f "$target/$key"{,.pub}
+        if [ "x$distro" = "xdebian" ]; then
+            chroot "$target" \
+                env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+                ssh-keygen -t $key_type -q -N '' -f "$key"
+        fi
+    fi
+done
+
+config="$target/etc/ssh/sshd_config" 
+if [ ! -e "$config" ]; then
+    log_error "Config file: \`$config' is missing."
+fi
+
+# Remove non-default keys...
+grep ^HostKey "$config" | while read key_line; do
+    key=$(echo $key_line | cut -d" " -f2)
+    if [ "$key" = $HOST_KEY -o "$key" = $RSA_KEY -o \
+            "$key" = $DSA_KEY -o "$key" = $ECDSA_KEY ]; then
+        continue;
+    fi
+
+    if [ "x$distro" = "xdebian" ]; then
+        # Most distros recreate missing keys...debian complains
+        type=""
+        if [ -e "$target/$key" ]; then
+            if grep -e "-----BEGIN DSA PRIVATE KEY-----" "$target/$key"; then
+                type=dsa
+            elif grep -e "-----BEGIN EC PRIVATE KEY-----" "$target/$key"; then
+                type=ecdsa
+            elif grep -e "-----BEGIN RSA PRIVATE KEY-----" "$target/$key"; then
+                type=rsa
+            elif grep -e "SSH PRIVATE KEY FILE FORMAT" "$target/$key"; then
+                type=rsa1
+            fi
+        else # do some guessing...
+            for i in rsa dsa ecdsa; do
+                echo "$key" | grep _${i}_ && { type="$i"; break; }
+            done
+        fi
+        if [ -z "$type" ]; then
+            echo "Warning: Unknown key type. I'll use \`rsa1'";
+            type=rsa1
+        fi
+
+        rm -f "$target/$key"{,.pub}
+        chroot "$target" \
+            env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+            ssh-keygen -t $type -q -N '' -f "$key"
+    else
+        rm -f "$target/$key"{,.pub}
+    fi
+done
 
 cleanup
 trap - EXIT
