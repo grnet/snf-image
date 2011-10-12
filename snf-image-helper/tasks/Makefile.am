@@ -11,7 +11,7 @@ dist_tasks_SCRIPTS = \
 		50AssignHostname \
 		50ChangePassword \
 		80UmountImage \
-		${srcdir}/40EnforcePersonality.py
+		${srcdir}/40EnforcePersonality
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
