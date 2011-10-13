@@ -2,8 +2,9 @@
 
 ### BEGIN TASK INFO
 # Provides:		DeleteSSHKeys
-# Requires:             MountImage
-# Short-Description:	Remove ssh keys if present.
+# RunBefore:            UmountImage
+# RunAfter:             MountImage
+# Short-Description:	Remove ssh keys and in some cases recreate them
 ### END TASK INFO
 
 set -e

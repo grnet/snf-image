@@ -1,7 +1,12 @@
 #!/usr/bin/env python
-#
-# Copyright (c) 2011 Greek Research and Technology Network
-#
+
+### BEGIN TASK INFO
+# Provides:		EnforcePersonality
+# RunBefore:		UmountImage
+# RunAfter:		MountImage
+# Short-Description:	Inject files to the instance
+### END TASK INFO
+
 """Personalize an Image by injecting files
 
 This hook injects files into the filesystem of an Image.
