@@ -44,9 +44,13 @@ for pair in "$HOST_KEY@rsa1" "$RSA_KEY@rsa" "$DSA_KEY@dsa" "$ECDSA_KEY@ecdsa"; d
     fi
 done
 
-config="$target/etc/ssh/sshd_config" 
+config="$target/etc/ssh/sshd_config"
 if [ ! -e "$config" ]; then
-    log_error "Config file: \`$config' is missing."
+    echo "Warning: Config file: \`$config' is missing."
+    echo "Warning: Can't check for non-default keys."
+    cleanup
+    trap - EXIT
+    exit 0
 fi
 
 # Remove non-default keys...
