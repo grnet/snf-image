@@ -119,7 +119,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Read the first line. This will remove \r and \n chars
-result=$(sed 's|\r||g' "$result_file" | xargs echo)
+result=$(sed 's|\r||g' "$result_file" | head -1)
 
 if [ "x$result" != "xSUCCESS" ]; then
     log_error "Helper VM returned error"
