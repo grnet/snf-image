@@ -46,9 +46,9 @@ def main():
             if os.path.lexists(real_path):
                 backup_file = real_path + '.bak.' + timestamp()
                 os.rename(real_path, backup_file)
-            file = open(real_path, 'w')
-            file.write(base64.b64decode(f['contents']))
-            file.close()
+            newfile = open(real_path, 'w')
+            newfile.write(base64.b64decode(f['contents']))
+            newfile.close()
             os.chmod(real_path, 0440)
         sys.stderr.write('Successful personalization of Image\n')
     else:
