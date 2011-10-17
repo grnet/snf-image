@@ -1,2 +1,6 @@
-2011-10-04	Nikos Skalkotos <skalkoto@grnet.gr>
-	* Initial release v0.1
+2011-10-17, v0.1.1
+	* Replace $(var) with ${var} in defaults file.
+	* Fix a dangerous-use-of-xargs bug in create.
+
+2011-10-04, v0.1
+	* Initial release
