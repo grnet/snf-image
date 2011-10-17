@@ -71,15 +71,20 @@ fi
 
 RUN_PARTS=$(which run-parts)
 if [ -z "$RUN_PARTS" ]; then
-    log_error "run-parts programe is missing from the system"
+    log_error "run-parts program is missing from the system"
 fi
 
 # If something goes wrong with the tasks, try to umount the target filesystem
 # in case it is left mounted...
 trap '{ umount "$target"; }' ERR
 
+# Redirect standard error to standard output,
+# prepend a timestamp before each line of output.
 echo "Execute all snf-image tasks...."
-$RUN_PARTS -v --exit-on-error "@tasksdir@"
+$RUN_PARTS -v --exit-on-error "@tasksdir@" 2>&1|
+    while IFS= read -r line; do
+        echo $(date +%Y:%m:%d-%H:%M:%S.%N) "$line"
+    done
 
 # Disable the trap. If code reaches here, the filesystem is unmounted.
 trap - ERR
