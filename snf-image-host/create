@@ -102,6 +102,7 @@ add_cleanup rm "$snapshot"
 
 "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
 
+echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Starting helper VM..."
 "$TIMELIMIT" -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
     -drive file="$root_dev",format=raw,if=virtio,cache=none \
@@ -110,6 +111,7 @@ add_cleanup rm "$snapshot"
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
     -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper" \
     2>&1 | sed 's|^|HELPER: |g'
+echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Helper VM finished."
 
 if [ $? -ne 0 ]; then
     if [ $? -gt 128 ];  then
