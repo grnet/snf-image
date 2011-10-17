@@ -20,16 +20,16 @@
 # HELPER_DIR="/var/lib/snf-image/helper/"
 
 # HELPER_IMG: Path to the helper VM image
-# HELPER_IMG="$(HELPER_DIR)/image"
+# HELPER_IMG="${HELPER_DIR}/image"
 
 # HELPER_KERNEL: Path to the helper VM kernel
-# HELPER_KERNEL="$(HELPER_DIR)/kernel"
+# HELPER_KERNEL="${HELPER_DIR}/kernel"
 
 # HELPER_INITRD: Path to the helper VM initial ramdisk
-# HELPER_INITRD="$(HELPER_DIR)/initrd"
+# HELPER_INITRD="${HELPER_DIR}/initrd"
 
 # HELPER_PKG: Path to the snf-image-helper package
-# HELPER_PKG="$(HELPER_DIR)/snf-image-helper.deb"
+# HELPER_PKG="${HELPER_DIR}/snf-image-helper.deb"
 
 # HELPER_TIMOUT: Soft and hard timeout limits for helper instance.
 # The helper instance will be terminated after a given time if it hasn't exited
@@ -47,7 +47,7 @@
 
 # HELPER_CACHE_FILE: Cache file update-helper script uses to avoid running
 # `debootstrap' all the time.
-# HELPER_CACHE_FILE="$(HELPER_DIR)/cache.tar"
+# HELPER_CACHE_FILE="${HELPER_DIR}/cache.tar"
 
 # HELPER_EXTRA_PKGS: Extra packages that will need to be supplied
 # to debootstrap to make the resulting helper image workable
