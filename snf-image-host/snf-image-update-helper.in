@@ -65,15 +65,26 @@ if [  -f "$HELPER_CACHE_FILE" ]; then
 else
     echo "not found"
     echo "Debootstraping to create a new root filesystem:"
-    debootstrap --arch amd64 --include "$HELPER_EXTRA_PKGS" \
-        --variant=minbase stable "$target" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
 
+    # Create a policy-rc.d file to deny init script execution
+    mkdir -p "$target/usr/sbin"
+    cat > "$target/usr/sbin/policy-rc.d" <<EOF
+#!/bin/sh
+exit 101
+EOF
+    chmod +x "$target/usr/sbin/policy-rc.d"
+
+    debootstrap --arch amd64 --include "$HELPER_EXTRA_PKGS" \
+        --variant=minbase stable "$target" "$HELPER_MIRROR" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
+
+    rm "$target/usr/sbin/policy-rc.d"
+    
     # remove the downloaded debs, as they are no longer needed
     find "$target/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
         xargs -r0 rm -f
 
     tmp_cache=$(mktemp "$HELPER_CACHE_FILE.XXXXXX")
-    tar cf "$tmp_cache" -C "$target" . || { rm "$tmp_cache"; false; }
+    tar cf "$tmp_cache" --one-file-system -C "$target" . || { rm "$tmp_cache"; false; }
     mv -f "$tmp_cache" "$HELPER_CACHE_FILE"
 fi
 

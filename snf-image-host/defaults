@@ -53,6 +53,11 @@
 # to debootstrap to make the resulting helper image workable
 # HELPER_EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python"
 
+# HELPER_MIRROR: Debian mirror to use with debootstrap. Using a mirror close to
+# you will speed up the whole debootstraping process. By default we do not
+# define a mirror. Debootstrap will use it's default debian URL.
+# HELPER_MIRROR="http://ftp.debian.org/debian"
+
 # Paths for needed programs. Uncommend and change the variables below, if you
 # don't want to use the default one.
 # LOSETUP="losetup"
