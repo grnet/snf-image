@@ -5,14 +5,80 @@ set -o pipefail
 
 . @osdir@/common.sh
 
-if [ ! -e "$HELPER_PKG" ]; then
-    log_error "Helper package \`$HELPER_PKG' not found."
-    log_error "You need to provide this for the script to work."
+list_defaults() {
+    cat <<EOF
+
+*** DEFAULT HELPER VALUES ***
+
+Helper directory:               $HELPER_DIR
+Helper cache file:              $HELPER_CACHE_FILE
+Helper snf-image-helper pkg:    $HELPER_PKG
+
+EOF
+}
+
+usage() {
+    local rc="$1"
+
+    cat <<EOF
+
+Usage: $0 [options]
+
+This script runs a debootstrap and creates a small Debian image populated with
+the snf-image-helper package. This needs to be done before the first use of
+ganeti's \`snf-image' guest OS type.
+
+OPTIONS:
+    -c  Overwrite the default cache file
+    -d  Overwrite the default directory where the helper image will be hosted
+    -h  Show this message
+    -l  List default helper values
+    -p  Overwrite the default snf-image-helper debian package
+    -y  Automatic yes to prompts and run non-interactively.
+
+EOF
+
+    exit "$rc"
+}
+
+while getopts "c:d:hlp:y" opt; do
+    case $opt in
+        c) HELPER_CACHE_FILE="$OPTARG"
+            ;;
+        d) HELPER_DIR="$OPTARG"
+            ;;
+        h) usage 0
+            ;;
+        l) list_defaults; exit 0
+            ;;
+        p) HELPER_PKG="$OPTARG"
+            ;;
+        y) NO_PROMPT="yes"
+            ;;
+        ?) log_error "Use \`-h' for help"; exit 1
+            ;;
+    esac
+done
+
+echo
+echo "This is the update helper image script for snf-image."
+echo "If you don't know what to do, use \`-h'."
+echo
+
+if [ ! -d "$HELPER_DIR" -o ! -w "$HELPER_DIR" ]; then
+    log_error "Helper directory \`$HELPER_DIR' does not exist or the script" \
+    "has no write permission on it."
+    exit 1
+fi
+
+if [ ! -r "$HELPER_PKG" ]; then
+    log_error "Helper package \`$HELPER_PKG' does not exist or is not " \
+    "readable by the script."
     exit 1
 fi
 
 cat >&1 <<EOF
-This program will overwrite the following files:
+This program will overwrite the following files if present:
   \`$HELPER_DIR/initrd'
   \`$HELPER_DIR/kernel'
   \`$HELPER_DIR/image'
@@ -20,6 +86,11 @@ EOF
 
 while [[ 1 ]]; do
     echo -n "Do you want to continue [y/N]? "
+    if [ "x$NO_PROMPT" = "xyes" ]; then
+        echo "y";
+        break;
+    fi
+
     read answer
     [ "$(echo -n "$answer" | tr [A-Z] [a-z])" = "y" ] && break
     if [ -z "$answer" -o "$(echo -n "$answer" | tr [A-Z] [a-z])" = "n" ]; then
@@ -75,7 +146,8 @@ EOF
     chmod +x "$target/usr/sbin/policy-rc.d"
 
     debootstrap --arch amd64 --include "$HELPER_EXTRA_PKGS" \
-        --variant=minbase stable "$target" "$HELPER_MIRROR" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
+        --variant=minbase stable "$target" "$HELPER_MIRROR" 2>&1 | \
+        sed -e 's/^/DEBOOTSTRAP: /g'
 
     rm "$target/usr/sbin/policy-rc.d"
     
@@ -84,7 +156,8 @@ EOF
         xargs -r0 rm -f
 
     tmp_cache=$(mktemp "$HELPER_CACHE_FILE.XXXXXX")
-    tar cf "$tmp_cache" --one-file-system -C "$target" . || { rm "$tmp_cache"; false; }
+    tar cf "$tmp_cache" --one-file-system -C "$target" . || \
+        { rm "$tmp_cache"; false; }
     mv -f "$tmp_cache" "$HELPER_CACHE_FILE"
 fi
 
