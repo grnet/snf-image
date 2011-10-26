@@ -5,18 +5,6 @@ set -o pipefail
 
 . @osdir@/common.sh
 
-list_defaults() {
-    cat <<EOF
-
-*** DEFAULT HELPER VALUES ***
-
-Helper directory:               $HELPER_DIR
-Helper cache file:              $HELPER_CACHE_FILE
-Helper snf-image-helper pkg:    $HELPER_PKG
-
-EOF
-}
-
 usage() {
     local rc="$1"
 
@@ -29,19 +17,28 @@ the snf-image-helper package. This needs to be done before the first use of
 ganeti's \`snf-image' guest OS type.
 
 OPTIONS:
-    -c  Overwrite the default cache file
-    -d  Overwrite the default directory where the helper image will be hosted
-    -h  Show this message
-    -l  List default helper values
-    -p  Overwrite the default snf-image-helper debian package
-    -y  Automatic yes to prompts and run non-interactively.
+    -c CACHE_FILE
+        Use this cache file, instead of the default
+        [default: $HELPER_CACHE_FILE]
+
+    -d DIRECTORY
+        Use this directory to host the created files, instead of the default
+        [default: $HELPER_DIR]
+
+    -h  Print this message
+
+    -p PACKAGE
+        Install this deb package in the helper image, instead of the default
+        [default: $HELPER_PKG]
+
+    -y  Assume Yes to all queries and do not prompt
 
 EOF
 
     exit "$rc"
 }
 
-while getopts "c:d:hlp:y" opt; do
+while getopts "c:d:hp:y" opt; do
     case $opt in
         c) HELPER_CACHE_FILE="$OPTARG"
             ;;
@@ -66,12 +63,14 @@ echo "If you don't know what to do, use \`-h'."
 echo
 
 if [ ! -d "$HELPER_DIR" -o ! -w "$HELPER_DIR" ]; then
+    log_error "ERROR:"
     log_error "Helper directory \`$HELPER_DIR' does not exist or the script" \
     "has no write permission on it."
     exit 1
 fi
 
 if [ ! -r "$HELPER_PKG" ]; then
+    log_error "ERROR:"
     log_error "Helper package \`$HELPER_PKG' does not exist or is not " \
     "readable by the script."
     exit 1
