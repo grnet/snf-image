@@ -162,7 +162,7 @@ unmap_disk0() {
 format_disk0() {
     local device="$1"
     local image_type="$2"
-    
+
     declare -A part_id=( ['extdump']="83" ["ntfsdump"]="7" )
 
     # The -f is needed, because we use an optimal alignment and sfdisk complains
@@ -219,15 +219,17 @@ ganeti_os_main() {
         else
             if grep -qxF "$OS_VARIANT" variants.list; then
                 log_error "ERROR: instance-image configuration error"
-                log_error "  Published variant $OS_VARIANT is missing its config" \
-                          "file"
-                log_error "  Please create $VARIANT_CONFIG or unpublish the variant"
+                log_error "  Published variant $OS_VARIANT is missing its" \
+                    "config file"
+                log_error "  Please create $VARIANT_CONFIG or unpublish the" \
+                    "variant"
                 log_error "  (by removing $OS_VARIANT from variants.list)"
             else
                 log_error "Unofficial variant $OS_VARIANT is unsupported"
-                log_error "Most probably this is a user error, forcing a wrong name"
+                log_error "Most probably this is a user error, forcing a" \
+                    "wrong name"
                 log_error "To support this variant please create file" \
-                            "$VARIANT_CONFIG"
+                    "$VARIANT_CONFIG"
             fi
             exit 1
         fi
