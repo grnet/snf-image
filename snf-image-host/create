@@ -41,6 +41,8 @@ case "$IMAGE_TYPE" in
 	image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.extdump";;
     ntfsdump)
         image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.ntfsdump";;
+    diskdump)
+        image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.diskdump";;
     *)
         log_error "Unknown image type: \`$IMAGE_TYPE'.";
         exit 1
@@ -66,18 +68,23 @@ if [ ! -b "$blockdev" ]; then
     add_cleanup "$LOSETUP" -d "$blockdev"
 fi
 
-format_disk0 "$blockdev" "$IMAGE_TYPE"
+case "$IMAGE_TYPE" in
+    ntfsdump, extdump)
+        format_disk0 "$blockdev" "$IMAGE_TYPE"
 
-filesystem_dev=$(map_disk0 "$blockdev")
-add_cleanup unmap_disk0 "$blockdev"
-
-root_dev="${filesystem_dev}-1"
+        target="$(map_disk0 "$blockdev")-1" #the root device
+        add_cleanup unmap_disk0 "$blockdev"
+        ;;
+    diskdump)
+        target="$blockdev"
+        ;;
+esac
 
 # dd the dump to its new home :-)
-# Deploying an image file on a target block device is a streaming
-# copy operation. Enable the direct I/O flag on the output fd to 
-# avoid polluting the host cache with useless data.
-$monitor dd bs=4M if="$image_file" of="$root_dev" oflag=direct
+# Deploying an image file on a target block device is a streaming copy
+# operation. Enable the direct I/O flag on the output fd to avoid polluting the
+# host cache with useless data.
+$monitor dd bs=4M if="$image_file" of="$target" oflag=direct
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
@@ -105,7 +112,7 @@ add_cleanup rm "$snapshot"
 echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Starting helper VM..."
 "$TIMELIMIT" -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
-    -drive file="$root_dev",format=raw,if=virtio,cache=none \
+    -drive file="$blockdev",format=raw,if=virtio,cache=none \
     -boot c -serial stdio -serial file:"$result_file" \
     -fda "$floppy" -vga none -nographic -parallel none -monitor null \
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
