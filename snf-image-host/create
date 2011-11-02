@@ -36,17 +36,7 @@ set -o pipefail
 
 ganeti_os_main
 
-case "$IMAGE_TYPE" in
-    extdump)
-	image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.extdump";;
-    ntfsdump)
-        image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.ntfsdump";;
-    diskdump)
-        image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.diskdump";;
-    *)
-        log_error "Unknown image type: \`$IMAGE_TYPE'.";
-        exit 1
-esac
+image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.$IMAGE_TYPE"
 
 if [ ! -e "$image_file" ]; then
     log_error "Image file \`$image_file' does not exit."
@@ -70,7 +60,11 @@ fi
 
 case "$IMAGE_TYPE" in
     ntfsdump, extdump)
+        # Create partitions
         format_disk0 "$blockdev" "$IMAGE_TYPE"
+
+        # Install a new MBR
+        "$INSTALL_MBR" -p 1 -i n "$blockdev"
 
         target="$(map_disk0 "$blockdev")-1" #the root device
         add_cleanup unmap_disk0 "$blockdev"
@@ -134,9 +128,6 @@ if [ "x$result" != "xSUCCESS" ]; then
     log_error "Helper VM returned error"
     exit 1
 fi
-
-# Install a new MBR
-"$INSTALL_MBR" -p 1 -i n "$blockdev"
 
 # Execute cleanups
 cleanup
