@@ -35,6 +35,7 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 # Programs
 XMLSTARLET=xmlstarlet
 RESIZE2FS=resize2fs
+PARTED=parted
 
 CLEANUP=( )
 
@@ -89,6 +90,35 @@ get_distro() {
         echo "suse"
     elif [ -e "$root_dir/gentoo-release" ]; then
         echo "gentoo"
+    fi
+}
+
+get_last_partition() {
+    local dev="$1"
+
+    "$PARTED" -s -m "$dev" unit s print | tail -1
+}
+
+get_partition() {
+    local dev="$1"
+    local id="$2"
+
+    "$PARTED" -s -m "$dev" unit s print | grep "^$id" 
+}
+
+get_partition_count() {
+    local dev="$1"
+
+     expr $("$PARTED" -s -m "$dev" unit s print | wc -l) - 2
+}
+
+get_last_free_sector() {
+    local dev="$1"
+    local last_line=$("$PARTED" -s -m "$dev" unit s print free | tail -1)
+    local type=$(echo "$last_line" | cut -d: -f 5)
+
+    if [ "$type" = "free;" ]; then
+        echo "$last_line" | cut -d: -f 3
     fi
 }
 

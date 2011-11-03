@@ -1,7 +1,7 @@
 #! /bin/bash
 
 ### BEGIN TASK INFO
-# Provides:		ResizeMounted
+# Provides:		FilesystemResizeMounted
 # RunBefore:            UmountImage
 # RunAfter:		MountImage
 # Short-Description:	Resize filesystem to use all the available space
@@ -14,13 +14,17 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
 fi
 
-if [ "$SNF_IMAGE_TYPE" = "ntfsdump" ]; then
+last_partition=$(get_last_partition "$SNF_IMAGE_DEV")
+id=$(echo "$last_partition" | cut -d: -f1)
+ptype=$(echo "$last_partition" | cut -d: -f5)
+
+if [ "$ptype" = "ntfs" ]; then
     # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
     # try to execute this script during the specialize pass.
     mkdir -p "$SNF_IMAGE_TARGET/Windows/SnfScripts"
     cat > "$SNF_IMAGE_TARGET/Windows/SnfScripts/ExtendFilesystem" <<EOF
 select disk 0
-select volume 1
+select volume $id
 extend filesystem
 exit
 EOF

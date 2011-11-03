@@ -64,6 +64,7 @@ target=$(mktemp -d --tmpdir target.XXXXXX)
 add_cleanup rmdir "$target"
 
 export SNF_IMAGE_TARGET="$target"
+export SNF_IMAGE_ROOTDEV="${SNF_IMAGE_DEV}${SNF_IMAGE_ROOT}"
 
 if [ ! -d "@tasksdir@" ]; then
     log_error "snf-image/tasks directory is missing"
