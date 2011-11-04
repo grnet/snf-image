@@ -29,6 +29,7 @@
 
 RESULT=/dev/ttyS1
 FLOPPY_DEV=/dev/fd0
+PROGNAME=$(basename $0)
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
@@ -48,6 +49,10 @@ add_cleanup() {
 log_error() {
     echo "ERROR: $@" | tee $RESULT >&2
     exit 1
+}
+
+warn() {
+    echo "Warning: $@" >&2
 }
 
 get_base_distro() {
@@ -153,6 +158,8 @@ cleanup() {
     done
   fi
 }
+
+
 
 trap cleanup EXIT
 

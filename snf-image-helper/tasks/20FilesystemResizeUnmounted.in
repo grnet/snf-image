@@ -14,16 +14,12 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi
 
-if [ -z "$SNF_IMAGE_TYPE" ]; then
-    log_error "Image type does not exist"
-fi
-
 last_partition=$(get_last_partition "$SNF_IMAGE_DEV")
 id=$(echo "$last_partition" | cut -d: -f1)
 ptype=$(echo "$last_partition" | cut -d: -f5)
 
-if [[ "$ptype" =~ ext[234] ]]; then
-    device="$SNF_IMAGE_DEV""$id"
+if [[ "$ptype" == ext[234] ]]; then
+    device="${SNF_IMAGE_DEV}${id}"
     "$RESIZE2FS" "$device"
 fi
 

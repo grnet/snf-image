@@ -11,10 +11,10 @@ set -e
 . "@commondir@/common.sh"
 
 if [ -z "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
 
-if [ "$SNF_IMAGE_TYPE" != "ntfsdump" ]; then
+if [ "$SNF_IMAGE_OS" != "windows" ]; then
     exit 0
 fi
 

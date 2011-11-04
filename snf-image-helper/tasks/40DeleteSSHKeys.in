@@ -16,7 +16,7 @@ fi
 
 target="$SNF_IMAGE_TARGET"
 
-if [ "$SNF_IMAGE_TYPE" != "extdump" ]; then
+if [ "$SNF_IMAGE_OS" != "linux" ]; then
     cleanup
     trap - EXIT
     exit 0

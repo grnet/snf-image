@@ -20,20 +20,18 @@ fi
 retval=$(get_last_partition "$SNF_IMAGE_DEV")
 
 id=$(echo $retval | cut -d: -f1)
+pstart=$(echo $retval | cut -d: -f2)
+pend=$(echo $retval | cut -d: -f3)
+ptype=$(echo $retval | cut -d: -f5)
 
 if [ $id -gt 4 ]; then
     log_error "We don't support logical volumes"
 fi
 
-pstart=$(echo $retval | cut -d: -f2)
-pend=$(echo $retval | cut -d: -f3)
-ptype=$(echo $retval | cut -d: -f5)
-
 if [ x"$ptype" = "x" ]; then
     # Don't know how to handle this
-    echo "Warning: Last partition with id: \`$id' is empty" \
-        "or has unknown filesystem"
-
+    warn "Last partition with id: \`$id' is empty or has unknown filesystem"
+    warn "I won't resize the partition"
     exit 0
 fi
 
@@ -41,7 +39,7 @@ new_pend=$(get_last_free_sector "$SNF_IMAGE_DEV")
 
 #Extend the partition
 
-$PARTED -s -m "$SNF_IMAGE_DEV" rm $id
+$PARTED -s -m "$SNF_IMAGE_DEV" rm "$id"
 $PARTED -s -m "$SNF_IMAGE_DEV" mkpart primary "$ptype" "$pstart" "$new_pend"
 
 #inform the kernel about the changes
