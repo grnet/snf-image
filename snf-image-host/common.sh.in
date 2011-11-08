@@ -127,10 +127,15 @@ get_api20_arguments() {
         log_error "Missing OS API Parameter: OSP_IMG_PASSWD"
         exit 1
     fi
+    if [ -z "$OSP_IMG_PROPERTIES" ]; then
+        log_error "Missing OS API Parameter: OSP_IMG_PROPERTIES"
+        exit 1
+    fi
 
     IMG_ID=$OSP_IMG_ID
     IMG_FORMAT=$OSP_IMG_FORMAT
     IMG_PASSWD=$OSP_IMG_PASSWD
+    IMG_PROPERTIES=$OSP_IMG_PROPERTIES
     if [ -n "$OSP_IMG_PERSONALITY" ]; then
         IMG_PERSONALITY=$OSP_IMG_PERSONALITY
     fi
