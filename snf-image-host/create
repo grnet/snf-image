@@ -36,7 +36,13 @@ set -o pipefail
 
 ganeti_os_main
 
-image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.$IMAGE_TYPE"
+if [ "$IMAGE_TYPE" = custom ]; then
+    image_file=/dev/null
+    image_size=0
+else
+    image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.$IMAGE_TYPE"
+    image_size="$(stat -L -c %s "$image_file")"
+fi
 
 if [ ! -e "$image_file" ]; then
     log_error "Image file \`$image_file' does not exit."
@@ -45,7 +51,6 @@ fi
 
 monitor="" #Empty if progress monitor support is disabled
 if [ "$progress_monitor_support" = "yes" ]; then
-    image_size="$(stat -L -c %s "$image_file")"
     monitor="$(printf "%q" "$PROGRESS_MONITOR") \
         -i $(printf "%q" "$INSTANCE_NAME") -r $image_size"
 fi
@@ -70,16 +75,20 @@ case "$IMAGE_TYPE" in
         add_cleanup unmap_disk0 "$blockdev"
         snf_export_ROOT=1
         ;;
-    diskdump)
+    diskdump, custom)
         target="$blockdev"
         ;;
 esac
 
-# dd the dump to its new home :-)
-# Deploying an image file on a target block device is a streaming copy
-# operation. Enable the direct I/O flag on the output fd to avoid polluting the
-# host cache with useless data.
-$monitor dd bs=4M if="$image_file" of="$target" oflag=direct
+if [ "$IMAGE_TYPE" = "custom" ]; then
+    wget -O - $IMAGE_NAME | $monitor dd bs=4M of="$target" oflag=direct
+else
+    # dd the dump to its new home :-)
+    # Deploying an image file on a target block device is a streaming copy
+    # operation. Enable the direct I/O flag on the output fd to avoid polluting
+    # the host cache with useless data.
+    $monitor dd bs=4M if="$image_file" of="$target" oflag=direct
+fi
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
