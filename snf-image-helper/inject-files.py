@@ -52,7 +52,7 @@ def parse_arguments(input_args):
 def main():
     (input_file, target) = parse_arguments(sys.argv[1:])
 
-    files = json.loads(input_file.read())
+    files = json.load(input_file)
     for f in files:
         real_path = target + '/' + f['path']
         if os.path.lexists(real_path):
