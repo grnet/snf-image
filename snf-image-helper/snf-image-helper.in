@@ -59,6 +59,16 @@ else
     log_error "Floppy does not contain \`rules\' file"
 fi
 
+if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
+    properties=$(mktemp --tmpdir properties.XXXXXX)
+    add_cleanup rm "$properties"
+    echo "SNF_IMAGE_PROPERTIES" |
+        "@scriptsdir@/snf-decode-properties.py" > "$properties"
+    source "$properties"
+else
+    log_error "SNF_IMAGE_PROPERTIES variable is missing"
+fi
+
 # Image mount point...
 target=$(mktemp -d --tmpdir target.XXXXXX)
 add_cleanup rmdir "$target"

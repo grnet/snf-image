@@ -16,7 +16,7 @@ fi
 
 target="$SNF_IMAGE_TARGET"
 
-if [ "$SNF_IMAGE_OS" != "linux" ]; then
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "linux" ]; then
     cleanup
     trap - EXIT
     exit 0

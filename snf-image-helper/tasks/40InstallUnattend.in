@@ -14,7 +14,7 @@ if [ -z "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
 
-if [ "$SNF_IMAGE_OS" != "windows" ]; then
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
     exit 0
 fi
 
