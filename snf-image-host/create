@@ -64,7 +64,7 @@ if [ ! -b "$blockdev" ]; then
 fi
 
 case "$IMAGE_TYPE" in
-    ntfsdump, extdump)
+    ntfsdump|extdump)
         # Create partitions
         format_disk0 "$blockdev" "$IMAGE_TYPE"
 
@@ -75,7 +75,7 @@ case "$IMAGE_TYPE" in
         add_cleanup unmap_disk0 "$blockdev"
         snf_export_ROOT=1
         ;;
-    diskdump, custom)
+    diskdump|custom)
         target="$blockdev"
         ;;
 esac
