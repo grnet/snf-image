@@ -37,12 +37,17 @@ fi
 
 new_pend=$(get_last_free_sector "$SNF_IMAGE_DEV")
 
-#Extend the partition
+if [ -z "$new_pend" ] ; then
+    # Nothing to do
+    exit 0
+fi
+
+# Extend the partition
 
 $PARTED -s -m "$SNF_IMAGE_DEV" rm "$id"
 $PARTED -s -m "$SNF_IMAGE_DEV" mkpart primary "$ptype" "$pstart" "$new_pend"
 
-#inform the kernel about the changes
+# Inform the kernel about the changes
 partprobe "$SNF_IMAGE_DEV"
 
 exit 0

@@ -46,10 +46,11 @@ def main():
     for key, value in properties.items():
         os.environ['SNF_IMAGE_PROPERTY_' + key] = value
 
-    output = StringIO(subprocess.check_output(['bash', '-c', 'set']))
+    p = subprocess.Popen(['bash', '-c', 'set'], stdout=subprocess.PIPE)
+    output = StringIO(p.communicate()[0]);
     for line in iter(output):
         if line.startswith('SNF_IMAGE_PROPERTY_'):
-            outfh.write(line)
+            outfh.write('export ' + line)
 
     infh.close()
     outfh.close()
