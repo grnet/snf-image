@@ -14,11 +14,7 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing."
 fi
 
-target="$SNF_IMAGE_TARGET"
-
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "linux" ]; then
-    cleanup
-    trap - EXIT
     exit 0
 fi
 
@@ -29,6 +25,7 @@ RSA_KEY="/etc/ssh/ssh_host_rsa_key"
 DSA_KEY="/etc/ssh/ssh_host_dsa_key"
 ECDSA_KEY="/etc/ssh/ssh_host_ecdsa_key"
 
+target="$SNF_IMAGE_TARGET"
 
 #Remove the default keys
 for pair in "$HOST_KEY@rsa1" "$RSA_KEY@rsa" "$DSA_KEY@dsa" "$ECDSA_KEY@ecdsa"; do
@@ -48,8 +45,6 @@ config="$target/etc/ssh/sshd_config"
 if [ ! -e "$config" ]; then
     echo "Warning: Config file: \`$config' is missing."
     echo "Warning: Can't check for non-default keys."
-    cleanup
-    trap - EXIT
     exit 0
 fi
 
@@ -92,9 +87,6 @@ grep ^HostKey "$config" | while read key_line; do
         rm -f "$target/$key"{,.pub}
     fi
 done
-
-cleanup
-trap - EXIT
 
 exit 0
 

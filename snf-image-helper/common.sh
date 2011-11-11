@@ -159,7 +159,6 @@ cleanup() {
   fi
 }
 
-trap cleanup EXIT
 
 check_if_excluded() {
 
@@ -173,6 +172,8 @@ check_if_excluded() {
 
     return 0
 }
+
+trap cleanup EXIT
 
 # Check if the execution of a task should be ommited
 check_if_excluded

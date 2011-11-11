@@ -68,9 +68,6 @@ elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
     linux_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
 fi
 
-cleanup
-trap - EXIT
-
 exit 0
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

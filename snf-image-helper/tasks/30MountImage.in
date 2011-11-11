@@ -17,7 +17,7 @@ if [ ! -b "$SNF_IMAGE_ROOTDEV" ]; then
     log_error "Device file:\`$SNF_IMAGE_ROOTDEV' is not a block device"
 fi
 
-mount "$SNF_IMAGE_ROOTDEV" "$SNF_IMAGE_TARGET"
+mount "$SNF_IMAGE_ROOTDEV" "$SNF_IMAGE_TARGET" -o rw
 
 exit 0
 
