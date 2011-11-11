@@ -88,7 +88,7 @@ fi
 # in case it is left mounted...
 trap '{ umount "$target"; }' ERR
 
-if [ -z "$SNF_IMAGE_EXCLUDE_ALL_TASKS" ]; then
+if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
     # Redirect standard error to standard output,
     # prepend a timestamp before each line of output.
     echo "Execute all snf-image tasks...."
