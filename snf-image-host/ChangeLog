@@ -1,3 +1,9 @@
+2011-11-11, v0.2
+	* Support diskdump format
+	* Support custom images format. Custom images are diskdump images
+	  that can be accessed from a URL
+	* Add a new OS parameter (img_properties)
+
 2011-10-20, v0.1.2
 	* Fix a debootstrap bug in snf-image-update-helper
 	* Use --one-file-system option when creating cache for update-helper
