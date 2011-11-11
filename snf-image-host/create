@@ -74,7 +74,7 @@ case "$IMAGE_TYPE" in
 
         target="$(map_disk0 "$blockdev")-1" #the root device
         add_cleanup unmap_disk0 "$blockdev"
-        snf_export_ROOT=1
+        snf_export_PROPERTY_ROOT_PARTITION=1
         ;;
     diskdump|custom)
         target="$blockdev"

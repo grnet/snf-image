@@ -13,11 +13,17 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir:\`$SNF_IMAGE_TARGET' is missing"
 fi
 
-if [ ! -b "$SNF_IMAGE_ROOTDEV" ]; then
-    log_error "Device file:\`$SNF_IMAGE_ROOTDEV' is not a block device"
+if [ -z "$SNF_IMAGE_PROPERTY_ROOT_PARTITION" ]; then
+    log_error "Root Partition image property not defined"
 fi
 
-mount "$SNF_IMAGE_ROOTDEV" "$SNF_IMAGE_TARGET" -o rw
+rootdev="${SNF_IMAGE_DEV}${SNF_IMAGE_PROPERTY_ROOT_PARTITION}"
+
+if [ ! -b "$rootdev" ]; then
+    log_error "Image root partition device:\`$rootdev' is not a block device"
+fi
+
+mount "$rootdev" "$SNF_IMAGE_TARGET" -o rw
 
 exit 0
 
