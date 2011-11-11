@@ -35,7 +35,6 @@ QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
 TIMELIMIT="timelimit"
 CURL="curl"
-WGET="wget"
 PROGRESS_MONITOR="snf-progress-monitor"
 
 progress_monitor_support="@progress_monitor_support@"

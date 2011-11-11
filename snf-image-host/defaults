@@ -67,5 +67,4 @@
 # INSTALL_MBR="install-mbr"
 # TIMELIMIT="timelimit"
 # CURL="curl"
-# WGET="wget"
 # PROGRESS_MONITOR="snf-progress-monitor"
