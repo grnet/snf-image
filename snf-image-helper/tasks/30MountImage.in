@@ -13,11 +13,11 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir:\`$SNF_IMAGE_TARGET' is missing"
 fi
 
-if [ ! -b "$SNF_IMAGE_DEV" ]; then
-    log_error "Device file:\`$SNF_IMAGE_DEV' is not a block device"
+if [ ! -b "$SNF_IMAGE_ROOTDEV" ]; then
+    log_error "Device file:\`$SNF_IMAGE_ROOTDEV' is not a block device"
 fi
 
-mount "$SNF_IMAGE_DEV" "$SNF_IMAGE_TARGET"
+mount "$SNF_IMAGE_ROOTDEV" "$SNF_IMAGE_TARGET" -o rw
 
 exit 0
 

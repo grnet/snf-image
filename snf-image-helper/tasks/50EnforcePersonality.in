@@ -1,0 +1,29 @@
+#! /bin/bash
+
+### BEGIN TASK INFO
+# Provides:		EnforcePersonality
+# RunBefore:		UmountImage
+# RunAfter:		DeleteSSHKeys
+# Short-Description:	Inject files to the instance
+### END TASK INFO
+
+set -e
+set -o pipefail
+
+. "@commondir@/common.sh"
+
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
+fi
+
+if [ -n "$SNF_IMAGE_PERSONALITY" ]; then
+    echo "$SNF_IMAGE_PERSONALITY" |
+        @scriptsdir@/inject-files.py "$SNF_IMAGE_TARGET"
+else
+    warn "This image has no personality (0 files to inject)\n"
+fi
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
+

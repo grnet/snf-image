@@ -36,15 +36,14 @@ set -o pipefail
 
 ganeti_os_main
 
-case "$IMAGE_TYPE" in
-    extdump)
-	image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.extdump";;
-    ntfsdump)
-        image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.ntfsdump";;
-    *)
-        log_error "Unknown image type: \`$IMAGE_TYPE'.";
-        exit 1
-esac
+if [ "$IMAGE_TYPE" = custom ]; then
+    image_file=/dev/null
+    image_size=\
+        $("$CURL" -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
+else
+    image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.$IMAGE_TYPE"
+    image_size="$(stat -L -c %s "$image_file")"
+fi
 
 if [ ! -e "$image_file" ]; then
     log_error "Image file \`$image_file' does not exit."
@@ -53,7 +52,6 @@ fi
 
 monitor="" #Empty if progress monitor support is disabled
 if [ "$progress_monitor_support" = "yes" ]; then
-    image_size="$(stat -L -c %s "$image_file")"
     monitor="$(printf "%q" "$PROGRESS_MONITOR") \
         -i $(printf "%q" "$INSTANCE_NAME") -r $image_size"
 fi
@@ -66,18 +64,32 @@ if [ ! -b "$blockdev" ]; then
     add_cleanup "$LOSETUP" -d "$blockdev"
 fi
 
-format_disk0 "$blockdev" "$IMAGE_TYPE"
+case "$IMAGE_TYPE" in
+    ntfsdump|extdump)
+        # Create partitions
+        format_disk0 "$blockdev" "$IMAGE_TYPE"
 
-filesystem_dev=$(map_disk0 "$blockdev")
-add_cleanup unmap_disk0 "$blockdev"
+        # Install a new MBR
+        "$INSTALL_MBR" -p 1 -i n "$blockdev"
 
-root_dev="${filesystem_dev}-1"
+        target="$(map_disk0 "$blockdev")-1" #the root device
+        add_cleanup unmap_disk0 "$blockdev"
+        snf_export_ROOT=1
+        ;;
+    diskdump|custom)
+        target="$blockdev"
+        ;;
+esac
 
-# dd the dump to its new home :-)
-# Deploying an image file on a target block device is a streaming
-# copy operation. Enable the direct I/O flag on the output fd to 
-# avoid polluting the host cache with useless data.
-$monitor dd bs=4M if="$image_file" of="$root_dev" oflag=direct
+if [ "$IMAGE_TYPE" = "custom" ]; then
+    "$WGET" -O - $IMAGE_NAME | $monitor dd bs=4M of="$target" oflag=direct
+else
+    # dd the dump to its new home :-)
+    # Deploying an image file on a target block device is a streaming copy
+    # operation. Enable the direct I/O flag on the output fd to avoid polluting
+    # the host cache with useless data.
+    $monitor dd bs=4M if="$image_file" of="$target" oflag=direct
+fi
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
@@ -87,6 +99,7 @@ snf_export_DEV=/dev/vda
 snf_export_TYPE="$IMG_FORMAT"
 snf_export_PASSWORD="$IMG_PASSWD"
 snf_export_HOSTNAME="$instance"
+snf_export_PROPERTIES="$IMG_PROPERTIES"
 if [ -n "$IMG_PERSONALITY" ]; then
     snf_export_PERSONALITY="$IMG_PERSONALITY"
 fi
@@ -105,7 +118,7 @@ add_cleanup rm "$snapshot"
 echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Starting helper VM..."
 "$TIMELIMIT" -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
-    -drive file="$root_dev",format=raw,if=virtio,cache=none \
+    -drive file="$blockdev",format=raw,if=virtio,cache=none \
     -boot c -serial stdio -serial file:"$result_file" \
     -fda "$floppy" -vga none -nographic -parallel none -monitor null \
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
@@ -127,9 +140,6 @@ if [ "x$result" != "xSUCCESS" ]; then
     log_error "Helper VM returned error"
     exit 1
 fi
-
-# Install a new MBR
-"$INSTALL_MBR" -p 1 -i n "$blockdev"
 
 # Execute cleanups
 cleanup

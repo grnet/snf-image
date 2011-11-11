@@ -1,0 +1,55 @@
+#! /bin/bash
+
+### BEGIN TASK INFO
+# Provides:		FixPartitionTable
+# RunBefore:		FilesystemResizeUnmounted
+# Short-Description:	Resize filesystem to use all the available space
+### END TASK INFO
+
+set -e
+. "@commondir@/common.sh"
+
+if [ ! -b "$SNF_IMAGE_DEV" ]; then
+    log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
+fi
+
+if [ $(get_partition_count "$SNF_IMAGE_DEV") -eq 0 ]; then
+    log_error "Device: \`${SNF_IMAGE_DEV}' does not contain any partition"
+fi
+
+retval=$(get_last_partition "$SNF_IMAGE_DEV")
+
+id=$(echo $retval | cut -d: -f1)
+pstart=$(echo $retval | cut -d: -f2)
+pend=$(echo $retval | cut -d: -f3)
+ptype=$(echo $retval | cut -d: -f5)
+
+if [ $id -gt 4 ]; then
+    log_error "We don't support logical volumes"
+fi
+
+if [ x"$ptype" = "x" ]; then
+    # Don't know how to handle this
+    warn "Last partition with id: \`$id' is empty or has unknown filesystem"
+    warn "I won't resize the partition"
+    exit 0
+fi
+
+new_pend=$(get_last_free_sector "$SNF_IMAGE_DEV")
+
+if [ -z "$new_pend" ] ; then
+    # Nothing to do
+    exit 0
+fi
+
+# Extend the partition
+
+$PARTED -s -m "$SNF_IMAGE_DEV" rm "$id"
+$PARTED -s -m "$SNF_IMAGE_DEV" mkpart primary "$ptype" "$pstart" "$new_pend"
+
+# Inform the kernel about the changes
+partprobe "$SNF_IMAGE_DEV"
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

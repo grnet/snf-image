@@ -23,6 +23,11 @@ if test -z "$RESIZE2FS" ; then
   AC_MSG_ERROR([resize2fs not found in $PATH])
 fi
 
+AC_PATH_PROG(PARTED, [parted], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$PARTED" ; then
+  AC_MSG_ERROR([parted not found in $PATH])
+fi
+
 AC_CONFIG_FILES([
     Makefile
     tasks/Makefile

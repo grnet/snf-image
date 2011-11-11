@@ -1,17 +1,18 @@
 tasksdir=$(libdir)/$(PACKAGE)/tasks
 
 dist_tasks_SCRIPTS = \
-		10ResizeUnmounted \
+		10FixPartitionTable \
+		20FilesystemResizeUnmounted \
 		30MountImage \
 		40AddDeleteUnattendScript \
 		40DeleteSSHKeys \
 		40InstallUnattend \
-		40ResizeMounted \
+		40FilesystemResizeMounted \
 		40SELinuxAutorelabel \
 		50AssignHostname \
+		50EnforcePersonality \
 		50ChangePassword \
-		80UmountImage \
-		${srcdir}/40EnforcePersonality
+		80UmountImage
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
@@ -28,14 +29,17 @@ edit = sed \
 		   $(edit) $${srcdir}$@.in >$@.tmp
 	mv $@.tmp $@
 
-CLEANFILES = 	10ResizeUnmounted \
+CLEANFILES =  \
+		10FixPartitionTable \
+		20FilesystemResizeUnmounted \
 		30MountImage \
 		40AddDeleteUnattendScript \
 		40DeleteSSHKeys \
 		40InstallUnattend \
-		40ResizeMounted \
+		40FilesystemResizeMounted \
 		40SELinuxAutorelabel \
 		50AssignHostname \
+		50EnforcePersonality \
 		50ChangePassword \
 		80UmountImage
 

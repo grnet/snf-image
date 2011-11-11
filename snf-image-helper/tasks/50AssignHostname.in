@@ -62,14 +62,11 @@ if [ -z "$SNF_IMAGE_HOSTNAME" ]; then
     log_error "Hostname is missing"
 fi
 
-if [ "$SNF_IMAGE_TYPE" = "ntfsdump" ]; then
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     windows_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
-elif [ "$SNF_IMAGE_TYPE" = "extdump" ]; then
+elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
     linux_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
 fi
-
-cleanup
-trap - EXIT
 
 exit 0
 

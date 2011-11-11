@@ -1,4 +1,5 @@
 img_id The id of the image to be installed (the id will be the image's file name prefix)
 img_format The format of the image to be installed
 img_passwd The root password which will be injected into the image
+img_properties The image properties that are used to customize the image (json.dumps format)
 img_personality The files to be injected into the image (base64 encoded in a json.dumps format)

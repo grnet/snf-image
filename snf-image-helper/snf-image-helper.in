@@ -59,11 +59,22 @@ else
     log_error "Floppy does not contain \`rules\' file"
 fi
 
+if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
+    properties=$(mktemp --tmpdir properties.XXXXXX)
+    add_cleanup rm "$properties"
+    echo "$SNF_IMAGE_PROPERTIES" |
+        "@scriptsdir@/decode-properties.py" "$properties"
+    source "$properties"
+else
+    log_error "SNF_IMAGE_PROPERTIES variable is missing"
+fi
+
 # Image mount point...
 target=$(mktemp -d --tmpdir target.XXXXXX)
 add_cleanup rmdir "$target"
 
 export SNF_IMAGE_TARGET="$target"
+export SNF_IMAGE_ROOTDEV="${SNF_IMAGE_DEV}${SNF_IMAGE_ROOT}"
 
 if [ ! -d "@tasksdir@" ]; then
     log_error "snf-image/tasks directory is missing"
@@ -78,13 +89,15 @@ fi
 # in case it is left mounted...
 trap '{ umount "$target"; }' ERR
 
-# Redirect standard error to standard output,
-# prepend a timestamp before each line of output.
-echo "Execute all snf-image tasks...."
-$RUN_PARTS -v --exit-on-error "@tasksdir@" 2>&1|
-    while IFS= read -r line; do
-        echo $(date +%Y:%m:%d-%H:%M:%S.%N) "$line"
-    done
+if [ -z "$SNF_IMAGE_EXCLUDE_ALL_TASKS" ]; then
+    # Redirect standard error to standard output,
+    # prepend a timestamp before each line of output.
+    echo "Execute all snf-image tasks...."
+    $RUN_PARTS -v --exit-on-error "@tasksdir@" 2>&1|
+        while IFS= read -r line; do
+            echo $(date +%Y:%m:%d-%H:%M:%S.%N) "$line"
+        done
+fi
 
 # Disable the trap. If code reaches here, the filesystem is unmounted.
 trap - ERR

@@ -46,8 +46,6 @@ while getopts "c:d:hp:y" opt; do
             ;;
         h) usage 0
             ;;
-        l) list_defaults; exit 0
-            ;;
         p) HELPER_PKG="$OPTARG"
             ;;
         y) NO_PROMPT="yes"

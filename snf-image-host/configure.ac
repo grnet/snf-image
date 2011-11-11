@@ -117,6 +117,16 @@ if test -z "$TIMELIMIT" ; then
   AC_MSG_ERROR([timelimit not found in $PATH:/usr/sbin:/sbin])
 fi
 
+AC_PATH_PROG(WGET, [wget], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$WGET" ; then
+  AC_MSG_ERROR([wget not found in $PATH:/usr/sbin:/sbin])
+fi
+
+AC_PATH_PROG(CURL, [curl], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$CURL" ; then
+  AC_MSG_ERROR([curl not found in $PATH:/usr/sbin:/sbin])
+fi
+
 AC_CONFIG_FILES([
     Makefile
 ])

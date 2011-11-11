@@ -14,7 +14,7 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
 	log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
 fi
 
-if [ "$SNF_IMAGE_TYPE" = "extdump" ]; then
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
     distro=$(get_base_distro $SNF_IMAGE_TARGET)
 
     if [ "$distro" = "redhat" ]; then
