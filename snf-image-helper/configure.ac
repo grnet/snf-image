@@ -28,6 +28,16 @@ if test -z "$PARTED" ; then
   AC_MSG_ERROR([parted not found in $PATH])
 fi
 
+AC_PATH_PROG(REGLOOKUP, [reglookup], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$REGLOOKUP" ; then
+  AC_MSG_ERROR([reglookup not found in $PATH])
+fi
+
+AC_PATH_PROG(CHNTPW, [chntpw], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$CHNTPW" ; then
+  AC_MSG_ERROR([chntpw not found in $PATH])
+fi
+
 AC_CONFIG_FILES([
     Makefile
     tasks/Makefile

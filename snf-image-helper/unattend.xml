@@ -21,6 +21,11 @@
                     <Order>1</Order>
                     <Path>diskpart.exe /s C:\Windows\SnfScripts\ExtendFilesystem</Path>
                 </RunSynchronousCommand>
+                <RunSynchronousCommand wcm:action="add">
+                    <Description>Enable RDP</Description>
+                    <Order>2</Order>
+                    <Path>cmd /C reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f</Path>
+                </RunSynchronousCommand>
             </RunSynchronous>
         </component>
     </settings>

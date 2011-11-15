@@ -1,0 +1,47 @@
+#! /bin/bash
+
+### BEGIN TASK INFO
+# Provides:		DisableRemoteDesktopConnections
+# RunBefore:            UmountImage
+# RunAfter:		MountImage
+# Short-Description:	Temporary Disable Remote Desktop Connections
+### END TASK INFO
+
+#
+# This task will change the value of `fDenyTSConnection' registry key located in
+# `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\' to
+# "true". This will disable RDP connections. The key will change back to "false"
+# during the specialize pass of the Windows setup.
+#
+
+set -e
+. "@commondir@/common.sh"
+
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
+fi
+
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
+    exit 0
+fi
+
+hive="$SNF_IMAGE_TARGET/Windows/System32/config/SYSTEM"
+current=$($REGLOOKUP "$hive" | grep ^/Select/Current | cut -d, -f3)
+
+# Change the key value.
+# For a stupid reason chntpw returns 2!
+chntpw -e "$hive" <<EOF || { test $? -eq 2 && chntpw_ret="success"; }
+cd ControlSet${current: -3}\Control\Terminal Server
+ed fDenyTSConnections
+1
+q
+y
+EOF
+
+if [ x"$chntpw_ret" != "xsuccess" ]; then
+    log_error "$CHNTPW failed"
+fi
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

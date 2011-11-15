@@ -6,6 +6,7 @@ dist_tasks_SCRIPTS = \
 		30MountImage \
 		40AddDeleteUnattendScript \
 		40DeleteSSHKeys \
+		40DisableRemoteDesktopConnections \
 		40InstallUnattend \
 		40FilesystemResizeMounted \
 		40SELinuxAutorelabel \
@@ -29,17 +30,5 @@ edit = sed \
 		   $(edit) $${srcdir}$@.in >$@.tmp
 	mv $@.tmp $@
 
-CLEANFILES =  \
-		10FixPartitionTable \
-		20FilesystemResizeUnmounted \
-		30MountImage \
-		40AddDeleteUnattendScript \
-		40DeleteSSHKeys \
-		40InstallUnattend \
-		40FilesystemResizeMounted \
-		40SELinuxAutorelabel \
-		50AssignHostname \
-		50EnforcePersonality \
-		50ChangePassword \
-		80UmountImage
+CLEANFILES = $(dist_tasks_SCRIPTS)
 

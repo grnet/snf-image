@@ -37,6 +37,8 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 XMLSTARLET=xmlstarlet
 RESIZE2FS=resize2fs
 PARTED=parted
+REGLOOKUP=reglookup
+CHNTPW=chntpw
 
 CLEANUP=( )
 

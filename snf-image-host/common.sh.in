@@ -293,7 +293,7 @@ fi
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
 : ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
-: ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted"}
+: ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw"}
 : ${HELPER_MIRROR:=""}
 
 

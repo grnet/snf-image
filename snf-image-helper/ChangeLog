@@ -1,6 +1,7 @@
 2011-11-11, v0.2
 	* Add support for Image Properties
-	* Add new FixPartitionTable hook
+	* Add new FixPartitionTable task
+	* Add new task that disables RDP connections during windows setup
 
 2011-10-20, v0.1.2
 
