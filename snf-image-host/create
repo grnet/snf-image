@@ -39,7 +39,7 @@ ganeti_os_main
 if [ "$IMAGE_TYPE" = custom ]; then
     image_file=/dev/null
     image_size=\
-        $("$CURL" -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
+        $($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
 else
     image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.$IMAGE_TYPE"
     image_size="$(stat -L -c %s "$image_file")"
@@ -52,7 +52,7 @@ fi
 
 monitor="" #Empty if progress monitor support is disabled
 if [ "$progress_monitor_support" = "yes" ]; then
-    monitor="$(printf "%q" "$PROGRESS_MONITOR") \
+    monitor="$PROGRESS_MONITOR \
         -i $(printf "%q" "$INSTANCE_NAME") -r $image_size"
 fi
 
@@ -60,8 +60,8 @@ fi
 # This is needed for file disks.
 if [ ! -b "$blockdev" ]; then
     original_blockdev="$blockdev"
-    blockdev=$("$LOSETUP" -sf "$blockdev")
-    add_cleanup "$LOSETUP" -d "$blockdev"
+    blockdev=$($LOSETUP -sf "$blockdev")
+    add_cleanup $LOSETUP -d "$blockdev"
 fi
 
 case "$IMAGE_TYPE" in
@@ -70,7 +70,7 @@ case "$IMAGE_TYPE" in
         format_disk0 "$blockdev" "$IMAGE_TYPE"
 
         # Install a new MBR
-        "$INSTALL_MBR" -p 1 -i n "$blockdev"
+        $INSTALL_MBR -p 1 -i n "$blockdev"
 
         target="$(map_disk0 "$blockdev")-1" #the root device
         add_cleanup unmap_disk0 "$blockdev"
@@ -122,7 +122,7 @@ add_cleanup rm "$snapshot"
 "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
 
 echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Starting helper VM..."
-"$TIMELIMIT" -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
+$TIMELIMIT -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
     -drive file="$blockdev",format=raw,if=virtio,cache=none \
     -boot c -serial stdio -serial file:"$result_file" \
