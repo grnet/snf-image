@@ -18,11 +18,33 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
     exit 0
 fi
 
-if [ -f "@commondir@/unattend.xml" ]; then
-    cat "@commondir@/unattend.xml" > "$SNF_IMAGE_TARGET/Unattend.xml"
-else
+if [ ! -f "@commondir@/unattend.xml" ]; then
     log_error "File \`@commondir@/unattend.xml' is missing."
 fi
+
+target=$SNF_IMAGE_TARGET
+mkdir -p "$target/Windows/Setup/Scripts"
+
+cat "@commondir@/unattend.xml" > "$target/Unattend.xml"
+echo "del /Q /F C:\Unattend.xml" > \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+mkdir -p "$target/Windows/SnfScripts"
+
+echo "exit" > "$target/Windows/SnfScripts/ExtendFilesystem"
+echo "del /Q /F C:\Windows\SnfScripts\ExtendFilesystem" >> \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+echo "@echo off" > "$target/Windows/SnfScripts/ChangeAdminPassword.cmd"
+# For security reasons, overwrite the file before deleting...
+spaces=$(printf "%200s");
+echo "echo ${spaces// /X} > C:\Windows\SnfScripts\ChangeAdminPassword.cmd" >> \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+echo "del /Q /F C:\Windows\SnfScripts\ChangeAdminPassword.cmd" >> \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+echo "rmdir C:\Windows\SnfScripts" >> \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
 
 exit 0
 

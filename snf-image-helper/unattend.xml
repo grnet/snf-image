@@ -17,13 +17,23 @@
         <component name="Microsoft-Windows-Deployment" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <RunSynchronous>
                 <RunSynchronousCommand wcm:action="add">
-                    <Description>Extend the filesystem</Description>
+                    <Description>Enable Build-in Account</Description>
                     <Order>1</Order>
+                    <Path>net user administrator /ACTIVE:YES /LOGONPASSWORDCHG:NO /EXPIRES:NEVER /PASSWORDREQ:YES</Path>
+                </RunSynchronousCommand>
+                <RunSynchronousCommand wcm:action="add">
+                    <Description>Change Administrator Password</Description>
+                    <Order>2</Order>
+                    <Path>C:\Windows\SnfScripts\ChangeAdminPassword.cmd</Path>
+                </RunSynchronousCommand>
+                <RunSynchronousCommand wcm:action="add">
+                    <Description>Extend the filesystem</Description>
+                    <Order>3</Order>
                     <Path>diskpart.exe /s C:\Windows\SnfScripts\ExtendFilesystem</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
                     <Description>Enable RDP</Description>
-                    <Order>2</Order>
+                    <Order>4</Order>
                     <Path>cmd /C reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f</Path>
                 </RunSynchronousCommand>
             </RunSynchronous>
@@ -46,12 +56,6 @@
             <OOBE>
                 <HideEULAPage>true</HideEULAPage>
             </OOBE>
-            <UserAccounts>
-                <AdministratorPassword>
-                    <Value>Admin1</Value>
-                    <PlainText>true</PlainText>
-                </AdministratorPassword>
-            </UserAccounts>
         </component>
     </settings>
     <cpi:offlineImage cpi:source="catalog:d:/sources/install_windows server 2008 r2 serverstandard.clg" xmlns:cpi="urn:schemas-microsoft-com:cpi" />

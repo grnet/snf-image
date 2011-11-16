@@ -25,7 +25,6 @@ ptype=$(echo "$last_partition" | cut -d: -f5)
 if [ "$ptype" = "ntfs" ]; then
     # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
     # try to execute this script during the specialize pass.
-    mkdir -p "$SNF_IMAGE_TARGET/Windows/SnfScripts"
     cat > "$SNF_IMAGE_TARGET/Windows/SnfScripts/ExtendFilesystem" <<EOF
 select disk 0
 select volume $id
