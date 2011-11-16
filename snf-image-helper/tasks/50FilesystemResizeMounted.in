@@ -3,7 +3,7 @@
 ### BEGIN TASK INFO
 # Provides:		FilesystemResizeMounted
 # RunBefore:            UmountImage
-# RunAfter:		MountImage
+# RunAfter:		InstallUnattend
 # Short-Description:	Resize filesystem to use all the available space
 ### END TASK INFO
 
