@@ -7,10 +7,10 @@ dist_tasks_SCRIPTS = \
 		40DeleteSSHKeys \
 		40DisableRemoteDesktopConnections \
 		40InstallUnattend \
-		40FilesystemResizeMounted \
 		40SELinuxAutorelabel \
 		50AssignHostname \
 		50EnforcePersonality \
+		50FilesystemResizeMounted \
 		50ChangePassword \
 		80UmountImage
 
