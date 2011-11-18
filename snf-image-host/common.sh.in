@@ -189,10 +189,8 @@ create_floppy() {
     dd bs=512 count=2880 if=/dev/zero of="$img"
     mkfs.ext2 -F "$img" > /dev/null
     mount "$img" "$target" -o loop
-    set | egrep ^snf_export_\\w+=|sed -e 's/^snf_export_/SNF_IMAGE_/' | \
-    while read line; do
-        echo "export $line" >> "$target/rules"
-    done
+    set | egrep ^snf_export_\\w+= | sed -e 's/^snf_export_/export SNF_IMAGE_/' \
+        > "$target/rules"
     umount "$target"
 }
 
