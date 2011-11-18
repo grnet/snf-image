@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-
-# Copyright (C) 2011 GRNET S.A. 
+#
+# Copyright (C) 2011 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import os
 import json
 import datetime
 import base64
-import struct
 from optparse import OptionParser
 
 
@@ -39,11 +38,12 @@ def timestamp():
     current_time = now.strftime("%Y%m%d.%H%M%S")
     return current_time
 
+
 def parse_arguments(input_args):
     usage = "Usage: %prog [options] <target>"
     parser = OptionParser(usage=usage)
     parser.add_option("-i", "--input",
-                        action="store",type='string', dest="input_file",
+                        action="store", type='string', dest="input_file",
                         help="get input from FILE instead of stdin",
                         metavar="FILE")
     parser.add_option("-d", "--decode",
@@ -54,7 +54,7 @@ def parse_arguments(input_args):
 
     if len(args) != 1:
         parser.error('target is missing')
-   
+
     target = args[0]
     if not os.path.isdir(target):
         parser.error('target is not a directory')
@@ -65,8 +65,8 @@ def parse_arguments(input_args):
     else:
         if not os.path.isfile(input_file):
             parser.error('input file does not exist')
-        input_file = open(input_file,'r')
-        
+        input_file = open(input_file, 'r')
+
     return (input_file, target, opts.decode)
 
 
@@ -74,16 +74,16 @@ def main():
     (input_file, target, decode) = parse_arguments(sys.argv[1:])
 
     files = json.load(input_file)
-    
+
     if decode:
         manifest = open(target + '/manifest', 'w')
-    
+
     count = 0
     for f in files:
         count += 1
         owner = f['owner'] if 'owner' in f else "root"
         group = f['group'] if 'group' in f else "root"
-        mode = f['mode'] if 'mode' in f else 288 # 440 in oct = 288 in dec
+        mode = f['mode'] if 'mode' in f else 0440
 
         filepath = f['path'] if not decode else str(count)
         filepath = target + "/" + filepath
@@ -99,19 +99,11 @@ def main():
         newfile = open(filepath, 'w')
         newfile.write(base64.b64decode(f['contents']))
         newfile.close()
-        
+
         if decode:
-            manifest.write(str(count))
-            manifest.write(struct.pack('B', 0))
-            manifest.write(owner)
-            manifest.write(struct.pack('B', 0))
-            manifest.write(group)
-            manifest.write(struct.pack('B', 0))
-            manifest.write("%o" % mode)
-            manifest.write(struct.pack('B', 0))
-            manifest.write(f['path'])
-            manifest.write(struct.pack('B', 0))
- 
+            manifest.write("%s\x00%s\x00%s\x00%o\x00%s\x00" %
+                           (count, owner, group, mode, f['path']))
+
     sys.stderr.write('Files were injected successfully\n')
 
     if decode:
