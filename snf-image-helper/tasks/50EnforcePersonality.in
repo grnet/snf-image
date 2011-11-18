@@ -29,6 +29,7 @@ elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
     add_cleanup rm -rf "$SNF_IMAGE_TARGET/$tmpdir"
     echo "$SNF_IMAGE_PERSONALITY" |
         @scriptsdir@/inject-files.py -d "$SNF_IMAGE_TARGET/$tmpdir"
+    chroot "$SNF_IMAGE_TARGET" chmod 777 "$tmpdir"
     {
         while read -d $'\0' src; do
             read -d $'\0' owner;
@@ -37,7 +38,7 @@ elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
             read -d $'\0' dest;
             chroot "$SNF_IMAGE_TARGET" chown "$owner:$group" "$tmpdir/$src"
             chroot "$SNF_IMAGE_TARGET" su -l "$owner" -c \
-                "umask 0007; install -D -m $mode $(printf "%q" "$tmpdir")/$src \
+                "install -D -m $mode $(printf "%q" "$tmpdir")/$src \
                 $(printf "%q" "$dest")"
         done
     } < "$SNF_IMAGE_TARGET/$tmpdir/manifest"
