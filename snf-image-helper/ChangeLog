@@ -1,7 +1,9 @@
-2011-11-11, v0.2
+2011-11-18, v0.2
 	* Add support for Image Properties
 	* Add new FixPartitionTable task
 	* Add new task that disables RDP connections during windows setup
+	* Extend image personalization to support custom ownership and
+	  permissions in the injected files
 
 2011-10-20, v0.1.2
 
