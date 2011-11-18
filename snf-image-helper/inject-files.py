@@ -13,6 +13,7 @@ import os
 import json
 import datetime
 import base64
+import struct
 from optparse import OptionParser
 
 
@@ -28,6 +29,9 @@ def parse_arguments(input_args):
                         action="store",type='string', dest="input_file",
                         help="get input from FILE instead of stdin",
                         metavar="FILE")
+    parser.add_option("-d", "--decode",
+                        action="store_true", dest="decode", default=False,
+                        help="decode files under target and create manifest")
 
     opts, args = parser.parse_args(input_args)
 
@@ -46,32 +50,58 @@ def parse_arguments(input_args):
             parser.error('input file does not exist')
         input_file = open(input_file,'r')
         
-    return (input_file, target)
+    return (input_file, target, opts.decode)
 
 
 def main():
-    (input_file, target) = parse_arguments(sys.argv[1:])
+    (input_file, target, decode) = parse_arguments(sys.argv[1:])
 
     files = json.load(input_file)
+    
+    if decode:
+        manifest = open(target + '/manifest', 'w')
+    
+    count = 0
     for f in files:
-        real_path = target + '/' + f['path']
-        if os.path.lexists(real_path):
-            backup_file = real_path + '.bak.' + timestamp()
-            os.rename(real_path, backup_file)
+        count += 1
+        owner = f['owner'] if 'owner' in f else "root"
+        group = f['group'] if 'group' in f else "root"
+        mode = f['mode'] if 'mode' in f else 288 # 440 in oct = 288 in dec
 
-        parentdir = os.path.dirname(real_path)
+        filepath = f['path'] if not decode else str(count)
+        filepath = target + "/" + filepath
+
+        if os.path.lexists(filepath):
+            backup_file = filepath + '.bak.' + timestamp()
+            os.rename(filepath, backup_file)
+
+        parentdir = os.path.dirname(filepath)
         if not os.path.exists(parentdir):
             os.makedirs(parentdir)
 
-        newfile = open(real_path, 'w')
+        newfile = open(filepath, 'w')
         newfile.write(base64.b64decode(f['contents']))
         newfile.close()
-        os.chmod(real_path, 0440)
-    sys.stderr.write('Successful personalization of Image\n')
+        
+        if decode:
+            manifest.write(str(count))
+            manifest.write(struct.pack('B', 0))
+            manifest.write(owner)
+            manifest.write(struct.pack('B', 0))
+            manifest.write(group)
+            manifest.write(struct.pack('B', 0))
+            manifest.write("%o" % mode)
+            manifest.write(struct.pack('B', 0))
+            manifest.write(f['path'])
+            manifest.write(struct.pack('B', 0))
+ 
+    sys.stderr.write('Files were injected successfully\n')
+
+    if decode:
+        manifest.close()
 
     input_file.close()
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

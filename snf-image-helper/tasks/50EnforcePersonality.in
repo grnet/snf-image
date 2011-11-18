@@ -16,11 +16,31 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
 
-if [ -n "$SNF_IMAGE_PERSONALITY" ]; then
+if [ -z "$SNF_IMAGE_PERSONALITY" ]; then
+    warn "This image has no personality (0 files to inject)"
+fi
+
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     echo "$SNF_IMAGE_PERSONALITY" |
         @scriptsdir@/inject-files.py "$SNF_IMAGE_TARGET"
-else
-    warn "This image has no personality (0 files to inject)\n"
+    exit 0
+elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
+    tmpdir=$(chroot "$SNF_IMAGE_TARGET" mktemp -d)
+    add_cleanup rm -rf "$SNF_IMAGE_TARGET/$tmpdir"
+    echo "$SNF_IMAGE_PERSONALITY" |
+        @scriptsdir@/inject-files.py -d "$SNF_IMAGE_TARGET/$tmpdir"
+    {
+        while read -d $'\0' src; do
+            read -d $'\0' owner;
+            read -d $'\0' group;
+            read -d $'\0' mode;
+            read -d $'\0' dest;
+            chroot "$SNF_IMAGE_TARGET" chown "$owner:$group" "$tmpdir/$src"
+            chroot "$SNF_IMAGE_TARGET" su -l "$owner" -c \
+                "umask 0007; install -D -m $mode $(printf "%q" "$tmpdir")/$src \
+                $(printf "%q" "$dest")"
+        done
+    } < "$SNF_IMAGE_TARGET/$tmpdir/manifest"
 fi
 
 exit 0
