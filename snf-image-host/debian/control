@@ -1,0 +1,26 @@
+Source: snf-image-host
+Section: admin
+Priority: extra
+Maintainer: Constantinos Venetsanopoulos <cven@grnet.gr>
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev, automake
+Standards-Version: 3.9.1
+Homepage: https://code.grnet.gr/projects/snf-image
+Vcs-Git: git://code.grnet.gr/git/snf-image
+Vcs-Browser: https://code.grnet.gr/git/snf-image
+
+Package: snf-image-host
+Architecture: all
+Depends: ${misc:Depends}, kpartx, debootstrap, timelimit, curl,
+ qemu-kvm (>= 0.11), qemu-utils, mbr
+Breaks: ganeti (<< 1.2.7)
+Replaces: snf-ganeti-instance-image
+Enhances: ganeti
+Description: Image Based Ganeti OS Provider
+ Ganeti is a cluster virtual server management software tool built on 
+ top of existing virtualization technologies such as Xen or KVM and
+ other Open Source software. Once installed, the tool will take over
+ the management part of the virtual instances.
+ .
+ This package provides an OS Provider for Ganeti, that allows the
+ installation of predefined or custom Images. It is the main provider
+ of the Synnefo Cloud Management Software.

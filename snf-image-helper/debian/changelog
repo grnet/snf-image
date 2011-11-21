@@ -1,0 +1,17 @@
+snf-image-helper (0.1.2-1) UNRELEASED; urgency=low
+
+  * New upstream version
+
+ -- Constantinos Venetsanopoulos <cven@grnet.gr>  Thu, 20 Oct 2011 13:24:28 +0300
+
+snf-image-helper (0.1.1-1) UNRELEASED; urgency=low
+
+  * New upstream version (bugfix)
+
+ -- Constantinos Venetsanopoulos <cven@grnet.gr>  Mon, 17 Oct 2011 13:24:28 +0300
+
+snf-image-helper (0.1-1) unstable; urgency=low
+
+  * Initial release
+
+ -- Constantinos Venetsanopoulos <cven@grnet.gr>  Tue, 04 Oct 2011 13:04:28 +0300
