@@ -35,6 +35,7 @@ fi
 
 if [ -z "$SNF_IMAGE_PERSONALITY" ]; then
     warn "This image has no personality (0 files to inject)"
+    exit 0
 fi
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
