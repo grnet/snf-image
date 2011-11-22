@@ -53,8 +53,6 @@ if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
     echo "$SNF_IMAGE_PROPERTIES" |
         "@scriptsdir@/decode-properties.py" "$properties"
     source "$properties"
-else
-    log_error "SNF_IMAGE_PROPERTIES variable is missing"
 fi
 
 # Image mount point...
