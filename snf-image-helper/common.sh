@@ -24,6 +24,7 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
 # Programs
 XMLSTARLET=xmlstarlet
+E2FSCK=e2fsck
 RESIZE2FS=resize2fs
 PARTED=parted
 REGLOOKUP=reglookup

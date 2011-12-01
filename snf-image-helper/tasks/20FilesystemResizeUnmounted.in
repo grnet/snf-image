@@ -37,7 +37,8 @@ ptype=$(echo "$last_partition" | cut -d: -f5)
 
 if [[ "$ptype" == ext[234] ]]; then
     device="${SNF_IMAGE_DEV}${id}"
-    "$RESIZE2FS" "$device"
+    $E2FSCK -f "$devide"
+    $RESIZE2FS "$device"
 fi
 
 exit 0
