@@ -29,7 +29,7 @@ if [ "$IMAGE_TYPE" = custom ]; then
     image_size=\
         $($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
 else
-    image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.$IMAGE_TYPE"
+    image_file="$IMAGE_DIR/$IMAGE_NAME.$IMAGE_TYPE"
     image_size="$(stat -L -c %s "$image_file")"
 fi
 

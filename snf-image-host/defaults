@@ -9,10 +9,6 @@
 # IMAGE_DIR: directory location for disk images
 # IMAGE_DIR="/var/lib/snf-image"
 
-# ARCH: Define the ARCH of the image to use
-# Use either x86 or x86_64
-# ARCH="x86_64"
-
 # IMAGE_DEBUG: turn on debugging output for the scripts
 # IMAGE_DEBUG=0
 

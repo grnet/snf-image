@@ -266,7 +266,6 @@ if [ -f "$DEFAULT_FILE" ]; then
     . "$DEFAULT_FILE"
 fi
 
-: ${ARCH:="x86_64"}
 : ${VARIANTS_DIR:="@sysconfdir@/ganeti/snf-image/variants"}
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
