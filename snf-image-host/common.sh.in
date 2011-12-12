@@ -27,6 +27,8 @@ CURL="curl"
 PROGRESS_MONITOR="snf-progress-monitor"
 
 progress_monitor_support="@progress_monitor_support@"
+pithos_backend_support="@pithos_backend_support@"
+network_backend_support="@network_backend_support@"
 
 CLEANUP=( )
 
@@ -181,6 +183,28 @@ create_floppy() {
     umount "$target"
 }
 
+get_backend_type() {
+    local id=$1
+
+    if [[ "$id" =~ ^pithos: ]]; then
+        if [ "$pithos_backend_support" = "yes" ]; then
+            echo "pithos"
+        else
+            log_error "Retrieving images from pithos is not supported"
+            exit 1
+        fi
+    elif [[ "$id" =~ ^(http|ftp)s?: ]]; then
+        if [ "$network_backend_support" = "yes" ]; then
+            echo "network";
+        else
+            log_error "Retrieving images from the network is not supported."
+            exit 1
+        fi
+    else
+        echo "local";
+    fi
+}
+
 # this one is only to be called by create
 ganeti_os_main() {
     if [ -z "$OS_API_VERSION" -o "$OS_API_VERSION" = "5" ]; then
@@ -192,8 +216,9 @@ ganeti_os_main() {
         get_api10_arguments
     elif [ "$OS_API_VERSION" = "20" ]; then
         get_api20_arguments
-        IMAGE_NAME=$IMG_ID
-        IMAGE_TYPE=$IMG_FORMAT
+        IMAGE_NAME="$IMG_ID"
+        IMAGE_TYPE="$IMG_FORMAT"
+        BACKEND_TYPE=$(get_backend_type $IMG_ID)
     else
         log_error "Unknown OS API VERSION $OS_API_VERSION"
         exit 1
@@ -279,7 +304,8 @@ fi
 : ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
 : ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw"}
 : ${HELPER_MIRROR:=""}
-
+: ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
+: ${PITHOS_DATA:="@localstatedir@/lib/pithos/"}
 
 SCRIPT_NAME=$(basename $0)
 

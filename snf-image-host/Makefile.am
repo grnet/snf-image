@@ -4,6 +4,18 @@ else
 progress_monitor_support=no
 endif
 
+if PITHOSIMGSUPPORT
+pithos_backend_support=yes
+else
+pithos_backend_support=no
+endif
+
+if NETWORKIMGSUPPORT
+network_backend_support=yes
+else
+network_backend_support=no
+endif
+
 osname=$(PACKAGE)
 osdir=$(OS_DIR)/$(osname)
 defaultdir=$(DEFAULT_DIR)
@@ -38,7 +50,9 @@ edit = sed \
 	   -e 's|@QEMU_IMG[@]|$(QEMU_IMG)|g' \
 	   -e 's|@INSTALL_MBR[@]|$(INSTALL_MBR)|g' \
 	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g' \
-	   -e 's|@progress_monitor_support[@]|$(progress_monitor_support)|g'
+	   -e 's|@progress_monitor_support[@]|$(progress_monitor_support)|g' \
+	   -e 's|@pithos_backend_support[@]|$(pithos_backend_support)|g' \
+	   -e 's|@network_backend_support[@]|$(network_backend_support)|g'
 
 %:%.in Makefile
 	rm -f $@ $@.tmp

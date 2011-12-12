@@ -54,6 +54,12 @@
 # define a mirror. Debootstrap will use it's default debian URL.
 # HELPER_MIRROR="http://ftp.debian.org/debian"
 
+# PITHOS_DB: Pithos database in SQLAlchemy format
+# PITHOS_DB="sqlite:////var/lib/pithos/backend.db"
+
+# PITHOS_DATA: Directory where pithos data are hosted
+# PITHOS_DATA="/var/lib/pithos/"
+
 # Paths for needed programs. Uncommend and change the variables below, if you
 # don't want to use the default one.
 # LOSETUP="losetup"
