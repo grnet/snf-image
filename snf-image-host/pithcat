@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2011 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+"""
+A tool that connects to the Pithos backend and returns the size and contents
+of a pithos object.
+
+Since the backend does not have a "root" account we use the account given in
+the URL as the user when connecting to the backend.
+"""
+
+from optparse import OptionParser
+from sys import exit, stdout
+
+from pithos.backends.modular import ModularBackend
+
+
+parser = OptionParser(usage='%prog [options] <URL>')
+parser.add_option('--db', dest='db', metavar='URI',
+        help='SQLAlchemy URI of the database [REQUIRED]')
+parser.add_option('--data', dest='data', metavar='DIR',
+        help='path to the directory where data are stored [REQUIRED]')
+parser.add_option('-s', action='store_true', dest='size', default=False,
+        help='print file size and exit')
+
+
+def urlsplit(url):
+    """Returns (accout, container, object) from a location string"""
+    
+    assert url.startswith('pithos://'), "Invalid URL"
+    t = url.split('/', 4)
+    assert len(t) == 5, "Invalid URL"
+    return t[2:5]
+
+
+def print_size(backend, url):
+    """Writes object's size to stdout."""
+    
+    account, container, object = urlsplit(url)
+    meta = backend.get_object_meta(account, account, container, object)
+    print meta['bytes']
+
+
+def print_data(backend, url):
+    """Writes object's size to stdout."""
+    
+    account, container, object = urlsplit(url)
+    size, hashmap = backend.get_object_hashmap(account, account, container,
+            object)
+    for hash in hashmap:
+        block = backend.get_block(hash)
+        stdout.write(block)
+
+
+def main():
+    options, args = parser.parse_args()
+    if len(args) != 1 or not options.db or not options.data:
+        parser.print_help()
+        exit(1)
+
+    url = args[0]
+    backend = ModularBackend(None, options.db, None, options.data)
+    
+    if options.size:
+        print_size(backend, url)
+    else:
+        print_data(backend, url)
+
+if __name__ == '__main__':
+    main()
