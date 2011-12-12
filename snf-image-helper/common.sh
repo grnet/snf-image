@@ -151,13 +151,12 @@ cleanup() {
   fi
 }
 
-
 check_if_excluded() {
 
     test "$PROGNAME" = "snf-image-helper" && return 0
 
-    eval local do_exclude=\$SNF_IMAGE_PROPERTY_EXCLUDE_${PROGNAME:2}_TASK
-    if [ -n "$do_exclude" ]; then
+    local exclude=SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${PROGNAME:2}
+    if [ -n "${!exclude}" ]; then
         warn "Task $PROGNAME was excluded and will not run."
         exit 0
     fi
