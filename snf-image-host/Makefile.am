@@ -23,6 +23,9 @@ variantsdir=${sysconfdir}/ganeti/snf-image/variants
 
 dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 			${srcdir}/rename ${srcdir}/verify
+if PITHOSIMGSUPPORT
+dist_os_SCRIPTS += ${srcdir}/pithcat
+endif
 	
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list
