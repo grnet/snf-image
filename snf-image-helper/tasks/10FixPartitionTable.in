@@ -26,6 +26,9 @@
 set -e
 . "@commondir@/common.sh"
 
+# Check if the task should be prevented from running.
+check_if_excluded
+
 if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi

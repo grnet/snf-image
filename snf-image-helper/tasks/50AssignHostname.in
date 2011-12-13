@@ -27,6 +27,9 @@
 set -e
 . "@commondir@/common.sh"
 
+# Check if the task should be prevented from running.
+check_if_excluded
+
 windows_hostname() {
     local target="$1"
     local password="$2"

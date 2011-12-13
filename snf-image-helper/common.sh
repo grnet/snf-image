@@ -153,8 +153,6 @@ cleanup() {
 
 check_if_excluded() {
 
-    test "$PROGNAME" = "snf-image-helper" && return 0
-
     local exclude=SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${PROGNAME:2}
     if [ -n "${!exclude}" ]; then
         warn "Task $PROGNAME was excluded and will not run."
@@ -165,8 +163,5 @@ check_if_excluded() {
 }
 
 trap cleanup EXIT
-
-# Check if the execution of a task should be ommited
-check_if_excluded
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
