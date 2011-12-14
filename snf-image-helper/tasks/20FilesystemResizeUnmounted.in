@@ -40,8 +40,20 @@ ptype=$(echo "$last_partition" | cut -d: -f5)
 
 if [[ "$ptype" == ext[234] ]]; then
     device="${SNF_IMAGE_DEV}${id}"
-    $E2FSCK -f -y "$device"
-    $RESIZE2FS "$device"
+
+    state=$($TUNE2FS -l | grep ^Filesystem\ state: | cut -d: -f2);
+    state=$(echo $state) #trim the value
+
+    if [ "$state" = "clean" ]; then
+        $RESIZE2FS -f "$device"
+    else
+        log_error "The file system state of partition: \`$device' " \
+            " is not clean (state = $state)"
+    fi
+
+else
+    warn "Last partition with id: \`$id' has an unsupported file system type:" \
+    " (ptype = $ptype)."
 fi
 
 exit 0
