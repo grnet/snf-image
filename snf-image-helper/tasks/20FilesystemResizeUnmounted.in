@@ -41,7 +41,7 @@ ptype=$(echo "$last_partition" | cut -d: -f5)
 if [[ "$ptype" == ext[234] ]]; then
     device="${SNF_IMAGE_DEV}${id}"
 
-    state=$($TUNE2FS -l | grep ^Filesystem\ state: | cut -d: -f2);
+    state=$($TUNE2FS -l "$device" | grep ^Filesystem\ state: | cut -d: -f2);
     state=$(echo $state) #trim the value
 
     if [ "$state" = "clean" ]; then
