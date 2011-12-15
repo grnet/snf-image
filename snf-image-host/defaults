@@ -58,7 +58,7 @@
 # PITHOS_DB="sqlite:////var/lib/pithos/backend.db"
 
 # PITHOS_DATA: Directory where pithos data are hosted
-# PITHOS_DATA="/var/lib/pithos/"
+# PITHOS_DATA="/var/lib/pithos/data"
 
 # Paths for needed programs. Uncommend and change the variables below, if you
 # don't want to use the default one.
