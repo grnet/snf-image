@@ -1,3 +1,8 @@
+2011-12-15, v0.3
+	* Force a resize when the filesystem is clean, even if resize2fs
+	  complains
+	* Make sure OSFAMILY image property is specified
+
 2011-11-18, v0.2
 	* Add support for Image Properties
 	* Add new FixPartitionTable task
