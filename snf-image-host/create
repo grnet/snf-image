@@ -110,10 +110,16 @@ fi
 create_floppy "$floppy"
 
 # Invoke the helper vm to do the dirty job...
-result_file=$(mktemp --tmpdir result.XXXXXX)
+jail=$(mktemp -d --tmpdir tmpfsXXXXXXX)
+add_cleanup rmdir "$jail"
+
+mount tmpfs -t tmpfs "$jail" -o size=50M
+add_cleanup umount "$jail"
+
+result_file=$(mktemp --tmpdir="$jail" result.XXXXXX)
 add_cleanup rm "$result_file"
 
-snapshot=$(mktemp --tmpdir helperXXXXXX.img)
+snapshot=$(mktemp --tmpdir="$jail" helperXXXXXX.img)
 add_cleanup rm "$snapshot"
 
 "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
