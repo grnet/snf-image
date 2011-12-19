@@ -10,7 +10,7 @@ config.status: configure
 configure:
 	dh_testdir
 	./autogen.sh
-	./configure $(CROSS) --prefix=/usr --localstatedir=/var --sysconfdir=/etc
+	./configure $(CROSS) --prefix=/usr --localstatedir=/var --sysconfdir=/etc --enable-network-backend
 
 
 build: build-arch build-indep
