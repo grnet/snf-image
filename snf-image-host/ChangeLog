@@ -1,3 +1,9 @@
+2011-12-15, v0.3
+	* Put all helpers run-time created files in a tmpfs jail
+	* Remove the ARCH field from the image name
+	* Support remote (network accessable) and pithos hosted images
+	* Remove custom images format (remote images is a supergroup)
+
 2011-11-18, v0.2
 	* Support diskdump format
 	* Support custom images format. Custom images are diskdump images

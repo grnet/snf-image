@@ -27,6 +27,9 @@
 set -e
 . "@commondir@/common.sh"
 
+# Check if the task should be prevented from running.
+check_if_excluded
+
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing."
 fi
@@ -60,8 +63,8 @@ done
 
 config="$target/etc/ssh/sshd_config"
 if [ ! -e "$config" ]; then
-    echo "Warning: Config file: \`$config' is missing."
-    echo "Warning: Can't check for non-default keys."
+    warn "Config file: \`$config' is missing."
+    warn "Can't check for non-default keys."
     exit 0
 fi
 

@@ -24,6 +24,7 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
 # Programs
 XMLSTARLET=xmlstarlet
+TUNE2FS=tune2fs
 RESIZE2FS=resize2fs
 PARTED=parted
 REGLOOKUP=reglookup
@@ -150,13 +151,10 @@ cleanup() {
   fi
 }
 
-
 check_if_excluded() {
 
-    test "$PROGNAME" = "snf-image-helper" && return 0
-
-    eval local do_exclude=\$SNF_IMAGE_PROPERTY_EXCLUDE_${PROGNAME:2}_TASK
-    if [ -n "$do_exclude" ]; then
+    local exclude=SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${PROGNAME:2}
+    if [ -n "${!exclude}" ]; then
         warn "Task $PROGNAME was excluded and will not run."
         exit 0
     fi
@@ -165,8 +163,5 @@ check_if_excluded() {
 }
 
 trap cleanup EXIT
-
-# Check if the execution of a task should be ommited
-check_if_excluded
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

@@ -27,6 +27,9 @@
 set -e
 . "@commondir@/common.sh"
 
+# Check if the task should be prevented from running.
+check_if_excluded
+
 if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi
@@ -37,7 +40,24 @@ ptype=$(echo "$last_partition" | cut -d: -f5)
 
 if [[ "$ptype" == ext[234] ]]; then
     device="${SNF_IMAGE_DEV}${id}"
-    "$RESIZE2FS" "$device"
+
+    state=$($TUNE2FS -l "$device" | grep ^Filesystem\ state: | cut -d: -f2);
+    state=$(echo $state) #trim the value
+
+    # We force a filesystem resize here if the file system is clean, even if
+    # resize2fs complains. By default resize2fs will refuse to resize a file
+    # system that has been mounted after the last fs check, but since we are
+    # sure the file system is clean it's safe enough to bypass this.
+    if [ "$state" = "clean" ]; then
+        $RESIZE2FS -f "$device"
+    else
+        log_error "The file system state of partition: \`$device' " \
+            " is not clean (state = $state)"
+    fi
+
+else
+    warn "Last partition with id: \`$id' has an unsupported file system type:" \
+    " (ptype = $ptype)."
 fi
 
 exit 0

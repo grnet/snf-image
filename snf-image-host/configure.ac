@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(snf-image, 0.2, synnefo@lists.grnet.gr)
+AC_INIT(snf-image, 0.3, synnefo@lists.grnet.gr)
 
 AC_CONFIG_AUX_DIR(autotools)
 AC_CONFIG_SRCDIR(configure)
@@ -7,19 +7,36 @@ AC_CONFIG_SRCDIR(configure)
 AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability])
 AM_INIT_AUTOMAKE([subdir-objects])
 
+AC_ARG_ENABLE([pithos_backend],
+   AS_HELP_STRING([--enable-pithos-backend],
+    [enable support for pithos-hosted images])
+)
+AS_IF([test "x$enable_pithos_backend" = "xyes"],,
+    [AC_MSG_NOTICE(pithos backend support not enabled)])
+AM_CONDITIONAL(PITHOSIMGSUPPORT, [test "x$enable_pithos_backend" = "xyes"])
+
+AC_ARG_ENABLE([network_backend],
+   AS_HELP_STRING([--enable-network-backend],
+    [enable support for network-hosted images
+    (this depends on cURL)])
+)
+AS_IF([test "x$enable_network_backend" = "xyes"],,
+    [AC_MSG_NOTICE(network backend support not enabled)])
+AM_CONDITIONAL(NETWORKIMGSUPPORT, [test "x$enable_network_backend" = "xyes"])
+
 # --with-progress-monitor
 AC_ARG_WITH([progress-monitor],
   [AS_HELP_STRING([--with-progress-monitor=PRGRM_PATH],
     [path to progress-monitor program]
     [[snf-progress-monitor]])],
     [if test "$withval" = "yes" ; then
-    AC_PATH_PROG(PROGRESS_MONITOR, [snf-progress-monitor], [], [$PATH:/usr/sbin:/sbin])
-    if test -z "$PROGRESS_MONITOR" ; then
-        AC_MSG_FAILURE([Could not find snf-progress-monitor.])
-    fi
-   else
-       PROGRESS_MONITOR="$withval"
-   fi],
+         AC_PATH_PROG(PROGRESS_MONITOR, [snf-progress-monitor], [], [$PATH:/usr/sbin:/sbin])
+         if test -z "$PROGRESS_MONITOR" ; then
+             AC_MSG_FAILURE([Could not find snf-progress-monitor.])
+         fi
+     else
+         PROGRESS_MONITOR="$withval"
+    fi],
    [AC_MSG_NOTICE(progress-monitor support not enabled)]
 )
 
@@ -117,9 +134,13 @@ if test -z "$TIMELIMIT" ; then
   AC_MSG_ERROR([timelimit not found in $PATH:/usr/sbin:/sbin])
 fi
 
-AC_PATH_PROG(CURL, [curl], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$CURL" ; then
-  AC_MSG_ERROR([curl not found in $PATH:/usr/sbin:/sbin])
+if test "x$enable_network_backend" = "xyes" ; then
+  AC_PATH_PROG(CURL, [curl], [], [$PATH:/usr/sbin:/sbin])
+    if test -z "$CURL" ; then
+      AC_MSG_ERROR([curl is needed for network backend support but was not \
+      found in $PATH:/usr/sbin:/sbin]
+      [To disable network backend support ommit --enable-network-backend])
+    fi
 fi
 
 AC_CONFIG_FILES([

@@ -9,10 +9,6 @@
 # IMAGE_DIR: directory location for disk images
 # IMAGE_DIR="/var/lib/snf-image"
 
-# ARCH: Define the ARCH of the image to use
-# Use either x86 or x86_64
-# ARCH="x86_64"
-
 # IMAGE_DEBUG: turn on debugging output for the scripts
 # IMAGE_DEBUG=0
 
@@ -57,6 +53,12 @@
 # you will speed up the whole debootstraping process. By default we do not
 # define a mirror. Debootstrap will use it's default debian URL.
 # HELPER_MIRROR="http://ftp.debian.org/debian"
+
+# PITHOS_DB: Pithos database in SQLAlchemy format
+# PITHOS_DB="sqlite:////var/lib/pithos/backend.db"
+
+# PITHOS_DATA: Directory where pithos data are hosted
+# PITHOS_DATA="/var/lib/pithos/data"
 
 # Paths for needed programs. Uncommend and change the variables below, if you
 # don't want to use the default one.

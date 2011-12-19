@@ -24,19 +24,27 @@ set -o pipefail
 
 ganeti_os_main
 
-if [ "$IMAGE_TYPE" = custom ]; then
-    image_file=/dev/null
-    image_size=\
-        $($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
-else
-    image_file="$IMAGE_DIR/$IMAGE_NAME-$ARCH.$IMAGE_TYPE"
-    image_size="$(stat -L -c %s "$image_file")"
-fi
-
-if [ ! -e "$image_file" ]; then
-    log_error "Image file \`$image_file' does not exit."
-    exit 1
-fi
+case $BACKEND_TYPE in
+    local)
+        image_file="$IMAGE_DIR/$(echo "$IMAGE_NAME" | sed 's/^file://').$IMAGE_TYPE"
+        if [ ! -e "$image_file" ]; then
+            log_error "Image file \`$image_file' does not exit."
+            exit 1
+        fi
+        image_size="$(stat -L -c %s "$image_file")"
+        ;;
+    network)
+        image_cmd="$CURL $(printf "%q" "$IMAGE_NAME") 2> /dev/null"
+        image_size=$($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
+        ;;
+    pithos)
+        cmd_args="--db $(printf "%q" "${PITHOS_DB}") \
+                  --data $(printf "%q" "${PITHOS_DATA}") \
+                  $(printf "%q" "${IMAGE_NAME}")"
+        image_cmd="./pithcat $cmd_args"
+        image_size=$(./pithcat -s  $cmd_args)
+        ;;
+esac
 
 monitor="" #Empty if progress monitor support is disabled
 if [ "$progress_monitor_support" = "yes" ]; then
@@ -69,20 +77,23 @@ case "$IMAGE_TYPE" in
             snf_export_PROPERTY_OSFAMILY="linux"
         fi
         ;;
-    diskdump|custom)
+    diskdump)
         target="$blockdev"
+        ;;
+    *)
+        log_error "Unknown Image format: \`$IMAGE_TYPE'"
+        exit 1
         ;;
 esac
 
-if [ "$IMAGE_TYPE" = "custom" ]; then
-    "$CURL" "$IMAGE_NAME" 2>/dev/null |\
-        $monitor dd bs=4M of="$target" oflag=direct
-else
+if [ "$BACKEND_TYPE" = "local" ]; then
     # dd the dump to its new home :-)
     # Deploying an image file on a target block device is a streaming copy
     # operation. Enable the direct I/O flag on the output fd to avoid polluting
     # the host cache with useless data.
     $monitor dd bs=4M if="$image_file" of="$target" oflag=direct
+else
+    $image_cmd | $monitor dd bs=4M of="$target" oflag=direct
 fi
 
 # Create a floppy image
@@ -103,10 +114,16 @@ fi
 create_floppy "$floppy"
 
 # Invoke the helper vm to do the dirty job...
-result_file=$(mktemp --tmpdir result.XXXXXX)
+jail=$(mktemp -d --tmpdir tmpfsXXXXXXX)
+add_cleanup rmdir "$jail"
+
+mount tmpfs -t tmpfs "$jail" -o size=50M
+add_cleanup umount "$jail"
+
+result_file=$(mktemp --tmpdir="$jail" result.XXXXXX)
 add_cleanup rm "$result_file"
 
-snapshot=$(mktemp --tmpdir helperXXXXXX.img)
+snapshot=$(mktemp --tmpdir="$jail" helperXXXXXX.img)
 add_cleanup rm "$snapshot"
 
 "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"

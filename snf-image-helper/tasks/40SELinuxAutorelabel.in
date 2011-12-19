@@ -27,6 +27,9 @@
 set -e
 . "@commondir@/common.sh"
 
+# Check if the task should be prevented from running.
+check_if_excluded
+
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
 	log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
 fi
