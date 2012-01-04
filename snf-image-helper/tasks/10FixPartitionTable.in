@@ -20,7 +20,7 @@
 ### BEGIN TASK INFO
 # Provides:		FixPartitionTable
 # RunBefore:		FilesystemResizeUnmounted
-# Short-Description:	Resize filesystem to use all the available space
+# Short-Description:	Enlarge last partition to use all the available space
 ### END TASK INFO
 
 set -e
