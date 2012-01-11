@@ -60,6 +60,8 @@ get_base_distro() {
         echo "suse"
     elif [ -e "$root_dir/gentoo-release" ]; then
         echo "gentoo"
+    else
+        warn "Unknown base distro."
     fi
 }
 
@@ -87,6 +89,8 @@ get_distro() {
         echo "suse"
     elif [ -e "$root_dir/gentoo-release" ]; then
         echo "gentoo"
+    else
+        warn "Unknown distro."
     fi
 }
 
