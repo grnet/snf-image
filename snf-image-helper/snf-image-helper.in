@@ -77,7 +77,7 @@ trap '{ umount "$target"; }' ERR
 if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
 
     if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows)$ ]]; then
-        log_error "Supported values for OSFAMILY propertry are: linux|windows"
+        log_error "Supported values for OSFAMILY property are: linux|windows"
     fi
 
     # Redirect standard error to standard output,

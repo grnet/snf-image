@@ -20,7 +20,7 @@
 ### BEGIN TASK INFO
 # Provides:		FixPartitionTable
 # RunBefore:		FilesystemResizeUnmounted
-# Short-Description:	Resize filesystem to use all the available space
+# Short-Description:	Enlarge last partition to use all the available space
 ### END TASK INFO
 
 set -e
@@ -45,7 +45,7 @@ pend=$(echo $retval | cut -d: -f3)
 ptype=$(echo $retval | cut -d: -f5)
 
 if [ $id -gt 4 ]; then
-    log_error "We don't support logical volumes"
+    log_error "We don't support logical partitions"
 fi
 
 if [ x"$ptype" = "x" ]; then

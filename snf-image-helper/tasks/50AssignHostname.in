@@ -66,6 +66,7 @@ linux_hostname() {
             echo "$hostname" > "${target}/etc/HOSTNAME";;
         gentoo)
             sed -ie "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;
+        *) log_error "Don't know how to assign hostname. Unknown linux distribution.";;
     esac
 
     # Some Linux distributions assign the hostname to 127.0.1.1 in order to be

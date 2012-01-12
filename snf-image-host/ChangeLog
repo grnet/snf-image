@@ -1,4 +1,4 @@
-2011-12-15, v0.3
+2011-01-12, v0.3
 	* Put all helpers run-time created files in a tmpfs jail
 	* Remove the ARCH field from the image name
 	* Support remote (network accessable) and pithos hosted images
