@@ -1,4 +1,5 @@
-2011-12-15, v0.3
+2012-01-12, v0.3
+	* Warn and in some cases fail if the instance is of an unknown
 	* Force a resize when the filesystem is clean, even if resize2fs
 	  complains
 	* Make sure OSFAMILY image property is specified
