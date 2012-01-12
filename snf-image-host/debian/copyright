@@ -4,11 +4,11 @@ Upstream-Contact: Nikos Skalkotos <skalkoto@grnet.gr>
 Source: https://code.grnet.gr/projects/snf-image
 
 Files: *
-Copyright: Copyright (C) 2011 Greek Research and Technology Network
+Copyright: Copyright (C) 2011, 2012 Greek Research and Technology Network
 Licence: GPL-2
 
 Files: common.sh.in
-Copyright: Copyright (C) 2011 Greek Research and Technology Network
+Copyright: Copyright (C) 2011, 2012 Greek Research and Technology Network
            Copyright (C) 2007, 2008, 2009 Google Inc.
 Licence: GPL-2
 
