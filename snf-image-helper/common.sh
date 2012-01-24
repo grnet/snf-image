@@ -56,9 +56,9 @@ get_base_distro() {
         echo "redhat"
     elif [ -e "$root_dir/etc/slackware-version" ]; then
         echo "slackware"
-    elif [ -e "$root_dir/SuSE-release" ]; then
+    elif [ -e "$root_dir/etc/SuSE-release" ]; then
         echo "suse"
-    elif [ -e "$root_dir/gentoo-release" ]; then
+    elif [ -e "$root_dir/etc/gentoo-release" ]; then
         echo "gentoo"
     else
         warn "Unknown base distro."
@@ -85,9 +85,9 @@ get_distro() {
         echo "redhat"
     elif [ -e "$root_dir/etc/slackware-version" ]; then
         echo "slackware"
-    elif [ -e "$root_dir/SuSE-release" ]; then
+    elif [ -e "$root_dir/etc/SuSE-release" ]; then
         echo "suse"
-    elif [ -e "$root_dir/gentoo-release" ]; then
+    elif [ -e "$root_dir/etc/gentoo-release" ]; then
         echo "gentoo"
     else
         warn "Unknown distro."
