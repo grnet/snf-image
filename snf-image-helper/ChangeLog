@@ -1,3 +1,6 @@
+2012-01-26, v0.3.1
+	* Fix a bug in the OS detection code
+
 2012-01-12, v0.3
 	* Warn and in some cases fail if the instance is of an unknown
 	* Force a resize when the filesystem is clean, even if resize2fs
