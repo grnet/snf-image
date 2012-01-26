@@ -1,3 +1,5 @@
+2012-01-26, v0.3.1
+
 2011-01-12, v0.3
 	* Put all helpers run-time created files in a tmpfs jail
 	* Remove the ARCH field from the image name
