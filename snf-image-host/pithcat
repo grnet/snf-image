@@ -53,7 +53,7 @@ def print_size(backend, url):
     """Writes object's size to stdout."""
     
     account, container, object = urlsplit(url)
-    meta = backend.get_object_meta(account, account, container, object)
+    meta = backend.get_object_meta(account, account, container, object, None)
     print meta['bytes']
 
 
