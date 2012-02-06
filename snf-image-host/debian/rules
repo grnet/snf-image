@@ -47,8 +47,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/ganeti-instance-image.
-	mkdir -p $(CURDIR)/debian/snf-image-host/etc/default
-	cp defaults $(CURDIR)/debian/snf-image-host/etc/default/snf-image
+	install -D -m 0600 defaults $(CURDIR)/debian/snf-image-host/etc/default/snf-image
 	$(MAKE) DESTDIR=$(CURDIR)/debian/snf-image-host install
 
 
@@ -74,7 +73,7 @@ binary-indep: build install
 	dh_link
 	dh_strip
 	dh_compress
-	dh_fixperms
+	dh_fixperms --exclude debian/snf-image-host/etc/default/snf-image
 #	dh_perl
 #	dh_makeshlibs
 	dh_installdeb
