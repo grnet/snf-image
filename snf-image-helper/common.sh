@@ -167,5 +167,5 @@ check_if_excluded() {
 }
 
 trap cleanup EXIT
-
+set -o pipefail
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

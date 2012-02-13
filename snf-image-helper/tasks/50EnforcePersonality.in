@@ -25,7 +25,6 @@
 ### END TASK INFO
 
 set -e
-set -o pipefail
 
 . "@commondir@/common.sh"
 
