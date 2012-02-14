@@ -94,6 +94,13 @@ get_distro() {
     fi
 }
 
+check_partition_table() {
+    local dev="$1"
+    if ! "$PARTED" -s "$dev" print; then
+        log_error "Unable to read partition table for device \`${dev}'"
+    fi
+}
+
 get_last_partition() {
     local dev="$1"
 
