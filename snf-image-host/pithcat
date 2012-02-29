@@ -65,7 +65,10 @@ def print_data(backend, url):
             object)
     for hash in hashmap:
         block = backend.get_block(hash)
+        if len(block) > size:
+            block = block[:size]
         stdout.write(block)
+        size -= len(block)
 
 
 def main():

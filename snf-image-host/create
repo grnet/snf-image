@@ -150,7 +150,8 @@ fi
 result=$(sed 's|\r||g' "$result_file" | head -1)
 
 if [ "x$result" != "xSUCCESS" ]; then
-    log_error "Helper VM returned error"
+    log_error "Helper VM returned error:"
+    log_error "$result"
     exit 1
 fi
 

@@ -94,6 +94,13 @@ get_distro() {
     fi
 }
 
+check_partition_table() {
+    local dev="$1"
+    if ! "$PARTED" -s "$dev" print; then
+        log_error "Unable to read partition table for device \`${dev}'"
+    fi
+}
+
 get_last_partition() {
     local dev="$1"
 
@@ -167,5 +174,5 @@ check_if_excluded() {
 }
 
 trap cleanup EXIT
-
+set -o pipefail
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

@@ -159,9 +159,9 @@ exit 101
 EOF
     chmod +x "$target/usr/sbin/policy-rc.d"
 
-    debootstrap --arch amd64 --include "$HELPER_EXTRA_PKGS" \
-        --variant=minbase stable "$target" "$HELPER_MIRROR" 2>&1 | \
-        sed -e 's/^/DEBOOTSTRAP: /g'
+    debootstrap --arch $(dpkg --print-architecture) \
+        --include "$HELPER_EXTRA_PKGS" --variant=minbase stable "$target" \
+        "$HELPER_MIRROR" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
 
     rm "$target/usr/sbin/policy-rc.d"
     

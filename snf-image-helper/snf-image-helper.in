@@ -20,7 +20,6 @@
 . @commondir@/common.sh
 
 set -e
-set -o pipefail
 
 if [ "x$1" != "x--force" ]; then
     echo "WARNING: Exiting, this command would cause the system to halt." >&2

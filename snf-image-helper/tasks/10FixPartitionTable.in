@@ -33,6 +33,8 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi
 
+check_partition_table "$SNF_IMAGE_DEV"
+
 if [ $(get_partition_count "$SNF_IMAGE_DEV") -eq 0 ]; then
     log_error "Device: \`${SNF_IMAGE_DEV}' does not contain any partition"
 fi
