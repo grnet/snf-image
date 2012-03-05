@@ -69,7 +69,7 @@ if [ ! -e "$config" ]; then
 fi
 
 # Remove non-default keys...
-grep ^HostKey "$config" | while read key_line; do
+grep ^HostKey "$config" || true | while read key_line; do
     key=$(echo $key_line | cut -d" " -f2)
     if [ "$key" = $HOST_KEY -o "$key" = $RSA_KEY -o \
             "$key" = $DSA_KEY -o "$key" = $ECDSA_KEY ]; then
@@ -91,7 +91,10 @@ grep ^HostKey "$config" | while read key_line; do
             fi
         else # do some guessing...
             for i in rsa dsa ecdsa; do
-                echo "$key" | grep _${i}_ && { type="$i"; break; }
+                if echo "$key" | grep _${i}_ > /dev/null; then
+                    type="$i";
+                    break;
+                fi
             done
         fi
         if [ -z "$type" ]; then
