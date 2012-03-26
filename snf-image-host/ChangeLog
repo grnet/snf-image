@@ -1,8 +1,10 @@
+2012-03-26, v0.3.5
+
 2012-03-05, v0.3.4
 
 2012-02-29, v0.3.3
 	* Fix a bug in pithcat where the restored image had incorrect
-          size. The trailing zeros in the image files where not restored.
+	  size. The trailing zeros in the image files where not restored.
 
 2012-02-06, v0.3.2
 	* Make pithcat work with pithos v0.8.3
