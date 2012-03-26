@@ -1,3 +1,6 @@
+2012-03-26, v0.3.5
+	* Force Automatic Update in Windows images
+
 2012-03-05, v0.3.4
 	* Fix 2 bugs in Delete SSH Keys task, caused by the use of pipefail
 	  bash option
