@@ -1,3 +1,9 @@
+2012-03-29, v0.3.5
+	* Make snf-image-update-helper ask whether to use the found deboostrap
+          cache file when in interactive mode.
+        * Make the system update the default debootstrap cache file when -c option
+          is used and it's value does not point to a cache file.
+
 2012-03-26, v0.3.5
 
 2012-03-05, v0.3.4
