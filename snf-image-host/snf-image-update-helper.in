@@ -57,7 +57,8 @@ EOF
 
 while getopts "c:d:hp:y" opt; do
     case $opt in
-        c) HELPER_CACHE_FILE="$OPTARG"
+        c) CACHE_FILE="$OPTARG"
+        OVERWRITTEN_CACHE_FILE="yes"
             ;;
         d) HELPER_DIR="$OPTARG"
             ;;
@@ -71,6 +72,10 @@ while getopts "c:d:hp:y" opt; do
             ;;
     esac
 done
+
+if [ x"$OVERWRITTEN_CACHE_FILE" != "xyes" ] ; then
+    CACHE_FILE="$HELPER_CACHE_FILE"
+fi
 
 echo
 echo "This is the update helper image script for snf-image."
@@ -143,37 +148,32 @@ add_cleanup rmdir "$target"
 mount "$root_dev" "$target"
 add_cleanup umount "$root_dev"
 
-echo -n "Checking for cached root filesystem file \`$HELPER_CACHE_FILE'..." 
-if [  -f "$HELPER_CACHE_FILE" ]; then
+echo -n "Checking for cached root filesystem file \`$CACHE_FILE'..."
+if [  -f "$CACHE_FILE" ]; then
     echo "found"
-    tar xf "$HELPER_CACHE_FILE" -C "$target"
+
+    while [[ 1 ]]; do
+        echo -n "Use the cached file [Y/n]? "
+        if [ "x$NO_PROMPT" = "xyes" ]; then
+            echo "y";
+            break;
+        fi
+
+        read answer
+    
+        if [ -z "$answer" -o "$(tr [A-Z] [a-z] <<< "$answer")" = "y" ]; then
+            break;
+        elif [ "$(tr [A-Z] [a-z] <<< "$answer" )" = "n" ]; then
+            do_debootstrap "$target"
+            break;
+        fi
+    done
 else
     echo "not found"
-    echo "Debootstraping to create a new root filesystem:"
-
-    # Create a policy-rc.d file to deny init script execution
-    mkdir -p "$target/usr/sbin"
-    cat > "$target/usr/sbin/policy-rc.d" <<EOF
-#!/bin/sh
-exit 101
-EOF
-    chmod +x "$target/usr/sbin/policy-rc.d"
-
-    debootstrap --arch $(dpkg --print-architecture) \
-        --include "$HELPER_EXTRA_PKGS" --variant=minbase stable "$target" \
-        "$HELPER_MIRROR" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
-
-    rm "$target/usr/sbin/policy-rc.d"
-    
-    # remove the downloaded debs, as they are no longer needed
-    find "$target/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
-        xargs -r0 rm -f
-
-    tmp_cache=$(mktemp "$HELPER_CACHE_FILE.XXXXXX")
-    tar cf "$tmp_cache" --one-file-system -C "$target" . || \
-        { rm "$tmp_cache"; false; }
-    mv -f "$tmp_cache" "$HELPER_CACHE_FILE"
+    do_debootstrap "$target"
 fi
+
+tar xf "$HELPER_CACHE_FILE" -C "$target"
 
 echo -n "Configuring the helper image..."
 echo snf-image-helper > "$target/etc/hostname"

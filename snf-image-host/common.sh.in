@@ -253,6 +253,36 @@ ganeti_os_main() {
 
 }
 
+do_debootstrap() {
+    local target=$1
+
+    echo "Debootstraping to create a new root filesystem:"
+
+    # Create a policy-rc.d file to deny init script execution
+    mkdir -p "$target/usr/sbin"
+    cat > "$target/usr/sbin/policy-rc.d" <<EOF
+#!/bin/sh
+exit 101
+EOF
+    chmod +x "$target/usr/sbin/policy-rc.d"
+
+    debootstrap --arch $(dpkg --print-architecture) \
+        --include "$HELPER_EXTRA_PKGS" --variant=minbase stable "$target" \
+        "$HELPER_MIRROR" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
+
+    rm "$target/usr/sbin/policy-rc.d"
+
+    # remove the downloaded debs, as they are no longer needed
+    find "$target/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
+        xargs -r0 rm -f
+
+    local tmp_cache=$(mktemp "$CACHE_FILE.XXXXXX")
+    tar cf "$tmp_cache" --one-file-system -C "$target" . || \
+        { rm "$tmp_cache"; false; }
+    # Overwrite the default cache file. Not the user specified if present.
+    mv -f "$tmp_cache" "$HELPER_CACHE_FILE"
+}
+
 cleanup() {
 # if something fails here, it souldn't call cleanup again...
     trap - EXIT
