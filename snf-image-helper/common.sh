@@ -27,6 +27,7 @@ XMLSTARLET=xmlstarlet
 TUNE2FS=tune2fs
 RESIZE2FS=resize2fs
 PARTED=parted
+SFDISK=sfdisk
 REGLOOKUP=reglookup
 CHNTPW=chntpw
 
@@ -94,38 +95,151 @@ get_distro() {
     fi
 }
 
-check_partition_table() {
+get_partition_table() {
     local dev="$1"
-    if ! "$PARTED" -s "$dev" print; then
+    if ! output="$("$PARTED" -s -m "$dev" print)"; then
         log_error "Unable to read partition table for device \`${dev}'"
     fi
+
+    echo "$output"
 }
 
-get_last_partition() {
-    local dev="$1"
+get_partition_table_type() {
+    local ptable="$1"
 
-    "$PARTED" -s -m "$dev" unit s print | tail -1
-}
+    local dev="$(sed -n 2p <<< "$ptable")"
+    declare -a field
+    IFS=':' read -ra field <<< "$dev"
 
-get_partition() {
-    local dev="$1"
-    local id="$2"
-
-    "$PARTED" -s -m "$dev" unit s print | grep "^$id" 
+    echo "${field[5]}"
 }
 
 get_partition_count() {
-    local dev="$1"
+    local ptable="$1"
 
-     expr $("$PARTED" -s -m "$dev" unit s print | wc -l) - 2
+    expr $(echo "$ptable" | wc -l) - 2
+}
+
+get_last_partition() {
+    local ptable="$1"
+
+    echo "$ptable" | tail -1
+}
+
+is_extended_partition() {
+    local dev="$1"
+    local part_num="$2"
+
+    id=$($SFDISK --print-id "$dev" "$part_num")
+    if [ "$id" = "5" ]; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+}
+
+get_extended_partition() {
+    local ptable="$1"
+    local dev="$(echo "$ptable" | sed -n 2p | cut -d':' -f1)"
+
+    tail -n +3 <<< "$ptable" | while read line; do
+        part_num=$(cut -d':' -f1 <<< "$line")
+        if [ $(is_extended_partition "$dev" "$part_num") == "yes" ]; then
+            echo "$line"
+            return 0
+        fi
+    done
+    echo ""
+}
+
+get_logical_partitions() {
+    local ptable="$1"
+
+    tail -n +3 <<< "$ptable" | while read line; do
+        part_num=$(cut -d':' -f1 <<< "$line")
+        if [ $part_num -ge 5 ]; then
+            echo "$line"
+        fi
+    done
+
+    return 0
+}
+
+get_last_primary_partition() {
+    local ptable="$1"
+    local dev=$(echo "ptable" | sed -n 2p | cut -d':' -f1)
+
+    for i in 4 3 2 1; do
+        if output=$(grep "^$i:" <<< "$ptable"); then
+            echo "$output"
+            return 0
+        fi
+    done
+    echo ""
+}
+
+create_partition() {
+    local device=$1
+    local part=$2
+    local ptype=$3
+
+    declare -a fields
+    IFS=":;" read -ra fields <<< "$part"
+    local id=${fields[0]}
+    local start=${fields[1]}
+    local end=${fields[2]}
+    local size=${fields[3]}
+    local fs=${fields[4]}
+    local name=${fields[5]}
+    local flags=${fields[6]//,/ }
+
+    $PARTED -s -m $device mkpart "$ptype" $fs "$start" "$end"
+    for flag in $flags; do
+        $PARTED -s -m $device set "$id" "$flag" on
+    done
+}
+
+enlarge_partition() {
+    local device=$1
+    local part=$2
+    local ptype=$3
+
+    local new_end=$(get_last_free_sector "$device")
+    declare -a fields
+    IFS=":;" read -ra fields <<< "$part"
+    fields[2]="$new_end"
+
+    local new_part=""
+    for ((i = 0; i < ${#fields[*]}; i = i + 1)); do
+        new_part="$new_part":"${fields[$i]}"
+    done
+    new_part=${new_part:1}
+
+    # If this is an extended partition, removing it will also remove the
+    # logical partitions it contains. We need to save them for later.
+    if [ "$ptype" = "extended" ]; then
+        local table="$(get_partition_table "$device")"
+        local logical="$(get_logical_partitions "$table")"
+    fi
+
+    id=${fields[0]}
+    $PARTED -s -m "$device" rm "$id"
+    create_partition "$device" "$new_part" "$ptype"
+
+    if [ "$ptype" = "extended" ]; then
+        # Recreate logical partitions
+        echo "$logical" | while read logical_part; do
+            create_partition "$device" "$logical_part" "logical"
+        done
+    fi
 }
 
 get_last_free_sector() {
     local dev="$1"
-    local last_line=$("$PARTED" -s -m "$dev" unit s print free | tail -1)
-    local type=$(echo "$last_line" | cut -d: -f 5)
+    local last_line="$("$PARTED" -s -m "$dev" print free | tail -1)"
+    local ptype="$(echo "$last_line" | cut -d: -f 5)"
 
-    if [ "$type" = "free;" ]; then
+    if [ "$ptype" = "free;" ]; then
         echo "$last_line" | cut -d: -f 3
     fi
 }
