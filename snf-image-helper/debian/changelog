@@ -1,3 +1,9 @@
+snf-image-helper (0.3.6-1) UNRELEASED; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 30 Mar 2012 10:43:30 +0300
+
 snf-image-helper (0.3.5-1) UNRELEASED; urgency=low
 
   * New upstream version
