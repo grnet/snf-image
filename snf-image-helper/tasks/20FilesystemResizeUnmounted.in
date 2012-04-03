@@ -34,7 +34,8 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi
 
-last_partition=$(get_last_partition "$SNF_IMAGE_DEV")
+table=$(get_partition_table "$SNF_IMAGE_DEV")
+last_partition=$(get_last_partition "$table")
 id=$(echo "$last_partition" | cut -d: -f1)
 ptype=$(echo "$last_partition" | cut -d: -f5)
 
