@@ -33,41 +33,51 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi
 
-check_partition_table "$SNF_IMAGE_DEV"
+table=$(get_partition_table "$SNF_IMAGE_DEV")
 
-if [ $(get_partition_count "$SNF_IMAGE_DEV") -eq 0 ]; then
+if [ $(get_partition_count "$table") -eq 0 ]; then
     log_error "Device: \`${SNF_IMAGE_DEV}' does not contain any partition"
 fi
 
-retval=$(get_last_partition "$SNF_IMAGE_DEV")
+table_type=$(get_partition_table_type "$table")
 
-id=$(echo $retval | cut -d: -f1)
-pstart=$(echo $retval | cut -d: -f2)
-pend=$(echo $retval | cut -d: -f3)
-ptype=$(echo $retval | cut -d: -f5)
-
-if [ $id -gt 4 ]; then
-    log_error "We don't support logical partitions"
+if [ "$table_type" != "msdos" ]; then # We are planning to add gpt support
+    log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition "
+        "table type: \`$table_type'. For now only msdos partitions are supported."
 fi
 
-if [ x"$ptype" = "x" ]; then
-    # Don't know how to handle this
-    warn "Last partition with id: \`$id' is empty or has unknown filesystem"
-    warn "I won't resize the partition"
-    exit 0
+last_part=$(get_last_partition "$table")
+last_part_id=$(cut -d':' -f1 <<< "$last_part")
+
+if [ "$table_type" != "msdos" ]; then
+    # Primary, extended and logical partitions is a concept for msdos partition
+    # tables. Parted's mkpart will use part-type as partition name if applied
+    # on a gpt table.
+    last_part_type=""
+elif [ $last_part_id -gt 4 ]; then
+    last_part_type="logical"
+    extended=$(get_extended_partition "$table")
+    last_primary=$(get_last_primary_partition "$table")
+
+    ext_id=$(cut -d':' -f1 <<< "$extended")
+    last_prim_id=$(cut -d':' -f1 <<< "$last_primary")
+
+    if [ "$ext_id" != "$last_prim_id" ]; then
+        #Mark last primary as the last partition
+        last_part="$extended"
+        last_part_id="$ext_id"
+        last_part_type="primary"
+    else
+        #enlarge the extended partition
+        enlarge_partition "$SNF_IMAGE_DEV" "$extended" "extended"
+    fi
+elif [ $(is_extended_partition "$SNF_IMAGE_DEV" "$last_part_id") = "yes" ]; then
+    last_part_type="extended"
+else
+    last_part_type="primary"
 fi
 
-new_pend=$(get_last_free_sector "$SNF_IMAGE_DEV")
-
-if [ -z "$new_pend" ] ; then
-    # Nothing to do
-    exit 0
-fi
-
-# Extend the partition
-
-$PARTED -s -m "$SNF_IMAGE_DEV" rm "$id"
-$PARTED -s -m "$SNF_IMAGE_DEV" mkpart primary "$ptype" "$pstart" "$new_pend"
+enlarge_partition "$SNF_IMAGE_DEV" "$last_part" "$last_part_type"
 
 # Inform the kernel about the changes
 partprobe "$SNF_IMAGE_DEV"
