@@ -38,7 +38,8 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
     exit 0
 fi
 
-last_partition=$(get_last_partition "$SNF_IMAGE_DEV")
+table=$(get_partition_table "$SNF_IMAGE_DEV")
+last_partition=$(get_last_partition "$table")
 id=$(echo "$last_partition" | cut -d: -f1)
 ptype=$(echo "$last_partition" | cut -d: -f5)
 
