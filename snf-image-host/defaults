@@ -45,8 +45,12 @@
 # `debootstrap' all the time.
 # HELPER_CACHE_FILE="${HELPER_DIR}/cache.tar"
 
+# HELPER_CACHE_PKGS: Debian Packages the cache file contains.
+# HELPER_CACHE_PKGS="${HELPER_DIR}/packages"
+
 # HELPER_EXTRA_PKGS: Extra packages that will need to be supplied
-# to debootstrap to make the resulting helper image workable
+# to debootstrap to make the resulting helper image workable.
+# DO NOT OVERWRITE THIS UNLESS YOU KNOW WHAT YOU ARE DOING
 # HELPER_EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"
 
 # HELPER_MIRROR: Debian mirror to use with debootstrap. Using a mirror close to

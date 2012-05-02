@@ -254,7 +254,7 @@ ganeti_os_main() {
 }
 
 do_debootstrap() {
-    local target=$1
+    local target="$1"
 
     echo "Debootstraping to create a new root filesystem:"
 
@@ -269,6 +269,9 @@ EOF
     debootstrap --arch $(dpkg --print-architecture) \
         --include "$HELPER_EXTRA_PKGS" --variant=minbase stable "$target" \
         "$HELPER_MIRROR" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
+
+    # Save the package list
+    chroot "$target" dpkg-query -W -f "\${Package}\n" > "$HELPER_CACHE_PKGS"
 
     rm "$target/usr/sbin/policy-rc.d"
 
@@ -332,6 +335,7 @@ fi
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
 : ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
+: ${HELPER_CACHE_PKGS:="@HELPER_DIR@/packages"}
 : ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"}
 : ${HELPER_MIRROR:=""}
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
