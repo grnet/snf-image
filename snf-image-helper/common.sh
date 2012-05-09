@@ -95,9 +95,33 @@ get_distro() {
     fi
 }
 
-get_partition_table() {
+normalize_unit() {
+    unit=$(tr [a-z] [A-Z] <<< $1)
+
+    case $unit in
+        "S") echo "s";;
+        "B"|"") echo "B";;
+        "KB") echo "kB";;
+        "MB") echo "MB";;
+        "GB") echo "GB";;
+        *)  log_error "Unknown unit type: \`$1'";;
+    esac
+}
+
+get_last_partition_id() {
     local dev="$1"
     if ! output="$("$PARTED" -s -m "$dev" print)"; then
+        log_error "Unable to read partition table for device \`${dev}'"
+    fi
+
+    last_line=$(tail -1 <<< "$output")
+
+    echo $(cut -d: -f1 <<< "$last_line")
+}
+
+get_partition_table() {
+    local dev="$1"
+    if ! output="$("$PARTED" -s -m "$dev" unit s print)"; then
         log_error "Unable to read partition table for device \`${dev}'"
     fi
 
@@ -118,6 +142,13 @@ get_partition_count() {
     local ptable="$1"
 
     expr $(echo "$ptable" | wc -l) - 2
+}
+
+get_partition_by_id() {
+    local ptable="$1"
+    local id="$2"
+
+    grep "^$id:" <<< "$ptable"
 }
 
 get_last_partition() {
@@ -179,32 +210,36 @@ get_last_primary_partition() {
 }
 
 create_partition() {
-    local device=$1
-    local part=$2
-    local ptype=$3
+    local device="$1"
+    local part="$2"
+    local ptype="$3"
 
     declare -a fields
     IFS=":;" read -ra fields <<< "$part"
-    local id=${fields[0]}
-    local start=${fields[1]}
-    local end=${fields[2]}
-    local size=${fields[3]}
-    local fs=${fields[4]}
-    local name=${fields[5]}
-    local flags=${fields[6]//,/ }
+    local id="${fields[0]}"
+    local start="${fields[1]}"
+    local end="${fields[2]}"
+    local size="${fields[3]}"
+    local fs="${fields[4]}"
+    local name="${fields[5]}"
+    local flags="${fields[6]//,/ }"
 
-    $PARTED -s -m $device mkpart "$ptype" $fs "$start" "$end"
+    $PARTED -s -m -- $device mkpart "$ptype" $fs "$start" "$end"
     for flag in $flags; do
         $PARTED -s -m $device set "$id" "$flag" on
     done
 }
 
 enlarge_partition() {
-    local device=$1
-    local part=$2
-    local ptype=$3
+    local device="$1"
+    local part="$2"
+    local ptype="$3"
+    local new_end="$4"
 
-    local new_end=$(get_last_free_sector "$device")
+    if [ -z "$new_end" ]; then
+        new_end=$(cut -d: -f 3 <<< "$(get_last_free_sector "$device")")
+    fi
+
     declare -a fields
     IFS=":;" read -ra fields <<< "$part"
     fields[2]="$new_end"
@@ -236,11 +271,17 @@ enlarge_partition() {
 
 get_last_free_sector() {
     local dev="$1"
-    local last_line="$("$PARTED" -s -m "$dev" print free | tail -1)"
-    local ptype="$(echo "$last_line" | cut -d: -f 5)"
+    local unit="$2"
+
+    if [ -n "$unit" ]; then
+        unit="unit $unit"
+    fi
+
+    local last_line="$("$PARTED" -s -m "$dev" "$unit" print free | tail -1)"
+    local ptype="$(cut -d: -f 5 <<< "$last_line")"
 
     if [ "$ptype" = "free;" ]; then
-        echo "$last_line" | cut -d: -f 3
+        echo "$last_line"
     fi
 }
 
@@ -256,11 +297,11 @@ cleanup() {
             # before we give up with an error. This is needed for kpartx when
             # dealing with ntfs partitions mounted through fuse. umount is not
             # synchronous and may return while the partition is still busy. A
-            # premature attempt to delete partition mappings through kpartx on a
-            # device that hosts previously mounted ntfs partition may fail with
-            # a `device-mapper: remove ioctl failed: Device or resource busy'
-            # error. A sensible workaround for this is to wait for a while and
-            # then try again.
+            # premature attempt to delete partition mappings through kpartx on
+            # a device that hosts previously mounted ntfs partition may fail
+            # with a `device-mapper: remove ioctl failed: Device or resource
+            # busy' error. A sensible workaround for this is to wait for a
+            # while and then try again.
             local cmd=${CLEANUP[$i]}
             $cmd || for interval in 0.25 0.5 1 2 4; do
             echo "Command $cmd failed!"
@@ -289,4 +330,5 @@ check_if_excluded() {
 
 trap cleanup EXIT
 set -o pipefail
+
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

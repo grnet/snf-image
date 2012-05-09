@@ -39,9 +39,9 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
 fi
 
 table=$(get_partition_table "$SNF_IMAGE_DEV")
-last_partition=$(get_last_partition "$table")
-id=$(echo "$last_partition" | cut -d: -f1)
-ptype=$(echo "$last_partition" | cut -d: -f5)
+partition=$(get_partition_by_id "$table" "$SNF_IMAGE_RESIZE_PART")
+id=$(cut -d: -f1 <<< "$partition")
+ptype=$(cut -d: -f5 <<< "$partition")
 
 if [ "$ptype" = "ntfs" ]; then
     # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
