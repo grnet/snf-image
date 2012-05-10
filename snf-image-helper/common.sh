@@ -95,19 +95,6 @@ get_distro() {
     fi
 }
 
-normalize_unit() {
-    unit=$(tr [a-z] [A-Z] <<< $1)
-
-    case $unit in
-        "S") echo "s";;
-        "B"|"") echo "B";;
-        "KB") echo "kB";;
-        "MB") echo "MB";;
-        "GB") echo "GB";;
-        *)  log_error "Unknown unit type: \`$1'";;
-    esac
-}
-
 get_last_partition_id() {
     local dev="$1"
     if ! output="$("$PARTED" -s -m "$dev" print)"; then
