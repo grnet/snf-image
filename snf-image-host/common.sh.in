@@ -24,9 +24,8 @@ QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
 TIMELIMIT="timelimit"
 CURL="curl"
-PROGRESS_MONITOR="snf-progress-monitor"
 
-progress_monitor_support="@progress_monitor_support@"
+
 pithos_backend_support="@pithos_backend_support@"
 network_backend_support="@network_backend_support@"
 
@@ -340,6 +339,7 @@ fi
 : ${HELPER_MIRROR:=""}
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
 : ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
+: ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
 
 SCRIPT_NAME=$(basename $0)
 
