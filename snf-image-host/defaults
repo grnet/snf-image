@@ -60,7 +60,15 @@
 # PITHOS_DATA: Directory where pithos data are hosted
 # PITHOS_DATA="/var/lib/pithos/data"
 
-# Paths for needed programs. Uncommend and change the variables below, if you
+# PROGRESS_MONITOR: External program that monitors the progress of the image
+# deployment. For now, this program is treated by snf-image as a decorator for
+# the raw copy command that copies the image file to the instance's hard disk.
+# This program must support the following options:
+#   -r, which specifies the expected number of bytes to be written to the disk.
+#   -i, which specifies the Ganeti instance name.
+# PROGRESS_MONITOR=""
+
+# Paths for needed programs. Uncommend and change the variables below if you
 # don't want to use the default one.
 # LOSETUP="losetup"
 # KPARTX="kpartx"
@@ -69,4 +77,3 @@
 # INSTALL_MBR="install-mbr"
 # TIMELIMIT="timelimit"
 # CURL="curl"
-# PROGRESS_MONITOR="snf-progress-monitor"

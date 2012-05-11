@@ -1,9 +1,3 @@
-if PROGMONSUPPORT
-progress_monitor_support=yes
-else
-progress_monitor_support=no
-endif
-
 if PITHOSIMGSUPPORT
 pithos_backend_support=yes
 else
