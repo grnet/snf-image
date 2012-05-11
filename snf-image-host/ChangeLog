@@ -1,4 +1,9 @@
-2012-03-29, v0.3.5
+2012-05-11, v0.3.7
+       * Remove the progress-monitor-support flag. snf-image-host will
+         check PROGRESS_MONITOR value to determine whether to involve progress
+         monitor or not.
+
+2012-03-29, v0.3.6
 	* Make snf-image-update-helper ask whether to use the found deboostrap
           cache file when in interactive mode.
         * Make the system update the default debootstrap cache file when -c option
