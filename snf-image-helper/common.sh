@@ -28,6 +28,8 @@ TUNE2FS=tune2fs
 RESIZE2FS=resize2fs
 PARTED=parted
 SFDISK=sfdisk
+MKSWAP=mkswap
+BLKID=blkid
 REGLOOKUP=reglookup
 CHNTPW=chntpw
 

@@ -1,0 +1,70 @@
+#! /bin/bash
+
+# Copyright (C) 2011 GRNET S.A. 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+### BEGIN TASK INFO
+# Provides:		AddSwap
+# RunBefore:            UmountImage
+# RunAfter:             MountImage
+# Short-Description:    Set up the swap partition and add an entry in fstab
+### END TASK INFO
+
+set -e
+. "@commondir@/common.sh"
+
+# Check if the task should be prevented from running.
+check_if_excluded
+
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing."
+fi
+
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "linux" ]; then
+    exit 0
+fi
+
+if [ -z "$SNF_IMAGE_PROPERTY_SWAP" ]; then
+    warn "No swap partition defined"
+    exit 0
+fi
+
+if [[ "$SNF_IMAGE_PROPERTY_SWAP" =~ ^([0-9]+):[0-9]+$ ]]; then
+    swap_id=${BASH_REMATCH[1]}
+else
+    log_error "SWAP property \`$SNF_IMAGE_PROPERTY_SWAP' is not valid"
+fi
+
+swap_dev="${SNF_IMAGE_DEV}${swap_id}"
+
+if [ ! -b "$swap_dev" ]; then
+    log_error "Swap partition \`$swap_dev' is missing."
+fi
+
+$MKSWAP "$swap_dev"
+
+UUID=$(cut -d" " -f2 <<< $($BLKID -s UUID "$swap_dev"))
+
+if [ -f "$SNF_IMAGE_TARGET/etc/fstab" ]; then
+    echo -e "$UUID\tnone\tswap\tsw\t0\t0" >> "$SNF_IMAGE_TARGET/etc/fstab"
+else
+    log_error "/etc/fstab file is missing"
+fi
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
