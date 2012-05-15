@@ -41,9 +41,11 @@ fi
 
 table_type=$(get_partition_table_type "$table")
 
-if [ "$table_type" != "msdos" ]; then # We are planning to add gpt support
+if [ "$table_type" == "gpt" ]; then
+    "@scriptsdir@/fix_gpt.py" "$SNF_IMAGE_DEV" $($BLOCKDEV --getsz "$SNF_IMAGE_DEV")
+elif [ "$table_type" != "msdos" ]; then
     log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition "
-    "table type: \`$table_type'. For now only msdos partitions are supported."
+    "table type: \`$table_type'. Only msdos & gpt partitions are supported."
 fi
 
 last_part=$(get_last_partition "$table")
@@ -87,8 +89,9 @@ extended=""
 if [ "$table_type" != "msdos" ]; then
     # Primary, extended and logical partitions is a concept for msdos partition
     # tables. Parted's mkpart will use part-type as partition name if applied
-    # on a gpt table.
-    last_part_type=""
+    # on a gpt table and leaving this empty is fragile: For a strange reason
+    # for swap partitions the command fails (???)
+    last_part_type="primary"
 elif [ $last_part_id -gt 4 ]; then
     last_part_type="logical"
     extended=$(get_extended_partition "$table")
@@ -132,7 +135,7 @@ enlarge_partition "$SNF_IMAGE_DEV" "$last_part" "$last_part_type" "${new_end}s"
 if [ $swap_num -gt 0 ]; then
     swap_part="$swap_num:${swap_start}s:${swap_end}s:0:linux-swap(v1)::;"
     if [ "$table_type" != "msdos" ]; then
-        swap_ptype=""
+        swap_ptype="swap" # in gpt this is used as a partition name
     elif [ $swap_num -ge 5 ]; then
         if [ -z "$extended" ]; then
             extended="0:$((swap_start - 2))s:${swap_end}s:0:::;"
