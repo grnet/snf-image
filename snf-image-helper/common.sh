@@ -30,6 +30,7 @@ PARTED=parted
 SFDISK=sfdisk
 MKSWAP=mkswap
 BLKID=blkid
+BLOCKDEV=blockdev
 REGLOOKUP=reglookup
 CHNTPW=chntpw
 
@@ -97,20 +98,13 @@ get_distro() {
     fi
 }
 
-get_last_partition_id() {
-    local dev="$1"
-    if ! output="$("$PARTED" -s -m "$dev" print)"; then
-        log_error "Unable to read partition table for device \`${dev}'"
-    fi
-
-    last_line=$(tail -1 <<< "$output")
-
-    echo $(cut -d: -f1 <<< "$last_line")
-}
 
 get_partition_table() {
     local dev="$1"
-    if ! output="$("$PARTED" -s -m "$dev" unit s print)"; then
+    # If the partition table is gpt then parted will raise an error if the
+    # secondary gpt is not it the end of the disk, and a warning that has to
+    # do with the "Last Usable LBA" entry in gpt.
+    if ! output="$("$PARTED" -s -m "$dev" unit s print | grep -E -v "^(Warning|Error): ")"; then
         log_error "Unable to read partition table for device \`${dev}'"
     fi
 
@@ -133,7 +127,7 @@ get_partition_count() {
     expr $(echo "$ptable" | wc -l) - 2
 }
 
-get_partition_by_id() {
+get_partition_by_num() {
     local ptable="$1"
     local id="$2"
 
@@ -196,6 +190,35 @@ get_last_primary_partition() {
         fi
     done
     echo ""
+}
+
+get_partition_to_resize() {
+    local dev="$1"
+
+    table=$(get_partition_table "$dev")
+
+    if [ $(get_partition_count "$table") -eq 0 ]; then
+        return 0
+    fi
+
+    table_type=$(get_partition_table_type "$table")
+    last_part=$(get_last_partition "$table")
+    last_part_num=$(cut -d: -f1 <<< "$last_part")
+
+    if [ "$table_type" == "msdos" -a $last_part_num -gt 4 ]; then
+        extended=$(get_extended_partition "$table")
+        last_primary=$(get_last_primary_partition "$table")
+        ext_num=$(cut -d: -f1 <<< "$extended")
+        prim_num=$(cut -d: -f1 <<< "$last_primary")
+
+        if [ "$ext_num" != "$last_prim_num" ]; then
+            echo "$last_prim_num"
+        else
+            echo "$last_part_num"
+        fi
+    else
+        echo "$last_part_num"
+    fi
 }
 
 create_partition() {

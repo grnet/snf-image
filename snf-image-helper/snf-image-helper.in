@@ -59,7 +59,6 @@ target=$(mktemp -d --tmpdir target.XXXXXX)
 add_cleanup rmdir "$target"
 
 export SNF_IMAGE_TARGET="$target"
-export SNF_IMAGE_RESIZE_PART="$(get_last_partition_id "$SNF_IMAGE_DEV")"
 
 if [ ! -d "@tasksdir@" ]; then
     log_error "snf-image/tasks directory is missing"
@@ -75,6 +74,8 @@ fi
 trap '{ umount "$target"; }' ERR
 
 if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
+
+    export SNF_IMAGE_RESIZE_PART="$(get_partition_to_resize "$SNF_IMAGE_DEV")"
 
     if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows)$ ]]; then
         log_error "Supported values for OSFAMILY property are: linux|windows"

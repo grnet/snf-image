@@ -40,7 +40,7 @@ if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then
 fi
 
 table=$(get_partition_table "$SNF_IMAGE_DEV")
-partition=$(get_partition_by_id "$table" "$SNF_IMAGE_RESIZE_PART")
+partition=$(get_partition_by_num "$table" "$SNF_IMAGE_RESIZE_PART")
 id=$(cut -d: -f1 <<< "$partition")
 ptype=$(cut -d: -f5 <<< "$partition")
 
