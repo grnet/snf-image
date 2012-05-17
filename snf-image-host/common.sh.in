@@ -179,6 +179,13 @@ create_floppy() {
     mount "$img" "$target" -o loop
     set | egrep ^snf_export_\\w+= | sed -e 's/^snf_export_/export SNF_IMAGE_/' \
         > "$target/rules"
+    if [ -n "$UNATTEND" ]; then
+        if [ -f "$UNATTEND" ]; then
+            cat "$UNATTEND" > "$target/unattend.xml"
+        else
+            log_error "Unattend file: \`"$UNATTEND"' does not exist"
+        fi
+    fi
     umount "$target"
 }
 
@@ -340,6 +347,7 @@ fi
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
 : ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
+: ${UNATTEND:="@UNATTEND@"}
 
 SCRIPT_NAME=$(basename $0)
 

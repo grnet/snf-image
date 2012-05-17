@@ -46,6 +46,10 @@ else
     log_error "Floppy does not contain \`rules\' file"
 fi
 
+if [ -f "$floppy/unattend.xml" ]; then
+    export SNF_IMAGE_UNATTEND="$floppy/unattend.xml"
+fi
+
 if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
     properties=$(mktemp --tmpdir properties.XXXXXX)
     add_cleanup rm "$properties"

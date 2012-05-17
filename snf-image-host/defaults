@@ -72,6 +72,12 @@
 #   -i, which specifies the Ganeti instance name.
 # PROGRESS_MONITOR=""
 
+# UNATTEND: This variables overwrites the unattend.xml file used when deploying
+# a windows image. snf-image-helper will use its own unattend.xml file if this
+# variable is empty. Please unless you really know what you are doing, leave
+# this empty.
+# UNATTEND=""
+
 # Paths for needed programs. Uncommend and change the variables below if you
 # don't want to use the default one.
 # LOSETUP="losetup"

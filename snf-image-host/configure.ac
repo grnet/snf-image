@@ -26,16 +26,27 @@ AM_CONDITIONAL(NETWORKIMGSUPPORT, [test "x$enable_network_backend" = "xyes"])
 
 # --with-progress-monitor
 AC_ARG_WITH([progress-monitor],
-  [AS_HELP_STRING([--with-progress-monitor=PRGRM_PATH],
-    [path to progress-monitor program []])],
+  [AS_HELP_STRING([--with-progress-monitor=PRGRM],
+    [name of the progress-monitor program []])],
     [if test "$withval" != "yes" -a "$withval" != "no"; then
          AC_PATH_PROG(PROGRESS_MONITOR, ["$withval"], [], [$PATH:/usr/sbin:/sbin])
          if test -z "$PROGRESS_MONITOR" ; then
              AC_MSG_FAILURE([Could not find progress-monitor: $withval.])
          fi
-         PROGRESS_MONITOR="$withval"
      elif test "$withval" != "no"; then
          AC_MSG_ERROR([you must specify a value for progress-monitor if --with-progress-monitor is specified])
+    fi]
+)
+
+# --with-unattend-file
+AC_ARG_WITH([unattend-file],
+  [AS_HELP_STRING([--with-unattend-file=UNATTEND_PATH],
+    [path to unattend.xml windows setup file []])],
+    [if test "$withval" != "yes" -a "$withval" != "no"; then
+	AC_SUBST(UNATTEND, "$withval")
+        AC_MSG_NOTICE(using unattend file: $withval)
+     elif test "$withval" != "no"; then
+         AC_MSG_ERROR([you must specify an Unattend.xml file if --with-unattend-file is specified])
     fi]
 )
 

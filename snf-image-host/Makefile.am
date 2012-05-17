@@ -47,6 +47,7 @@ edit = sed \
 	   -e 's|@QEMU_IMG[@]|$(QEMU_IMG)|g' \
 	   -e 's|@INSTALL_MBR[@]|$(INSTALL_MBR)|g' \
 	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g' \
+	   -e 's|@UNATTEND[@]|$(UNATTEND)|g' \
 	   -e 's|@progress_monitor_support[@]|$(progress_monitor_support)|g' \
 	   -e 's|@pithos_backend_support[@]|$(pithos_backend_support)|g' \
 	   -e 's|@network_backend_support[@]|$(network_backend_support)|g'
