@@ -1,3 +1,9 @@
+2012-05-17, v0.4
+	* Add support for creating SWAP partitions
+	* Add support for GPT partition tables
+	* Add support for resizing logical partitions
+	* Add mechanism for overwritting Unattend.xml
+
 2012-03-29, v0.3.6
 
 2012-03-26, v0.3.5
