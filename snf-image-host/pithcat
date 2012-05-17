@@ -26,9 +26,13 @@ the URL as the user when connecting to the backend.
 """
 
 from optparse import OptionParser
-from sys import exit, stdout
+from sys import exit, stdout, stderr
 
-from pithos.backends.modular import ModularBackend
+try:
+    from pithos.backends.modular import ModularBackend
+except ImportError:
+    stderr.write("Pithos backend was not found.\n")
+    exit(2)
 
 
 parser = OptionParser(usage='%prog [options] <URL>')

@@ -7,14 +7,6 @@ AC_CONFIG_SRCDIR(configure)
 AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability])
 AM_INIT_AUTOMAKE([subdir-objects])
 
-AC_ARG_ENABLE([pithos_backend],
-   AS_HELP_STRING([--enable-pithos-backend],
-    [enable support for pithos-hosted images])
-)
-AS_IF([test "x$enable_pithos_backend" = "xyes"],,
-    [AC_MSG_NOTICE(pithos backend support not enabled)])
-AM_CONDITIONAL(PITHOSIMGSUPPORT, [test "x$enable_pithos_backend" = "xyes"])
-
 AC_ARG_ENABLE([network_backend],
    AS_HELP_STRING([--enable-network-backend],
     [enable support for network-hosted images

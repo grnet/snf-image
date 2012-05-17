@@ -26,7 +26,6 @@ TIMELIMIT="timelimit"
 CURL="curl"
 
 
-pithos_backend_support="@pithos_backend_support@"
 network_backend_support="@network_backend_support@"
 
 CLEANUP=( )
@@ -193,12 +192,7 @@ get_backend_type() {
     local id=$1
 
     if [[ "$id" =~ ^pithos: ]]; then
-        if [ "$pithos_backend_support" = "yes" ]; then
-            echo "pithos"
-        else
-            log_error "Retrieving images from pithos is not supported"
-            exit 1
-        fi
+        echo "pithos"
     elif [[ "$id" =~ ^(http|ftp)s?: ]]; then
         if [ "$network_backend_support" = "yes" ]; then
             echo "network";
@@ -303,11 +297,12 @@ cleanup() {
             # before we give up with an error. This is needed for kpartx when
             # dealing with ntfs partitions mounted through fuse. umount is not
             # synchronous and may return while the partition is still busy. A
-            # premature attempt to delete partition mappings through kpartx on a
-            # device that hosts previously mounted ntfs partition may fail with
-            # an  `device-mapper: remove ioctl failed: Device or resource busy'
-            # error. A sensible workaround for this is to wait for a while and
-            # then try again.
+            # premature attempt to delete partition mappings through kpartx on
+            # a device that hosts previously mounted ntfs partition may fail
+            # with errors like this one:
+            # `device-mapper: remove ioctl failed: Device or resource busy'
+            # A sensible workaround for this is to wait for a while and then
+            # retry it.
             local cmd=${CLEANUP[$i]}
             $cmd || for interval in 0.25 0.5 1 2 4; do
             echo "Command $cmd failed!"
