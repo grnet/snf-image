@@ -24,10 +24,8 @@ QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
 TIMELIMIT="timelimit"
 CURL="curl"
-PROGRESS_MONITOR="snf-progress-monitor"
 
-progress_monitor_support="@progress_monitor_support@"
-pithos_backend_support="@pithos_backend_support@"
+
 network_backend_support="@network_backend_support@"
 
 CLEANUP=( )
@@ -180,6 +178,13 @@ create_floppy() {
     mount "$img" "$target" -o loop
     set | egrep ^snf_export_\\w+= | sed -e 's/^snf_export_/export SNF_IMAGE_/' \
         > "$target/rules"
+    if [ -n "$UNATTEND" ]; then
+        if [ -f "$UNATTEND" ]; then
+            cat "$UNATTEND" > "$target/unattend.xml"
+        else
+            log_error "Unattend file: \`"$UNATTEND"' does not exist"
+        fi
+    fi
     umount "$target"
 }
 
@@ -187,12 +192,7 @@ get_backend_type() {
     local id=$1
 
     if [[ "$id" =~ ^pithos: ]]; then
-        if [ "$pithos_backend_support" = "yes" ]; then
-            echo "pithos"
-        else
-            log_error "Retrieving images from pithos is not supported"
-            exit 1
-        fi
+        echo "pithos"
     elif [[ "$id" =~ ^(http|ftp)s?: ]]; then
         if [ "$network_backend_support" = "yes" ]; then
             echo "network";
@@ -254,7 +254,7 @@ ganeti_os_main() {
 }
 
 do_debootstrap() {
-    local target=$1
+    local target="$1"
 
     echo "Debootstraping to create a new root filesystem:"
 
@@ -269,6 +269,9 @@ EOF
     debootstrap --arch $(dpkg --print-architecture) \
         --include "$HELPER_EXTRA_PKGS" --variant=minbase stable "$target" \
         "$HELPER_MIRROR" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
+
+    # Save the package list
+    chroot "$target" dpkg-query -W -f "\${Package}\n" > "$HELPER_CACHE_PKGS"
 
     rm "$target/usr/sbin/policy-rc.d"
 
@@ -294,11 +297,12 @@ cleanup() {
             # before we give up with an error. This is needed for kpartx when
             # dealing with ntfs partitions mounted through fuse. umount is not
             # synchronous and may return while the partition is still busy. A
-            # premature attempt to delete partition mappings through kpartx on a
-            # device that hosts previously mounted ntfs partition may fail with
-            # an  `device-mapper: remove ioctl failed: Device or resource busy'
-            # error. A sensible workaround for this is to wait for a while and
-            # then try again.
+            # premature attempt to delete partition mappings through kpartx on
+            # a device that hosts previously mounted ntfs partition may fail
+            # with errors like this one:
+            # `device-mapper: remove ioctl failed: Device or resource busy'
+            # A sensible workaround for this is to wait for a while and then
+            # retry it.
             local cmd=${CLEANUP[$i]}
             $cmd || for interval in 0.25 0.5 1 2 4; do
             echo "Command $cmd failed!"
@@ -332,10 +336,13 @@ fi
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
 : ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
+: ${HELPER_CACHE_PKGS:="@HELPER_DIR@/packages"}
 : ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"}
 : ${HELPER_MIRROR:=""}
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
 : ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
+: ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
+: ${UNATTEND:="@UNATTEND@"}
 
 SCRIPT_NAME=$(basename $0)
 

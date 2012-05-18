@@ -1,15 +1,3 @@
-if PROGMONSUPPORT
-progress_monitor_support=yes
-else
-progress_monitor_support=no
-endif
-
-if PITHOSIMGSUPPORT
-pithos_backend_support=yes
-else
-pithos_backend_support=no
-endif
-
 if NETWORKIMGSUPPORT
 network_backend_support=yes
 else
@@ -22,11 +10,8 @@ defaultdir=$(DEFAULT_DIR)
 variantsdir=${sysconfdir}/ganeti/snf-image/variants
 
 dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
-			${srcdir}/rename ${srcdir}/verify
-if PITHOSIMGSUPPORT
-dist_os_SCRIPTS += ${srcdir}/pithcat
-endif
-	
+			${srcdir}/rename ${srcdir}/verify ${srcdir}/pithcat
+
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list
 
@@ -53,8 +38,8 @@ edit = sed \
 	   -e 's|@QEMU_IMG[@]|$(QEMU_IMG)|g' \
 	   -e 's|@INSTALL_MBR[@]|$(INSTALL_MBR)|g' \
 	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g' \
+	   -e 's|@UNATTEND[@]|$(UNATTEND)|g' \
 	   -e 's|@progress_monitor_support[@]|$(progress_monitor_support)|g' \
-	   -e 's|@pithos_backend_support[@]|$(pithos_backend_support)|g' \
 	   -e 's|@network_backend_support[@]|$(network_backend_support)|g'
 
 %:%.in Makefile

@@ -1,8 +1,20 @@
+2012-05-17, v0.4
+	* Remove progress-monitor-support flag. An external progress monitor
+	  programm will be used if --with-progress-monitor flag is used in
+	  configure or if PROGRESS_MONITOR variable in the defaults file has a
+	  non-empty value
+	* Remove --enable-pithos-backend option in configure. This will be
+	  detected at runtime
+	* Create package list in snf-update-helper every time debootstrap is
+	  performed. If a cache file is found, snf-update-helper will use this
+	  list to determine if it is OK to use this cache file or not.
+	* Add mechanism for overwritting the helper's Unattend.xml file
+
 2012-03-29, v0.3.5
 	* Make snf-image-update-helper ask whether to use the found deboostrap
-          cache file when in interactive mode.
-        * Make the system update the default debootstrap cache file when -c option
-          is used and it's value does not point to a cache file.
+	  cache file when in interactive mode.
+	* Make the system update the default debootstrap cache file when -c
+	  option is used and it's value does not point to a cache file.
 
 2012-03-26, v0.3.5
 

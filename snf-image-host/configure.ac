@@ -1,19 +1,11 @@
 AC_PREREQ(2.59)
-AC_INIT(snf-image, 0.3.6, synnefo@lists.grnet.gr)
+AC_INIT(snf-image, 0.4, synnefo@lists.grnet.gr)
 
 AC_CONFIG_AUX_DIR(autotools)
 AC_CONFIG_SRCDIR(configure)
 
 AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability])
 AM_INIT_AUTOMAKE([subdir-objects])
-
-AC_ARG_ENABLE([pithos_backend],
-   AS_HELP_STRING([--enable-pithos-backend],
-    [enable support for pithos-hosted images])
-)
-AS_IF([test "x$enable_pithos_backend" = "xyes"],,
-    [AC_MSG_NOTICE(pithos backend support not enabled)])
-AM_CONDITIONAL(PITHOSIMGSUPPORT, [test "x$enable_pithos_backend" = "xyes"])
 
 AC_ARG_ENABLE([network_backend],
    AS_HELP_STRING([--enable-network-backend],
@@ -26,21 +18,30 @@ AM_CONDITIONAL(NETWORKIMGSUPPORT, [test "x$enable_network_backend" = "xyes"])
 
 # --with-progress-monitor
 AC_ARG_WITH([progress-monitor],
-  [AS_HELP_STRING([--with-progress-monitor=PRGRM_PATH],
-    [path to progress-monitor program]
-    [[snf-progress-monitor]])],
-    [if test "$withval" = "yes" ; then
-         AC_PATH_PROG(PROGRESS_MONITOR, [snf-progress-monitor], [], [$PATH:/usr/sbin:/sbin])
+  [AS_HELP_STRING([--with-progress-monitor=PRGRM],
+    [name of the progress-monitor program []])],
+    [if test "$withval" != "yes" -a "$withval" != "no"; then
+         AC_PATH_PROG(PROGRESS_MONITOR, ["$withval"], [], [$PATH:/usr/sbin:/sbin])
          if test -z "$PROGRESS_MONITOR" ; then
-             AC_MSG_FAILURE([Could not find snf-progress-monitor.])
+             AC_MSG_FAILURE([Could not find progress-monitor: $withval.])
          fi
-     else
-         PROGRESS_MONITOR="$withval"
-    fi],
-   [AC_MSG_NOTICE(progress-monitor support not enabled)]
+     elif test "$withval" != "no"; then
+         AC_MSG_ERROR([you must specify a value for progress-monitor if --with-progress-monitor is specified])
+    fi]
 )
 
-AM_CONDITIONAL(PROGMONSUPPORT, [test -n "$PROGRESS_MONITOR"])
+# --with-unattend-file
+AC_ARG_WITH([unattend-file],
+  [AS_HELP_STRING([--with-unattend-file=UNATTEND_PATH],
+    [path to unattend.xml windows setup file []])],
+    [if test "$withval" != "yes" -a "$withval" != "no"; then
+	AC_SUBST(UNATTEND, "$withval")
+        AC_MSG_NOTICE(using unattend file: $withval)
+     elif test "$withval" != "no"; then
+         AC_MSG_ERROR([you must specify an Unattend.xml file if --with-unattend-file is specified])
+    fi]
+)
+
 
 # --with-helper-dir
 AC_ARG_WITH([helper-dir],

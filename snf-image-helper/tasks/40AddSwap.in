@@ -18,10 +18,10 @@
 # 02110-1301, USA.
 
 ### BEGIN TASK INFO
-# Provides:		FilesystemResizeMounted
+# Provides:		AddSwap
 # RunBefore:            UmountImage
-# RunAfter:		InstallUnattend
-# Short-Description:	Resize filesystem to use all the available space
+# RunAfter:             MountImage
+# Short-Description:    Set up the swap partition and add an entry in fstab
 ### END TASK INFO
 
 set -e
@@ -31,27 +31,38 @@ set -e
 check_if_excluded
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing."
 fi
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "linux" ]; then
     exit 0
 fi
 
-table=$(get_partition_table "$SNF_IMAGE_DEV")
-partition=$(get_partition_by_num "$table" "$SNF_IMAGE_RESIZE_PART")
-id=$(cut -d: -f1 <<< "$partition")
-ptype=$(cut -d: -f5 <<< "$partition")
+if [ -z "$SNF_IMAGE_PROPERTY_SWAP" ]; then
+    warn "No swap partition defined"
+    exit 0
+fi
 
-if [ "$ptype" = "ntfs" ]; then
-    # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
-    # try to execute this script during the specialize pass.
-    cat > "$SNF_IMAGE_TARGET/Windows/SnfScripts/ExtendFilesystem" <<EOF
-select disk 0
-select volume $id
-extend filesystem
-exit
-EOF
+if [[ "$SNF_IMAGE_PROPERTY_SWAP" =~ ^([0-9]+):[0-9]+$ ]]; then
+    swap_id=${BASH_REMATCH[1]}
+else
+    log_error "SWAP property \`$SNF_IMAGE_PROPERTY_SWAP' is not valid"
+fi
+
+swap_dev="${SNF_IMAGE_DEV}${swap_id}"
+
+if [ ! -b "$swap_dev" ]; then
+    log_error "Swap partition \`$swap_dev' is missing."
+fi
+
+$MKSWAP "$swap_dev"
+
+UUID=$(cut -d" " -f2 <<< $($BLKID -s UUID "$swap_dev"))
+
+if [ -f "$SNF_IMAGE_TARGET/etc/fstab" ]; then
+    echo -e "$UUID\tnone\tswap\tsw\t0\t0" >> "$SNF_IMAGE_TARGET/etc/fstab"
+else
+    log_error "/etc/fstab file is missing"
 fi
 
 exit 0

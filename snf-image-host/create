@@ -46,8 +46,8 @@ case $BACKEND_TYPE in
         ;;
 esac
 
-monitor="" #Empty if progress monitor support is disabled
-if [ "$progress_monitor_support" = "yes" ]; then
+monitor="" # Empty if no progress monitor program is not defined.
+if [ -n "$PROGRESS_MONITOR" ]; then
     monitor="$PROGRESS_MONITOR \
         -i $(printf "%q" "$INSTANCE_NAME") -r $image_size"
 fi

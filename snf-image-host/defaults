@@ -45,8 +45,12 @@
 # `debootstrap' all the time.
 # HELPER_CACHE_FILE="${HELPER_DIR}/cache.tar"
 
+# HELPER_CACHE_PKGS: Debian Packages the cache file contains.
+# HELPER_CACHE_PKGS="${HELPER_DIR}/packages"
+
 # HELPER_EXTRA_PKGS: Extra packages that will need to be supplied
-# to debootstrap to make the resulting helper image workable
+# to debootstrap to make the resulting helper image workable.
+# DO NOT OVERWRITE THIS UNLESS YOU KNOW WHAT YOU ARE DOING
 # HELPER_EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"
 
 # HELPER_MIRROR: Debian mirror to use with debootstrap. Using a mirror close to
@@ -60,7 +64,21 @@
 # PITHOS_DATA: Directory where pithos data are hosted
 # PITHOS_DATA="/var/lib/pithos/data"
 
-# Paths for needed programs. Uncommend and change the variables below, if you
+# PROGRESS_MONITOR: External program that monitors the progress of the image
+# deployment. For now, this program is treated by snf-image as a decorator for
+# the raw copy command that copies the image file to the instance's hard disk.
+# This program must support the following options:
+#   -r, which specifies the expected number of bytes to be written to the disk.
+#   -i, which specifies the Ganeti instance name.
+# PROGRESS_MONITOR=""
+
+# UNATTEND: This variables overwrites the unattend.xml file used when deploying
+# a windows image. snf-image-helper will use its own unattend.xml file if this
+# variable is empty. Please unless you really know what you are doing, leave
+# this empty.
+# UNATTEND=""
+
+# Paths for needed programs. Uncommend and change the variables below if you
 # don't want to use the default one.
 # LOSETUP="losetup"
 # KPARTX="kpartx"
@@ -69,4 +87,3 @@
 # INSTALL_MBR="install-mbr"
 # TIMELIMIT="timelimit"
 # CURL="curl"
-# PROGRESS_MONITOR="snf-progress-monitor"

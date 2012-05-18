@@ -46,6 +46,10 @@ else
     log_error "Floppy does not contain \`rules\' file"
 fi
 
+if [ -f "$floppy/unattend.xml" ]; then
+    export SNF_IMAGE_UNATTEND="$floppy/unattend.xml"
+fi
+
 if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
     properties=$(mktemp --tmpdir properties.XXXXXX)
     add_cleanup rm "$properties"
@@ -74,6 +78,8 @@ fi
 trap '{ umount "$target"; }' ERR
 
 if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
+
+    export SNF_IMAGE_RESIZE_PART="$(get_partition_to_resize "$SNF_IMAGE_DEV")"
 
     if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows)$ ]]; then
         log_error "Supported values for OSFAMILY property are: linux|windows"

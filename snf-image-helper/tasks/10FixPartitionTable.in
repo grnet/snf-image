@@ -41,19 +41,57 @@ fi
 
 table_type=$(get_partition_table_type "$table")
 
-if [ "$table_type" != "msdos" ]; then # We are planning to add gpt support
+if [ "$table_type" == "gpt" ]; then
+    "@scriptsdir@/fix_gpt.py" "$SNF_IMAGE_DEV" $($BLOCKDEV --getsz "$SNF_IMAGE_DEV")
+elif [ "$table_type" != "msdos" ]; then
     log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition "
-        "table type: \`$table_type'. For now only msdos partitions are supported."
+    "table type: \`$table_type'. Only msdos & gpt partitions are supported."
 fi
 
 last_part=$(get_last_partition "$table")
 last_part_id=$(cut -d':' -f1 <<< "$last_part")
 
+# Check if swap is defined...
+if [ -n "$SNF_IMAGE_PROPERTY_SWAP" ]; then
+    if [[ "$SNF_IMAGE_PROPERTY_SWAP" =~ ^([0-9]+):([0-9]+)$ ]]; then
+        swap_num=${BASH_REMATCH[1]}
+        swap_size=${BASH_REMATCH[2]}
+        swap_unit="MB"
+    else
+        log_error "SWAP property \`$SNF_IMAGE_PROPERTY_SWAP' is not valid"
+    fi
+fi
+
+if [ -z "$swap_num" ]; then
+    swap_num=0
+fi
+
+# Most partition setups leave 2048s in the end. For GPT partitions you need at
+# least 34s for the secondary GPT header.
+new_end="-2049"
+
+if [ $swap_num -ne 0 ]; then
+    free=$(get_last_free_sector "$SNF_IMAGE_DEV" "$swap_unit")
+    free_size=$(cut -d: -f4 <<< "$free")
+    free_size_val=${free_size/$swap_unit/}
+    if [ $free_size_val -le $swap_size ]; then
+        log_error "Not enough space for swap partition"
+    fi
+
+    swap_end="$new_end"
+
+    swap_start=$((new_end - (swap_size * 2048) + 1)) # in sectors
+    new_end=$((swap_start - 1))
+fi
+
+extended=""
+
 if [ "$table_type" != "msdos" ]; then
     # Primary, extended and logical partitions is a concept for msdos partition
     # tables. Parted's mkpart will use part-type as partition name if applied
-    # on a gpt table.
-    last_part_type=""
+    # on a gpt table and leaving this empty is fragile: For a strange reason
+    # for swap partitions the command fails (???)
+    last_part_type="primary"
 elif [ $last_part_id -gt 4 ]; then
     last_part_type="logical"
     extended=$(get_extended_partition "$table")
@@ -63,21 +101,52 @@ elif [ $last_part_id -gt 4 ]; then
     last_prim_id=$(cut -d':' -f1 <<< "$last_primary")
 
     if [ "$ext_id" != "$last_prim_id" ]; then
-        #Mark last primary as the last partition
+        # Mark last primary as the last partition
         last_part="$extended"
         last_part_id="$ext_id"
         last_part_type="primary"
     else
-        #enlarge the extended partition
-        enlarge_partition "$SNF_IMAGE_DEV" "$extended" "extended"
+        # Enlarge the extended partition
+        if [ $swap_num -ge 5 ]; then
+            enlarge_partition "$SNF_IMAGE_DEV" "$extended" "extended" "${swap_end}s"
+        else
+            enlarge_partition "$SNF_IMAGE_DEV" "$extended" "extended" "${new_end}s"
+        fi
     fi
 elif [ $(is_extended_partition "$SNF_IMAGE_DEV" "$last_part_id") = "yes" ]; then
     last_part_type="extended"
+    extended="$last_part"
+    if [ $swap_num -ge 5]; then
+        new_end=$swap_end
+    fi
 else
     last_part_type="primary"
+    if [ $swap_num -ge 5 ]; then
+        # This is needed because the swap partition should be added inside a
+        # new extended partition. In order to align the swap partition, we
+        # need to create some extra space between the (aligned) primary and
+        # the swap.
+        new_end=$((new_end - 2048))
+    fi
 fi
 
-enlarge_partition "$SNF_IMAGE_DEV" "$last_part" "$last_part_type"
+enlarge_partition "$SNF_IMAGE_DEV" "$last_part" "$last_part_type" "${new_end}s"
+
+if [ $swap_num -gt 0 ]; then
+    swap_part="$swap_num:${swap_start}s:${swap_end}s:0:linux-swap(v1)::;"
+    if [ "$table_type" != "msdos" ]; then
+        swap_ptype="swap" # in gpt this is used as a partition name
+    elif [ $swap_num -ge 5 ]; then
+        if [ -z "$extended" ]; then
+            extended="0:$((swap_start - 2))s:${swap_end}s:0:::;"
+            create_partition "$SNF_IMAGE_DEV" "$extended" "extended"
+        fi
+        swap_ptype="logical"
+    else
+        swap_ptype="primary"
+    fi
+    create_partition "$SNF_IMAGE_DEV" "$swap_part" "$swap_ptype"
+fi
 
 # Inform the kernel about the changes
 partprobe "$SNF_IMAGE_DEV"

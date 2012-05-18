@@ -4,6 +4,7 @@ dist_tasks_SCRIPTS = \
 		10FixPartitionTable \
 		20FilesystemResizeUnmounted \
 		30MountImage \
+		40AddSwap \
 		40DeleteSSHKeys \
 		40DisableRemoteDesktopConnections \
 		40InstallUnattend \
