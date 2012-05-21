@@ -10,7 +10,7 @@
 	  list to determine if it is OK to use this cache file or not.
 	* Add mechanism for overwritting the helper's Unattend.xml file
 
-2012-03-29, v0.3.5
+2012-03-29, v0.3.6
 	* Make snf-image-update-helper ask whether to use the found deboostrap
 	  cache file when in interactive mode.
 	* Make the system update the default debootstrap cache file when -c
