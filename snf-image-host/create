@@ -24,6 +24,7 @@ set -o pipefail
 
 ganeti_os_main
 
+
 case $BACKEND_TYPE in
     local)
         image_file="$IMAGE_DIR/$(echo "$IMAGE_NAME" | sed 's/^file://').$IMAGE_TYPE"
@@ -46,11 +47,19 @@ case $BACKEND_TYPE in
         ;;
 esac
 
-monitor="" # Empty if no progress monitor program is not defined.
-if [ -n "$PROGRESS_MONITOR" ]; then
-    monitor="$PROGRESS_MONITOR \
-        -i $(printf "%q" "$INSTANCE_NAME") -r $image_size"
+monitor_pipe=$(mktemp -u)
+mkfifo -m 600 "$monitor_pipe"
+add_cleanup rm -f "$monitor_pipe"
+
+if [ -z "$PROGRESS_MONITOR" ]; then
+    PROGRESS_MONITOR="cat"
 fi
+
+"$PROGRESS_MONITOR" "$monitor_pipe" &
+
+# Create file descriptor to monitor_pipe
+eval "exec ${MONITOR_FD}>${monitor_pipe}"
+add_cleanup  close_fd ${MONITOR_FD}
 
 # If the target device is not a real block device we'll first losetup it.
 # This is needed for file disks.
@@ -86,6 +95,8 @@ case "$IMAGE_TYPE" in
         ;;
 esac
 
+monitor="./copy-monitor.py -o $(printf "%q" "$monitor_pipe") \
+		-i $(printf "%q" "$INSTANCE_NAME") -r $image_size"
 if [ "$BACKEND_TYPE" = "local" ]; then
     # dd the dump to its new home :-)
     # Deploying an image file on a target block device is a streaming copy

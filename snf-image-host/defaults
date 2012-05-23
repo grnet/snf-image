@@ -65,11 +65,8 @@
 # PITHOS_DATA="/var/lib/pithos/data"
 
 # PROGRESS_MONITOR: External program that monitors the progress of the image
-# deployment. For now, this program is treated by snf-image as a decorator for
-# the raw copy command that copies the image file to the instance's hard disk.
-# This program must support the following options:
-#   -r, which specifies the expected number of bytes to be written to the disk.
-#   -i, which specifies the Ganeti instance name.
+# deployment. This program should accept as argument a named pipe file where
+# snf-image outputs monitor messages.
 # PROGRESS_MONITOR=""
 
 # UNATTEND: This variables overwrites the unattend.xml file used when deploying
