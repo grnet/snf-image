@@ -108,6 +108,10 @@ elif [ $last_part_id -gt 4 ]; then
     else
         # Enlarge the extended partition
         if [ $swap_num -ge 5 ]; then
+            # This is needed because logical partitions need to have at least
+            # 1 sector gap between them. We make the gap 2048 sectors to
+            # properly align them.
+            new_end=$((new_end - 2048))
             enlarge_partition "$SNF_IMAGE_DEV" "$extended" "extended" "${swap_end}s"
         else
             enlarge_partition "$SNF_IMAGE_DEV" "$extended" "extended" "${new_end}s"
