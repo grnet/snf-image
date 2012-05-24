@@ -65,8 +65,8 @@
 # PITHOS_DATA="/var/lib/pithos/data"
 
 # PROGRESS_MONITOR: External program that monitors the progress of the image
-# deployment. This program should accept as argument a named pipe file where
-# snf-image outputs monitor messages.
+# deployment. The snf-image monitor messages will be redirected to the standard
+# input of this program.
 # PROGRESS_MONITOR=""
 
 # UNATTEND: This variables overwrites the unattend.xml file used when deploying

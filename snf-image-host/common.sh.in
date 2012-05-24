@@ -32,7 +32,10 @@ network_backend_support="@network_backend_support@"
 # internally.
 MONITOR_FD=9
 
+ERROR_TYPE="ganeti-error"
+
 CLEANUP=( )
+ERROR_MSGS=( )
 
 add_cleanup() {
     local cmd=""
@@ -41,12 +44,42 @@ add_cleanup() {
 }
 
 log_error() {
+    ERROR_MSGS+=("$@")
     echo "$@" >&2
 }
 
 close_fd() {
     local fd="$1"
     eval "exec $fd>&-"
+}
+
+report_error() {
+    local error_file=$1
+
+    local id=$(sed 's/"/\\"/g' <<< "$INSTANCE_NAME")
+    local type="$ERROR_TYPE"
+    local location="host"
+
+    local msg="["
+    for err in "${ERROR_MSGS[@]}"; do
+        msg+="\"$(sed 's/"/\\"/g' <<< "$err")\","
+    done
+    if [ ${#msg} -gt 1 ]; then
+        # remove last comma (,)
+        msg="${msg%?}"
+    fi
+    msg+="]"
+
+    local stderr="$(cat "$error_file" | sed 's/"/\\"/g')"
+
+    report="{\"id\":\"$id\","
+    report+="\"type\":\"$type\"," \
+    report+="\"timestamp\":$(date +%s)," \
+    report+="\"location\":\"$location\"," \
+    report+="\"messages\":$msg," \
+    report+="\"stderr\":\"$stderr\"}"
+
+    eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
 }
 
 get_api5_arguments() {
@@ -296,8 +329,19 @@ EOF
 }
 
 cleanup() {
-# if something fails here, it souldn't call cleanup again...
+    # Carefull this should be the first command in the function. We want to
+    # store the last exit code to see if cleanup was triggered by an abnormal
+    # termination of the script.
+    local rc=$?
+    local err_file=$1
+
+    # if something fails here, it souldn't call cleanup again...
     trap - EXIT
+
+    if [ $rc -ne 0 -a -f "$err_file" ]; then
+        report_error "$err_file"
+    fi
+
     if [ ${#CLEANUP[*]} -gt 0 ]; then
         LAST_ELEMENT=$((${#CLEANUP[*]}-1))
         REVERSE_INDEXES=$(seq ${LAST_ELEMENT} -1 0)

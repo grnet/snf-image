@@ -22,8 +22,28 @@ set -o pipefail
 
 . common.sh
 
-ganeti_os_main
+# Save stderr to a file
+stderr=$(mktemp)
+add_cleanup rm "$stderr"
+exec 2> >(tee -a "$stderr" >&2)
 
+monitor_pipe=$(mktemp -u)
+mkfifo -m 600 "$monitor_pipe"
+add_cleanup rm -f "$monitor_pipe"
+
+if [ -n "$PROGRESS_MONITOR" ]; then
+    { cat "$monitor_pipe" | tee >( $PROGRESS_MONITOR ) ; } &
+else
+    cat "$monitor_pipe" &
+fi
+
+# Create file descriptor to monitor_pipe
+eval "exec ${MONITOR_FD}>${monitor_pipe}"
+add_cleanup  close_fd ${MONITOR_FD}
+
+trap "cleanup $(printf "%q" "$stderr")" EXIT
+
+ganeti_os_main
 
 case $BACKEND_TYPE in
     local)
@@ -46,20 +66,6 @@ case $BACKEND_TYPE in
         image_size=$(./pithcat -s  $cmd_args)
         ;;
 esac
-
-monitor_pipe=$(mktemp -u)
-mkfifo -m 600 "$monitor_pipe"
-add_cleanup rm -f "$monitor_pipe"
-
-if [ -z "$PROGRESS_MONITOR" ]; then
-    PROGRESS_MONITOR="cat"
-fi
-
-"$PROGRESS_MONITOR" "$monitor_pipe" &
-
-# Create file descriptor to monitor_pipe
-eval "exec ${MONITOR_FD}>${monitor_pipe}"
-add_cleanup  close_fd ${MONITOR_FD}
 
 # If the target device is not a real block device we'll first losetup it.
 # This is needed for file disks.
