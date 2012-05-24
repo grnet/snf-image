@@ -149,7 +149,8 @@ echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Starting helper VM..."
 $TIMELIMIT -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
     -drive file="$blockdev",format=raw,if=virtio,cache=none \
-    -boot c -serial stdio -serial file:"$result_file" \
+    -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
+    -serial "file:$(printf "%q" "$monitor_pipe")" \
     -fda "$floppy" -vga none -nographic -parallel none -monitor null \
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
     -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper" \

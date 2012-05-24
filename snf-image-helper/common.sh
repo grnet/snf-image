@@ -17,6 +17,8 @@
 # 02110-1301, USA.
 
 RESULT=/dev/ttyS1
+MONITOR=/dev/ttyS2
+
 FLOPPY_DEV=/dev/fd0
 PROGNAME=$(basename $0)
 
@@ -35,6 +37,8 @@ REGLOOKUP=reglookup
 CHNTPW=chntpw
 
 CLEANUP=( )
+ERRORS=( )
+WARNINGS=( )
 
 add_cleanup() {
     local cmd=""
@@ -43,12 +47,81 @@ add_cleanup() {
 }
 
 log_error() {
+    ERRORS+=("$@")
     echo "ERROR: $@" | tee $RESULT >&2
     exit 1
 }
 
 warn() {
+    WARNINGS+=("$@")
     echo "Warning: $@" >&2
+}
+
+report_start_task() {
+
+    local id="$SNF_IMAGE_HOSTNAME"
+    local type="ganeti-start-task"
+    local timestamp=$(date +%s)
+    local name="${PROGNAME}"
+
+    report="{\"id\":\"$id\","
+    report+="\"type\":\"$type\"," \
+    report+="\"timestamp\":$(date +%s)," \
+    report+="\"name\":\"$name\"}"
+
+    echo "$report" > "$MONITOR"
+}
+
+json_list() {
+    declare -a items=("${!1}")
+    report="["
+    for item in "${items[@]}"; do
+        report+="\"$(sed 's/"/\\"/g' <<< "$item")\","
+    done
+    if [ ${#report} -gt 1 ]; then
+        # remove last comma(,)
+        report="${report%?}"
+    fi
+    report+="]"
+
+    echo "$report"
+}
+
+report_end_task() {
+
+    local id="$SNF_IMAGE_HOSTNAME"
+    local type="ganeti-end-task"
+    local timestam=$(date +%s)
+    local name=${PROGNAME}
+    local warnings=$(json_list WARNINGS[@])
+
+    report="{\"id\":\"$id\","
+    report+="\"type\":\"$type\"," \
+    report+="\"timestamp\":$(date +%s)," \
+    report+="\"name\":\"$name\"," \
+    report+="\"warnings\":\"$warnings\"}"
+
+    echo "$report" > "$MONITOR"
+}
+
+report_error() {
+    local id="$SNF_IMAGE_HOSTNAME"
+    local type="ganeti-error"
+    local timestamp=$(date +%s)
+    local location="${PROGNAME}"
+    local errors=$(json_list ERRORS[@])
+    local warnings=$(json_list WARNINGS[@])
+    local stderr="$(cat "$STDERR_FILE" | sed 's/"/\\"/g')"
+
+    report="{\"id\":\"$id\","
+    report+="\"type\":\"$type\"," \
+    report+="\"timestamp\":$(date +%s)," \
+    report+="\"location\":\"$location\"," \
+    report+="\"errors\":$errors," \
+    report+="\"warnings\":$warnings," \
+    report+="\"stderr\":\"$stderr\"}"
+
+    echo "$report" > "$MONITOR"
 }
 
 get_base_distro() {
@@ -329,6 +402,18 @@ cleanup() {
   fi
 }
 
+task_cleanup() {
+    rc=$?
+
+    if [ $rc -eq 0 ]; then
+       report_end_task 
+    else
+       report_error
+    fi
+
+    cleanup
+}
+
 check_if_excluded() {
 
     local exclude=SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${PROGNAME:2}
@@ -342,5 +427,9 @@ check_if_excluded() {
 
 trap cleanup EXIT
 set -o pipefail
+
+STDERR_FILE=$(mktemp)
+add_cleanup rm -f "$STDERR_FILE"
+exec 2> >(tee -a "$STDERR_FILE" >&2)
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

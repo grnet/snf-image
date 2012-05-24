@@ -27,6 +27,8 @@
 set -e
 . "@commondir@/common.sh"
 
+trap task_cleanup EXIT
+report_start_task
 # Check if the task should be prevented from running.
 check_if_excluded
 
