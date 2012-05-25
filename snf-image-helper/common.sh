@@ -59,14 +59,13 @@ warn() {
 
 report_start_task() {
 
-    local id="$SNF_IMAGE_HOSTNAME"
-    local type="ganeti-start-task"
-    local timestamp=$(date +%s)
+    local type="start-task"
+    local timestamp=$(date +%s.%N)
     local name="${PROGNAME}"
 
     report="{\"id\":\"$id\","
     report+="\"type\":\"$type\"," \
-    report+="\"timestamp\":$(date +%s)," \
+    report+="\"timestamp\":$(date +%s.%N)," \
     report+="\"name\":\"$name\"}"
 
     echo "$report" > "$MONITOR"
@@ -89,9 +88,8 @@ json_list() {
 
 report_end_task() {
 
-    local id="$SNF_IMAGE_HOSTNAME"
-    local type="ganeti-end-task"
-    local timestam=$(date +%s)
+    local type="end-task"
+    local timestam=$(date +%s.%N)
     local name=${PROGNAME}
     local warnings=$(json_list WARNINGS[@])
 
@@ -105,9 +103,8 @@ report_end_task() {
 }
 
 report_error() {
-    local id="$SNF_IMAGE_HOSTNAME"
     local type="ganeti-error"
-    local timestamp=$(date +%s)
+    local timestamp=$(date +%s.%N)
     local location="${PROGNAME}"
     local errors=$(json_list ERRORS[@])
     local warnings=$(json_list WARNINGS[@])
@@ -406,7 +403,7 @@ task_cleanup() {
     rc=$?
 
     if [ $rc -eq 0 ]; then
-       report_end_task 
+       report_end_task
     else
        report_error
     fi

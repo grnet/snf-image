@@ -42,7 +42,7 @@ def parse_arguments(args):
         "%prog runs 'command' with the specified arguments, monitoring the " \
         "number of bytes read by it. 'command' is assumed to be " \
         "A program used to install the OS for a Ganeti instance. %prog " \
-        "periodically issues notifications of type 'ganeti-copy-progress'."
+        "periodically issues notifications of type 'copy-progress'."
 
     parser = OptionParser(**kw)
     parser.disable_interspersed_args()
@@ -52,19 +52,11 @@ def parse_arguments(args):
                       help="The expected number of bytes to be read, " \
                            "used to compute input progress",
                       default=None)
-    parser.add_option("-i", "--instance-name", dest="instance_name",
-                    default=None, metavar="GANETI_INSTANCE",
-                      help="The Ganeti instance name to be used in AMQP " \
-                           "notifications")
     parser.add_option("-o", "--output", dest="output", default=None,
                     metavar="FILE",
                     help="Write output notifications to this file")
 
     (opts, args) = parser.parse_args(args)
-    if opts.instance_name is None:
-        sys.stderr.write("Fatal: Option '-i' is mandatory.\n")
-        parser.print_help()
-        sys.exit(1)
 
     if opts.read_bytes is None:
         sys.stderr.write("Fatal: Option '-r' is mandatory.\n")
@@ -102,7 +94,7 @@ def report_wait_status(pid, status):
 
 
 def send_message(to, message):
-    message['timestamp'] = int(time.time())
+    message['timestamp'] = time.time()
     to.write("%s\n" % json.dumps(message))
     to.flush()
 
@@ -132,8 +124,7 @@ def main():
                          (sys.argv[0], pid, iofname))
 
         message = {}
-        message['id'] = opts.instance_name
-        message['type'] = 'ganeti-copy-progress'
+        message['type'] = 'copy-progress'
         message['total'] = opts.read_bytes
 
         while True:
@@ -147,7 +138,7 @@ def main():
                         return 1
                     else:
                         message['position'] = message['total']
-                        message['rprogress'] = float(100)
+                        message['progress'] = float(100)
                         send_message(out, message)
                         return 0
 
@@ -155,7 +146,7 @@ def main():
             for l in iof.readlines():
                 if l.startswith("rchar:"):
                     message['position'] = int(l.split(': ')[1])
-                    message['rprogress'] = float(100) if opts.read_bytes == 0 \
+                    message['progress'] = float(100) if opts.read_bytes == 0 \
                         else float("%2.2f" % (
                             message['position'] * 100.0 / message['total']))
                     send_message(out, message)

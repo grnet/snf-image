@@ -74,7 +74,7 @@ report_error() {
 
     report="{\"id\":\"$id\","
     report+="\"type\":\"$type\"," \
-    report+="\"timestamp\":$(date +%s)," \
+    report+="\"timestamp\":$(date +%s.%N)," \
     report+="\"location\":\"$location\"," \
     report+="\"messages\":$msg," \
     report+="\"stderr\":\"$stderr\"}"
@@ -328,19 +328,17 @@ EOF
     mv -f "$tmp_cache" "$HELPER_CACHE_FILE"
 }
 
-cleanup() {
-    # Carefull this should be the first command in the function. We want to
-    # store the last exit code to see if cleanup was triggered by an abnormal
-    # termination of the script.
-    local rc=$?
-    local err_file=$1
+report_and_cleanup(){
 
+    local err_file="$1"
+
+    report_error "$err_file"
+    cleanup
+}
+
+cleanup() {
     # if something fails here, it souldn't call cleanup again...
     trap - EXIT
-
-    if [ $rc -ne 0 -a -f "$err_file" ]; then
-        report_error "$err_file"
-    fi
 
     if [ ${#CLEANUP[*]} -gt 0 ]; then
         LAST_ELEMENT=$((${#CLEANUP[*]}-1))
