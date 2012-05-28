@@ -52,9 +52,9 @@ def parse_arguments(args):
                       help="The expected number of bytes to be read, " \
                            "used to compute input progress",
                       default=None)
-    parser.add_option("-o", "--output", dest="output", default=None,
-                    metavar="FILE",
-                    help="Write output notifications to this file")
+    parser.add_option("-o", "--output_fd", dest="output", default=None,
+                    metavar="FILE", type="int",
+                    help="Write output notifications to this file descriptor")
 
     (opts, args) = parser.parse_args(args)
 
@@ -95,66 +95,63 @@ def report_wait_status(pid, status):
 
 def send_message(to, message):
     message['timestamp'] = time.time()
-    to.write("%s\n" % json.dumps(message))
-    to.flush()
+    os.write(to, "%s\n" % json.dumps(message))
 
 
 def main():
     (opts, args) = parse_arguments(sys.argv[1:])
+    out = opts.output
+    pid = os.fork()
+    if pid == 0:
+        # In child process:
 
-    with open(opts.output, 'w') as out:
-        pid = os.fork()
-        if pid == 0:
-            # In child process:
+        # Make sure we die with the parent and are not left behind
+        # WARNING: This uses the prctl(2) call and is Linux-specific.
+        prctl.set_pdeathsig(signal.SIGHUP)
 
-            # Make sure we die with the parent and are not left behind
-            # WARNING: This uses the prctl(2) call and is Linux-specific.
-            prctl.set_pdeathsig(signal.SIGHUP)
+        # exec command specified in arguments,
+        # searching the $PATH, keeping all environment
+        os.execvpe(args[0], args, os.environ)
+        sys.stderr.write("execvpe failed, exiting with non-zero status")
+        os.exit(1)
 
-            # exec command specified in arguments,
-            # searching the $PATH, keeping all environment
-            os.execvpe(args[0], args, os.environ)
-            sys.stderr.write("execvpe failed, exiting with non-zero status")
-            os.exit(1)
+    # In parent process:
+    iofname = "/proc/%d/io" % pid
+    iof = open(iofname, "r", 0)   # 0: unbuffered open
+    sys.stderr.write("%s: created child PID = %d, monitoring file %s\n" %
+                     (sys.argv[0], pid, iofname))
 
-        # In parent process:
-        iofname = "/proc/%d/io" % pid
-        iof = open(iofname, "r", 0)   # 0: unbuffered open
-        sys.stderr.write("%s: created child PID = %d, monitoring file %s\n" %
-                         (sys.argv[0], pid, iofname))
+    message = {}
+    message['type'] = 'copy-progress'
+    message['total'] = opts.read_bytes
 
-        message = {}
-        message['type'] = 'copy-progress'
-        message['total'] = opts.read_bytes
-
-        while True:
-            # check if the child process is still alive
-            (wpid, status) = os.waitpid(pid, os.WNOHANG)
-            if wpid == pid:
-                report_wait_status(pid, status)
-                if (os.WIFEXITED(status) or os.WIFSIGNALED(status)):
-                    if not (os.WIFEXITED(status) and
-                                                os.WEXITSTATUS(status) == 0):
-                        return 1
-                    else:
-                        message['position'] = message['total']
-                        message['progress'] = float(100)
-                        send_message(out, message)
-                        return 0
-
-            iof.seek(0)
-            for l in iof.readlines():
-                if l.startswith("rchar:"):
-                    message['position'] = int(l.split(': ')[1])
-                    message['progress'] = float(100) if opts.read_bytes == 0 \
-                        else float("%2.2f" % (
-                            message['position'] * 100.0 / message['total']))
+    while True:
+        # check if the child process is still alive
+        (wpid, status) = os.waitpid(pid, os.WNOHANG)
+        if wpid == pid:
+            report_wait_status(pid, status)
+            if (os.WIFEXITED(status) or os.WIFSIGNALED(status)):
+                if not (os.WIFEXITED(status) and
+                                            os.WEXITSTATUS(status) == 0):
+                    return 1
+                else:
+                    message['position'] = message['total']
+                    message['progress'] = float(100)
                     send_message(out, message)
-                    break
+                    return 0
 
-            # Sleep for a while
-            time.sleep(3)
+        iof.seek(0)
+        for l in iof.readlines():
+            if l.startswith("rchar:"):
+                message['position'] = int(l.split(': ')[1])
+                message['progress'] = float(100) if opts.read_bytes == 0 \
+                    else float("%2.2f" % (
+                        message['position'] * 100.0 / message['total']))
+                send_message(out, message)
+                break
 
+        # Sleep for a while
+        time.sleep(3)
 
 if __name__ == "__main__":
     sys.exit(main())

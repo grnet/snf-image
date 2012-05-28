@@ -63,9 +63,8 @@ report_start_task() {
     local timestamp=$(date +%s.%N)
     local name="${PROGNAME}"
 
-    report="{\"id\":\"$id\","
-    report+="\"type\":\"$type\"," \
-    report+="\"timestamp\":$(date +%s.%N)," \
+    report+="\"type\":\"$type\","
+    report+="\"timestamp\":$(date +%s.%N),"
     report+="\"name\":\"$name\"}"
 
     echo "$report" > "$MONITOR"
@@ -93,10 +92,9 @@ report_end_task() {
     local name=${PROGNAME}
     local warnings=$(json_list WARNINGS[@])
 
-    report="{\"id\":\"$id\","
-    report+="\"type\":\"$type\"," \
-    report+="\"timestamp\":$(date +%s)," \
-    report+="\"name\":\"$name\"," \
+    report="\"type\":\"$type\","
+    report+="\"timestamp\":$(date +%s),"
+    report+="\"name\":\"$name\","
     report+="\"warnings\":\"$warnings\"}"
 
     echo "$report" > "$MONITOR"
@@ -110,12 +108,11 @@ report_error() {
     local warnings=$(json_list WARNINGS[@])
     local stderr="$(cat "$STDERR_FILE" | sed 's/"/\\"/g')"
 
-    report="{\"id\":\"$id\","
-    report+="\"type\":\"$type\"," \
-    report+="\"timestamp\":$(date +%s)," \
-    report+="\"location\":\"$location\"," \
-    report+="\"errors\":$errors," \
-    report+="\"warnings\":$warnings," \
+    report="\"type\":\"$type\","
+    report+="\"timestamp\":$(date +%s),"
+    report+="\"location\":\"$location\","
+    report+="\"errors\":$errors,"
+    report+="\"warnings\":$warnings,"
     report+="\"stderr\":\"$stderr\"}"
 
     echo "$report" > "$MONITOR"

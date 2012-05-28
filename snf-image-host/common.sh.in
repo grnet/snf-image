@@ -27,11 +27,6 @@ CURL="curl"
 
 network_backend_support="@network_backend_support@"
 
-# Use file descriptors in the range 3-9. File descriptors below 3 are used for
-# standard input, output, and error, the ones above 9 may be used by the shell
-# internally.
-MONITOR_FD=9
-
 ERROR_TYPE="ganeti-error"
 
 CLEANUP=( )
@@ -50,13 +45,13 @@ log_error() {
 
 close_fd() {
     local fd="$1"
-    eval "exec $fd>&-"
+    exec {fd}>&-
 }
 
 report_error() {
     local error_file=$1
+    local monitor_fd=$2
 
-    local id=$(sed 's/"/\\"/g' <<< "$INSTANCE_NAME")
     local type="$ERROR_TYPE"
     local location="host"
 
@@ -72,14 +67,13 @@ report_error() {
 
     local stderr="$(cat "$error_file" | sed 's/"/\\"/g')"
 
-    report="{\"id\":\"$id\","
-    report+="\"type\":\"$type\"," \
-    report+="\"timestamp\":$(date +%s.%N)," \
-    report+="\"location\":\"$location\"," \
-    report+="\"messages\":$msg," \
+    report="\"type\":\"$type\","
+    report+="\"timestamp\":$(date +%s.%N),"
+    report+="\"location\":\"$location\","
+    report+="\"messages\":$msg,"
     report+="\"stderr\":\"$stderr\"}"
 
-    eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
+    eval "echo $(printf "%q" "$report") >&${monitor_fd}"
 }
 
 get_api5_arguments() {
@@ -331,8 +325,9 @@ EOF
 report_and_cleanup(){
 
     local err_file="$1"
+    local fd="$2"
 
-    report_error "$err_file"
+    report_error "$err_file" "$fd"
     cleanup
 }
 

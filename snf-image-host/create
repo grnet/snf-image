@@ -32,7 +32,7 @@ mkfifo -m 600 "$monitor_pipe"
 add_cleanup rm -f "$monitor_pipe"
 
 if [ -n "$PROGRESS_MONITOR" ]; then
-    { sleep 1; tee >( $PROGRESS_MONITOR ) < "$monitor_pipe" ; } &
+    { sleep 1; $PROGRESS_MONITOR "$instance" < "$monitor_pipe" ; } &
     monitor_pid="$!"
 else
     cat "$monitor_pipe" &
@@ -40,15 +40,15 @@ else
 fi
 
 # Create file descriptor to monitor_pipe
-eval "exec ${MONITOR_FD}>${monitor_pipe}"
+exec {MONITOR_FD}>${monitor_pipe}
 add_cleanup  close_fd ${MONITOR_FD}
 
 # Ignore sigpipe signals. If progress monitor is dead and snf-image-host tries
-# to output something to the opened pipe, then a sigpipe signal will be raised.
-# If I do not catch this, the program will terminate.
+# to output something to the opened pipe, then a sigpipe will be raised. If we
+# do not catch this, the program will terminate.
 trap "" SIGPIPE
 
-trap "report_and_cleanup $(printf "%q" "$stderr")" EXIT
+trap "report_and_cleanup $(printf "%q" "$stderr") ${MONITOR_FD}" EXIT
 
 ganeti_os_main
 
@@ -108,7 +108,7 @@ case "$IMAGE_TYPE" in
         ;;
 esac
 
-monitor="./copy-monitor.py -o $(printf "%q" "$monitor_pipe") -r $image_size"
+monitor="./copy-monitor.py -o $MONITOR_FD -r $image_size"
 if [ "$BACKEND_TYPE" = "local" ]; then
     # dd the dump to its new home :-)
     # Deploying an image file on a target block device is a streaming copy
