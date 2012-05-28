@@ -1,3 +1,5 @@
+2012-05-28, v0.4.1
+
 2012-05-17, v0.4
 	* Remove progress-monitor-support flag. An external progress monitor
 	  programm will be used if --with-progress-monitor flag is used in

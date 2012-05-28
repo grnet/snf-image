@@ -1,3 +1,7 @@
+2012-05-28, v0.4.1
+	* Fix a bug in FixPartitionTable where in some cases the script
+	  failed to create the logical swap partition.
+
 2012-05-17, v0.4
 	* Add support for creating SWAP partitions
 	* Add support for GPT partition tables
