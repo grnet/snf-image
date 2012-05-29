@@ -29,11 +29,13 @@
 
 # HELPER_TIMOUT: Soft and hard timeout limits for helper instance.
 # The helper instance will be terminated after a given time if it hasn't exited
-# by itself.
-#
-# When HELPER_SOFT_TIMEOUT seconds have passed, a SIGTERM is sent.
-# When HELPER_HARD_TIMEOUT seconds more have passed, a SIGKILL is sent.
-# HELPER_SOFT_TIMEOUT="15"
+# by itself. A TERM signal will be send if the instance is running after
+# a HELPER_SOFT_TIMEOUT interval. A KILL signal will be sent, if the instance
+# is still running after a HELPER_HARD_TIMEOUT interval since the initial
+# signal was sent. The timeout values are integer numbers with an optional
+# suffix: `s' for seconds (the default), `m' for minutes, `h' for hours or `d'
+# for days.
+# HELPER_SOFT_TIMEOUT="20"
 # HELPER_HARD_TIMEOUT="5"
 
 # HELPER_USER: For security reasons, it is recommended that the helper VM

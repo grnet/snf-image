@@ -130,9 +130,9 @@ if test -z "$INSTALL_MBR" ; then
   AC_MSG_ERROR([install-mbr not found in $PATH:/usr/sbin:/sbin])
 fi
 
-AC_PATH_PROG(TIMELIMIT, [timelimit], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$TIMELIMIT" ; then
-  AC_MSG_ERROR([timelimit not found in $PATH:/usr/sbin:/sbin])
+AC_PATH_PROG(TIMEOUT, [timeout], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$TIMEOUT" ; then
+  AC_MSG_ERROR([timeout not found in $PATH:/usr/sbin:/sbin])
 fi
 
 if test "x$enable_network_backend" = "xyes" ; then

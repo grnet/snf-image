@@ -152,7 +152,8 @@ add_cleanup rm "$snapshot"
 "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
 
 echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Starting helper VM..."
-$TIMELIMIT -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
+set +e
+$TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
     -drive file="$blockdev",format=raw,if=virtio,cache=none \
     -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
@@ -161,13 +162,24 @@ $TIMELIMIT -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
     -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper" \
     2>&1 | sed 's|^|HELPER: |g'
-echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Helper VM finished."
-
-if [ $? -ne 0 ]; then
-    if [ $? -gt 128 ];  then
-        log_error "Helper was terminated. Did not finish on time."
+rc=$?
+set -e
+if [ $rc -ne 0 ]; then
+    if [ $rc -eq 124 ];  then
+        log_error "Helper VM was terminated. Did not finish on time."
+    if [ $rc -eq 137 ]; then # (128 + SIGKILL)
+        log_error "Helper VM was killed. Did not finish on time."
+    elif [ $rc -eq 141 ]; then # (128 + SIGPIPE)
+        log_error "Helper was killed by a SIGPIPE signal."
+        log_error "Maybe progress monitor has died unexpectedly."
+    elif [ $rc -eq 125 ]; then
+        log_error "timeout did not manage to run."
+    else
+        log_error "KVM returned an error (return code $rc)."
     fi
     exit 1
+else
+    echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Helper VM finished."
 fi
 
 # Do not report errors after this. If the result is not "SUCCESS" then the

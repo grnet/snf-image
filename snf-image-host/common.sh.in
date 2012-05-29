@@ -22,7 +22,7 @@ LOSETUP="losetup"
 SFDISK="sfdisk"
 QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
-TIMELIMIT="timelimit"
+TIMEOUT="timeout"
 CURL="curl"
 
 network_backend_support="@network_backend_support@"
@@ -378,7 +378,7 @@ fi
 : ${HELPER_KERNEL:="@HELPER_KERNEL@"}
 : ${HELPER_INITRD:="@HELPER_INITRD@"}
 : ${HELPER_PKG:="@HELPER_DIR@/snf-image-helper.deb"}
-: ${HELPER_SOFT_TIMEOUT:=15}
+: ${HELPER_SOFT_TIMEOUT:=20}
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
 : ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
