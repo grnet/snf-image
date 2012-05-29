@@ -35,7 +35,7 @@ if [ -n "$PROGRESS_MONITOR" ]; then
     { sleep 1; $PROGRESS_MONITOR "$instance" < "$monitor_pipe" ; } &
     monitor_pid="$!"
 else
-    cat "$monitor_pipe" &
+    sed -u 's|^|MONITOR MSG: |g' < "$monitor_pipe" &
     monitor_pid="$!"
 fi
 
@@ -161,7 +161,7 @@ $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
     -fda "$floppy" -vga none -nographic -parallel none -monitor null \
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
     -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper" \
-    2>&1 | sed 's|^|HELPER: |g'
+    2>&1 | sed -u 's|^|HELPER: |g'
 rc=$?
 set -e
 if [ $rc -ne 0 ]; then

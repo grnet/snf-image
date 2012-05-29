@@ -27,7 +27,7 @@ CURL="curl"
 
 network_backend_support="@network_backend_support@"
 
-ERROR_TYPE="ganeti-error"
+MSG_TYPE_ERROR="error"
 
 CLEANUP=( )
 ERROR_MSGS=( )
@@ -52,7 +52,7 @@ report_error() {
     local error_file=$1
     local monitor_fd=$2
 
-    local type="$ERROR_TYPE"
+    local type="$MSG_TYPE_ERROR"
     local location="host"
 
     local msg="["

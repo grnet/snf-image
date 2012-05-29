@@ -28,7 +28,7 @@ set -e
 . "@commondir@/common.sh"
 
 trap task_cleanup EXIT
-report_start_task
+report_task_start
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
 	log_error "Target dir:\`$SNF_IMAGE_TARGET' is missing"

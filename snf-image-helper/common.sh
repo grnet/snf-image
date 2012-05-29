@@ -40,6 +40,10 @@ CLEANUP=( )
 ERRORS=( )
 WARNINGS=( )
 
+MSG_TYPE_ERROR="error"
+MSG_TYPE_TASK_START="task-start"
+MSG_TYPE_TASK_END="task-end"
+
 add_cleanup() {
     local cmd=""
     for arg; do cmd+=$(printf "%q " "$arg"); done
@@ -57,13 +61,13 @@ warn() {
     echo "Warning: $@" >&2
 }
 
-report_start_task() {
+report_task_start() {
 
-    local type="start-task"
+    local type="$MSG_TYPE_TASK_START"
     local timestamp=$(date +%s.%N)
     local name="${PROGNAME}"
 
-    report+="\"type\":\"$type\","
+    report+="{\"type\":\"$type\","
     report+="\"timestamp\":$(date +%s.%N),"
     report+="\"name\":\"$name\"}"
 
@@ -85,15 +89,14 @@ json_list() {
     echo "$report"
 }
 
-report_end_task() {
-
-    local type="end-task"
+report_task_end() {
+    local type="$MSG_TYPE_TASK_END"
     local timestam=$(date +%s.%N)
     local name=${PROGNAME}
     local warnings=$(json_list WARNINGS[@])
 
-    report="\"type\":\"$type\","
-    report+="\"timestamp\":$(date +%s),"
+    report="{\"type\":\"$type\","
+    report+="\"timestamp\":$(date +%s.%N),"
     report+="\"name\":\"$name\","
     report+="\"warnings\":\"$warnings\"}"
 
@@ -101,14 +104,14 @@ report_end_task() {
 }
 
 report_error() {
-    local type="ganeti-error"
+    local type="$MSG_TYPE_ERROR"
     local timestamp=$(date +%s.%N)
     local location="${PROGNAME}"
     local errors=$(json_list ERRORS[@])
     local warnings=$(json_list WARNINGS[@])
     local stderr="$(cat "$STDERR_FILE" | sed 's/"/\\"/g')"
 
-    report="\"type\":\"$type\","
+    report="{\"type\":\"$type\","
     report+="\"timestamp\":$(date +%s),"
     report+="\"location\":\"$location\","
     report+="\"errors\":$errors,"
@@ -400,7 +403,7 @@ task_cleanup() {
     rc=$?
 
     if [ $rc -eq 0 ]; then
-       report_end_task
+       report_task_end
     else
        report_error
     fi

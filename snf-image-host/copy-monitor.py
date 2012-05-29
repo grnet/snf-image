@@ -32,6 +32,7 @@ import prctl
 import signal
 import socket
 
+MSG_TYPE="copy-progress"
 
 def parse_arguments(args):
     from optparse import OptionParser
@@ -122,7 +123,7 @@ def main():
                      (sys.argv[0], pid, iofname))
 
     message = {}
-    message['type'] = 'copy-progress'
+    message['type'] = MSG_TYPE
     message['total'] = opts.read_bytes
 
     while True:
