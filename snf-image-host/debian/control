@@ -3,7 +3,7 @@ Section: admin
 Priority: extra
 Maintainer: Nikos Skalkotos <skalkoto@grnet.gr>
 Build-Depends: debhelper (>= 7.0.50~), automake, autotools-dev, kpartx,
- qemu-utils, mount, mbr, timelimit, curl
+ qemu-utils, mbr, timelimit, curl
 Standards-Version: 3.9.1
 Homepage: https://code.grnet.gr/projects/snf-image
 Vcs-Git: git://code.grnet.gr/git/snf-image
@@ -12,7 +12,7 @@ Vcs-Browser: https://code.grnet.gr/git/snf-image
 Package: snf-image-host
 Architecture: all
 Depends: ${misc:Depends}, kpartx, debootstrap, timelimit, curl,
- qemu-kvm (>= 0.11), qemu-utils, mbr
+ qemu-kvm (>= 0.11), qemu-utils, mbr, python
 Breaks: ganeti (<< 1.2.7)
 Replaces: snf-ganeti-instance-image
 Enhances: ganeti
