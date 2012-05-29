@@ -167,7 +167,7 @@ set -e
 if [ $rc -ne 0 ]; then
     if [ $rc -eq 124 ];  then
         log_error "Helper VM was terminated. Did not finish on time."
-    if [ $rc -eq 137 ]; then # (128 + SIGKILL)
+    elif [ $rc -eq 137 ]; then # (128 + SIGKILL)
         log_error "Helper VM was killed. Did not finish on time."
     elif [ $rc -eq 141 ]; then # (128 + SIGPIPE)
         log_error "Helper was killed by a SIGPIPE signal."
