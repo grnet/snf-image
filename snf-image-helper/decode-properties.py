@@ -61,7 +61,7 @@ def main():
 
     properties = json.load(infh)
     for key, value in properties.items():
-        os.environ['SNF_IMAGE_PROPERTY_' + key] = value
+        os.environ['SNF_IMAGE_PROPERTY_' + str(key).upper()] = value
 
     p = subprocess.Popen(['bash', '-c', 'set'], stdout=subprocess.PIPE)
     output = StringIO(p.communicate()[0]);
