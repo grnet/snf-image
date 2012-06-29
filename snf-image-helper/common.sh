@@ -412,8 +412,8 @@ task_cleanup() {
 }
 
 check_if_excluded() {
-
-    local exclude=SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${PROGNAME:2}
+    local name="$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
+    local exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${name}"
     if [ -n "${!exclude}" ]; then
         warn "Task $PROGNAME was excluded and will not run."
         exit 0
