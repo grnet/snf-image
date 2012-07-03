@@ -1,3 +1,47 @@
 #!/bin/bash
 
+set -e
+
+. common.sh
+
+
+if [ -z "$OSP_IMG_ID" ]; then
+    log_error "Missing OS API Parameter: OSP_IMG_ID"
+    exit 1
+fi
+if [ -z "$OSP_IMG_FORMAT" ]; then
+    log_error "Missing OS API Parameter: OSP_IMG_FORMAT"
+    exit 1
+fi
+if [ -z "$OSP_IMG_PASSWD" ]; then
+    log_error "Missing OS API Parameter: OSP_IMG_PASSWD"
+    exit 1
+fi
+
+IMG_ID=$OSP_IMG_ID
+IMG_FORMAT=$OSP_IMG_FORMAT
+IMG_PASSWD=$OSP_IMG_PASSWD
+if [ -n "$OSP_IMG_PROPERTIES" ]; then
+    IMG_PROPERTIES="$OSP_IMG_PROPERTIES"
+fi
+if [ -n "$OSP_IMG_PERSONALITY" ]; then
+    IMG_PERSONALITY="$OSP_IMG_PERSONALITY"
+fi
+
+
+case $IMG_FORMAT in
+    extdump|ntfsdump)
+        ;;
+    diskdump)
+        if [ -z "$IMG_PROPERTIES" ]; then
+            log_error "Image format is 'diskdump' but img_properties parameter is missing"
+            exit 1
+        fi
+        ;;
+    *)
+        log_error "Invalid value '$IMG_FORMAT' for the img_format parameter"
+        exit 1
+        ;;
+esac
+
 exit 0
