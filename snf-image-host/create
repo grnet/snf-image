@@ -166,16 +166,17 @@ rc=$?
 set -e
 if [ $rc -ne 0 ]; then
     if [ $rc -eq 124 ];  then
-        log_error "Helper VM was terminated. Did not finish on time."
+        log_error "Image customization was terminated. Did not finish on time."
     elif [ $rc -eq 137 ]; then # (128 + SIGKILL)
-        log_error "Helper VM was killed. Did not finish on time."
+        log_error "Image customization was killed. Did not finish on time."
     elif [ $rc -eq 141 ]; then # (128 + SIGPIPE)
-        log_error "Helper was killed by a SIGPIPE signal."
+        log_error "Image customization was terminated by a SIGPIPE."
         log_error "Maybe progress monitor has died unexpectedly."
     elif [ $rc -eq 125 ]; then
+        log_error "Internal Error. Image customization could not start."
         log_error "timeout did not manage to run."
     else
-        log_error "KVM returned an error (return code $rc)."
+        log_error "Image customization died unexpectedly (return code $rc)."
     fi
     exit 1
 else
@@ -186,7 +187,7 @@ fi
 result=$(sed 's|\r||g' "$result_file" | head -1)
 
 if [ "x$result" != "xSUCCESS" ]; then
-    log_error "Helper VM did not return SUCCESS"
+    log_error "Image customization failed."
     exit 1
 fi
 

@@ -37,7 +37,7 @@ PROTOCOL = {
 
 
 def error(msg):
-    sys.stderr.write("helper-monitor error: %s\n" % msg)
+    sys.stderr.write("HELPER-MONITOR ERROR: %s\n" % msg)
     sys.exit(1)
 
 
@@ -45,7 +45,7 @@ def send(fd, msg_type, value):
     subtype, value_name = PROTOCOL[msg_type]
 
     msg = {}
-    msg['type'] = 'helper'
+    msg['type'] = 'image-helper'
     msg['subtype'] = subtype
     msg[value_name] = value
     msg['timestamp'] = time.time()

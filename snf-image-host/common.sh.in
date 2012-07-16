@@ -27,7 +27,7 @@ CURL="curl"
 
 network_backend_support="@network_backend_support@"
 
-MSG_TYPE_ERROR="error"
+MSG_TYPE_ERROR="image-error"
 
 CLEANUP=( )
 ERROR_MSGS=( )
