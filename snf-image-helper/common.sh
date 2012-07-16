@@ -40,9 +40,10 @@ CLEANUP=( )
 ERRORS=( )
 WARNINGS=( )
 
-MSG_TYPE_ERROR="error"
-MSG_TYPE_TASK_START="task-start"
-MSG_TYPE_TASK_END="task-end"
+MSG_TYPE_TASK_START="TASK_START"
+MSG_TYPE_TASK_END="TASK_END"
+
+STDERR_LINE_SIZE=10
 
 add_cleanup() {
     local cmd=""
@@ -57,68 +58,30 @@ log_error() {
 }
 
 warn() {
-    WARNINGS+=("$@")
     echo "Warning: $@" >&2
+    echo "WARNING:$@" > "$MONITOR"
 }
 
 report_task_start() {
-
-    local type="$MSG_TYPE_TASK_START"
-    local timestamp=$(date +%s.%N)
-    local name="${PROGNAME}"
-
-    report+="{\"type\":\"$type\","
-    report+="\"timestamp\":$(date +%s.%N),"
-    report+="\"name\":\"$name\"}"
-
-    echo "$report" > "$MONITOR"
-}
-
-json_list() {
-    declare -a items=("${!1}")
-    report="["
-    for item in "${items[@]}"; do
-        report+="\"$(sed 's/"/\\"/g' <<< "$item")\","
-    done
-    if [ ${#report} -gt 1 ]; then
-        # remove last comma(,)
-        report="${report%?}"
-    fi
-    report+="]"
-
-    echo "$report"
+    echo "$MSG_TYPE_TASK_START:${PROGNAME:2}" > "$MONITOR"
 }
 
 report_task_end() {
-    local type="$MSG_TYPE_TASK_END"
-    local timestam=$(date +%s.%N)
-    local name=${PROGNAME}
-    local warnings=$(json_list WARNINGS[@])
-
-    report="{\"type\":\"$type\","
-    report+="\"timestamp\":$(date +%s.%N),"
-    report+="\"name\":\"$name\","
-    report+="\"warnings\":\"$warnings\"}"
-
-    echo "$report" > "$MONITOR"
+    echo "$MSG_TYPE_TASK_END:${PROGNAME:2}" > "$MONITOR"
 }
 
 report_error() {
-    local type="$MSG_TYPE_ERROR"
-    local timestamp=$(date +%s.%N)
-    local location="${PROGNAME}"
-    local errors=$(json_list ERRORS[@])
-    local warnings=$(json_list WARNINGS[@])
-    local stderr="$(cat "$STDERR_FILE" | sed 's/"/\\"/g')"
-
-    report="{\"type\":\"$type\","
-    report+="\"timestamp\":$(date +%s),"
-    report+="\"location\":\"$location\","
-    report+="\"errors\":$errors,"
-    report+="\"warnings\":$warnings,"
-    report+="\"stderr\":\"$stderr\"}"
-
-    echo "$report" > "$MONITOR"
+    if [ ${#ERRORS[*]} -eq 0 ]; then
+        # No error message. Print stderr
+	local lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
+        echo -n "STDERR:${lines}:" > "$MONITOR"
+        tail --lines=$lines  "$STDERR_FILE" > "$MONITOR"
+    else
+        echo -n "ERROR:" > "$MONITOR"
+        for line in "${ERRORS[@]}"; do
+            echo "$line" > "$MONITOR"
+        done
+    fi
 }
 
 get_base_distro() {
@@ -415,7 +378,7 @@ check_if_excluded() {
     local name="$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
     local exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${name}"
     if [ -n "${!exclude}" ]; then
-        warn "Task $PROGNAME was excluded and will not run."
+        warn "Task ${PROGNAME:2} was excluded and will not run."
         exit 0
     fi
 

@@ -157,7 +157,7 @@ $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
     -drive file="$blockdev",format=raw,if=virtio,cache=none \
     -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
-    -serial "file:$(printf "%q" "$monitor_pipe")" \
+    -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
     -fda "$floppy" -vga none -nographic -parallel none -monitor null \
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
     -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper" \
@@ -182,16 +182,11 @@ else
     echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Helper VM finished."
 fi
 
-# Do not report errors after this. If the result is not "SUCCESS" then the
-# helper VM should have reported the error.
-trap cleanup EXIT
-
 # Read the first line. This will remove \r and \n chars
 result=$(sed 's|\r||g' "$result_file" | head -1)
 
 if [ "x$result" != "xSUCCESS" ]; then
-    log_error "Helper VM returned error:"
-    log_error "$result"
+    log_error "Helper VM did not return SUCCESS"
     exit 1
 fi
 
