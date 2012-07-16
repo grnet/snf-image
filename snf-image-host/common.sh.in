@@ -55,7 +55,7 @@ report_error() {
     local type="$MSG_TYPE_ERROR"
     local location="host"
 
-    report="\"type\":\"$type\","
+    report="{\"type\":\"$type\","
     report+="\"timestamp\":$(date +%s.%N),"
     report+="\"location\":\"$location\","
 
