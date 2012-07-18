@@ -22,6 +22,8 @@ set -o pipefail
 
 . common.sh
 
+ganeti_os_main
+
 # Save stderr to a file
 stderr=$(mktemp)
 add_cleanup rm "$stderr"
@@ -49,8 +51,6 @@ add_cleanup  close_fd ${MONITOR_FD}
 trap "" SIGPIPE
 
 trap "report_and_cleanup $(printf "%q" "$stderr") ${MONITOR_FD}" EXIT
-
-ganeti_os_main
 
 case $BACKEND_TYPE in
     local)
