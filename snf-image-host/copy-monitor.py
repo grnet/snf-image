@@ -32,7 +32,7 @@ import prctl
 import signal
 import socket
 
-MSG_TYPE="copy-progress"
+MSG_TYPE="image-copy-progress"
 
 def parse_arguments(args):
     from optparse import OptionParser

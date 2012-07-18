@@ -27,6 +27,7 @@ LINESIZE = 512
 PROGNAME = os.path.basename(sys.argv[0])
 STDERR_MAXLINES = 10
 MAXLINES = 100
+MSG_TYPE = 'image-helper'
 
 PROTOCOL = {
     'TASK_START': ('task-start', 'task'),
@@ -45,7 +46,7 @@ def send(fd, msg_type, value):
     subtype, value_name = PROTOCOL[msg_type]
 
     msg = {}
-    msg['type'] = 'image-helper'
+    msg['type'] = MSG_TYPE
     msg['subtype'] = subtype
     msg[value_name] = value
     msg['timestamp'] = time.time()
