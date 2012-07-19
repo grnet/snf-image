@@ -53,11 +53,9 @@ report_error() {
     local monitor_fd=$2
 
     local type="$MSG_TYPE_ERROR"
-    local location="host"
 
     report="{\"type\":\"$type\","
     report+="\"timestamp\":$(date +%s.%N),"
-    report+="\"location\":\"$location\","
 
     if [ ${#ERROR_MSGS[@]} -gt 0 ]; then
         local msg="["
