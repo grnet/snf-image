@@ -24,6 +24,7 @@ import json
 import re
 
 LINESIZE = 512
+BUFSIZE = 512
 PROGNAME = os.path.basename(sys.argv[0])
 STDERR_MAXLINES = 10
 MAXLINES = 100
@@ -71,63 +72,78 @@ if __name__ == "__main__":
         error("File descriptor is not valid")
 
     lines_left = 0
-    stderr = ""
-
     line_count = 0
-    while 1:
-        line = sys.stdin.readline(LINESIZE)
+    stderr = ""
+    line = ""
+    while True:
+        # Can't use sys.stdin.readline since I want unbuffered I/O
+        new_data = os.read(sys.stdin.fileno(), BUFSIZE)
 
-        if not line:
-            break
-        else:
+        if not new_data:
+            if not line:
+                break
+            else:
+                new_data = '\n'
+
+        while True:
+            split = new_data.split('\n', 1)
+            line += split[0]
+            if len(split) == 1:
+                if len(line) > LINESIZE:
+                    error("Line size exceeded the maximum allowed size")
+                break
+
+            new_data = split[1]
+
             line_count += 1
-
-        if line[-1] != '\n':
-            # Line is too long...
-            error("Too long line...")
-            sys.exit(1)
-
-        if lines_left > 0:
-            stderr += line
-            lines_left -= 1
-            if lines_left == 0:
-                send(fd, "STDERR", stderr)
-                stderr = ""
-            continue
-
-	if line_count >= MAXLINES + 1:
-            error("Maximum allowed helper monitor number of lines exceeded.")
-
-        line = line.strip()
-        if len(line) == 0:
-            continue
-
-        if line.startswith("STDERR:"):
-            m = re.match("STDERR:(\d+):(.*)", line)
-            if not m:
-                error("Invalid syntax for STDERR line")
-            try:
-                lines_left = int(m.group(1))
-            except ValueError:
-                error("Second field in STDERR line must be an integer")
-
-            if lines_left > STDERR_MAXLINES:
-                error("Too many lines in the STDERR output")
-            elif lines_left < 0:
-                error("Second field of STDERR: %d is invalid" % lines_left)
+            if line_count >= MAXLINES + 1:
+                error("Exceeded maximum allowed number of lines: %d." %
+                      MAXLINES)
 
             if lines_left > 0:
-                stderr = m.group(2) + "\n"
+                stderr += "%s\n" % line
                 lines_left -= 1
+                if lines_left == 0:
+                    send(fd, "STDERR", stderr)
+                    stderr = ""
+                line = ""
+                continue
 
-            if lines_left == 0:
-                send(fd, "STDERR", stderr)
-                stderr = ""
-        elif line.startswith("TASK_START:") or line.startswith("TASK_END:") \
-            or line.startswith("WARNING:") or line.startswith("ERROR:"):
-            (msg_type, _, value) = line.partition(':')
-            send(fd, msg_type, value)
-        else:
-            error("Unknown command!")
+            line = line.strip()
+            if len(line) == 0:
+                continue
+
+            if line.startswith("STDERR:"):
+                m = re.match("STDERR:(\d+):(.*)", line)
+                if not m:
+                    error("Invalid syntax for STDERR line")
+                try:
+                    lines_left = int(m.group(1))
+                except ValueError:
+                    error("Second field in STDERR line must be an integer")
+
+                if lines_left > STDERR_MAXLINES:
+                    error("Too many lines in the STDERR output")
+                elif lines_left < 0:
+                    error("Second field of STDERR: %d is invalid" % lines_left)
+
+                if lines_left > 0:
+                    stderr = m.group(2) + "\n"
+                    lines_left -= 1
+
+                if lines_left == 0:
+                    send(fd, "STDERR", stderr)
+                    stderr = ""
+            elif line.startswith("TASK_START:") \
+                or line.startswith("TASK_END:") \
+                or line.startswith("WARNING:") \
+                or line.startswith("ERROR:"):
+                (msg_type, _, value) = line.partition(':')
+                send(fd, msg_type, value)
+            else:
+                error("Unknown command!")
+
+            # Remove the processed line
+            line = ""
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
