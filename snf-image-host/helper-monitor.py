@@ -33,9 +33,9 @@ MSG_TYPE = 'image-helper'
 PROTOCOL = {
     'TASK_START': ('task-start', 'task'),
     'TASK_END': ('task-end', 'task'),
-    'WARNING': ('warning', 'msg'),
+    'WARNING': ('warning', 'messages'),
     'STDERR': ('error', 'stderr'),
-    'ERROR': ('error', 'msg')}
+    'ERROR': ('error', 'messages')}
 
 
 def error(msg):
@@ -139,6 +139,9 @@ if __name__ == "__main__":
                 or line.startswith("WARNING:") \
                 or line.startswith("ERROR:"):
                 (msg_type, _, value) = line.partition(':')
+
+                if line.startswith("WARNING:") or line.startswith("ERROR:"):
+                    value = [value]
                 send(fd, msg_type, value)
             else:
                 error("Unknown command!")
