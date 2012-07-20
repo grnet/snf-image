@@ -50,7 +50,7 @@ add_cleanup  close_fd ${MONITOR_FD}
 # do not catch this, the program will terminate.
 trap "" SIGPIPE
 
-trap "report_and_cleanup $(printf "%q" "$stderr") ${MONITOR_FD}" EXIT
+trap "report_and_cleanup $(printf "%q" "$stderr")" EXIT
 
 case $BACKEND_TYPE in
     local)
@@ -108,6 +108,7 @@ case "$IMAGE_TYPE" in
         ;;
 esac
 
+log_info "Starting image copy..."
 monitor="./copy-monitor.py -o $MONITOR_FD -r $image_size"
 if [ "$BACKEND_TYPE" = "local" ]; then
     # dd the dump to its new home :-)
@@ -118,6 +119,7 @@ if [ "$BACKEND_TYPE" = "local" ]; then
 else
     $image_cmd | $monitor dd bs=4M of="$target" oflag=direct
 fi
+log_info "Image copy finished..."
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
@@ -151,7 +153,8 @@ add_cleanup rm "$snapshot"
 
 "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
 
-echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Starting helper VM..."
+echo -n "$(date +%Y:%m:%d-%H:%M:%S.%N) " >&2
+log_info "Starting customization VM..."
 set +e
 $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
@@ -180,7 +183,8 @@ if [ $rc -ne 0 ]; then
     fi
     exit 1
 else
-    echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Helper VM finished."
+    echo -n "$(date +%Y:%m:%d-%H:%M:%S.%N)" >&2
+    log_info "Customization VM finished."
 fi
 
 # Read the first line. This will remove \r and \n chars
