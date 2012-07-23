@@ -69,6 +69,13 @@ linux_hostname() {
             echo "$hostname" > "${target}/etc/HOSTNAME";;
         gentoo)
             sed -ie "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;
+        arch)
+            sed -ie "s/^HOSTNAME=.*$/HOSTNAME=\"$hostname\"/" "$target/etc/rc.conf"
+            if grep "^127\.0\.0\.1[ \t]*" "$target/etc/hosts" > /dev/null; then
+               sed -ie "s/127\.0\.0\.1[ \t]*.*$/127.0.0.1\t$hostname/" "$target/etc/hosts"
+            else
+               echo -e "127.0.0.1\t$hostname" >> "$target/etc/hosts"
+            fi;;
         *) log_error "Don't know how to assign hostname. Unknown linux distribution.";;
     esac
 

@@ -97,6 +97,8 @@ get_base_distro() {
         echo "suse"
     elif [ -e "$root_dir/etc/gentoo-release" ]; then
         echo "gentoo"
+    elif [ -e "$root_dir/etc/arch-release" ]; then
+        echo "arch"
     else
         warn "Unknown base distro."
     fi
@@ -126,6 +128,8 @@ get_distro() {
         echo "suse"
     elif [ -e "$root_dir/etc/gentoo-release" ]; then
         echo "gentoo"
+    elif [ -e "$root_dir/etc/arch-release" ]; then
+        echo "arch"
     else
         warn "Unknown distro."
     fi
