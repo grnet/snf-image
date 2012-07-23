@@ -56,15 +56,18 @@ if __name__ == "__main__":
     msg['type'] = PROTOCOL[msg_type][0]
 
     lines = []
-    while True:
-        line = sys.stdin.readline()
+    if msg_type == 'stderr':
+        msg['stderr'] = sys.stdin.read()
+    else:
+        while True:
+            line = sys.stdin.readline()
 
-        if not line:
-            break
+            if not line:
+                break
 
-        lines.append(line.strip())
+            lines.append(line.strip())
+        msg[PROTOCOL[msg_type][1]] = lines
 
-    msg[PROTOCOL[msg_type][1]] = lines
     msg['timestamp'] = time.time()
     sys.stdout.write("%s\n" % json.dumps(msg))
 
