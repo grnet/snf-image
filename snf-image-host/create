@@ -119,7 +119,7 @@ if [ "$BACKEND_TYPE" = "local" ]; then
 else
     $image_cmd | $monitor dd bs=4M of="$target" oflag=direct
 fi
-log_info "Image copy finished..."
+log_info "Image copy finished."
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
@@ -194,6 +194,8 @@ if [ "x$result" != "xSUCCESS" ]; then
     log_error "Image customization failed."
     exit 1
 fi
+
+log_info "Image customization finished successfully."
 
 # Execute cleanups
 cleanup
