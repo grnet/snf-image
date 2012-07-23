@@ -73,10 +73,9 @@ report_error() {
 
     local type="$MSG_TYPE_ERROR"
 
-    report="{\"type\":\"$type\","
-    report+="\"timestamp\":$(date +%s.%N),"
-
     if [ ${#ERROR_MSGS[@]} -gt 0 ]; then
+        report="{\"type\":\"$type\","
+        report+="\"timestamp\":$(date +%s.%N),"
         local msg="["
         for err in "${ERROR_MSGS[@]}"; do
             msg+="\"$(sed 's/"/\\"/g' <<< "$err")\","
@@ -88,8 +87,7 @@ report_error() {
         msg+="]"
         report+="\"messages\":$msg}"
     else
-        local stderr="$(cat "$error_file" | sed 's/"/\\"/g')"
-        report+="\"stderr\":\"$stderr\"}"
+        report=$(tail -10 "$error_file" | ./stderr-monitor.py "$type")
     fi
 
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
