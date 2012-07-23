@@ -52,12 +52,7 @@ log_error() {
 log_info() {
     echo "$*" >&2
 
-    local type="$MSG_TYPE_INFO"
-    local msg="[\"$(sed 's/"/\\"/g' <<< "$@")\"]"
-
-    report="{\"type\":\"$type\","
-    report+="\"timestamp\":$(date +%s.%N),"
-    report+="\"messages\":$msg}"
+    local report="$(./host-monitor.py info <<< "$*")"
 
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
 }
@@ -70,24 +65,15 @@ close_fd() {
 
 report_error() {
     local error_file=$1
-
-    local type="$MSG_TYPE_ERROR"
-
+    local report=""
     if [ ${#ERROR_MSGS[@]} -gt 0 ]; then
-        report="{\"type\":\"$type\","
-        report+="\"timestamp\":$(date +%s.%N),"
-        local msg="["
+        local msg=""
         for err in "${ERROR_MSGS[@]}"; do
-            msg+="\"$(sed 's/"/\\"/g' <<< "$err")\","
+            msg+="$(echo "$err")"
         done
-        if [ ${#msg} -gt 1 ]; then
-            # remove last comma (,)
-            msg="${msg%?}"
-        fi
-        msg+="]"
-        report+="\"messages\":$msg}"
+        report="$(./host-monitor.py error <<< "$msg")"
     else
-        report=$(tail -10 "$error_file" | ./stderr-monitor.py "$type")
+        report=$(tail -10 "$error_file" | ./host-monitor.py stderr)
     fi
 
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
