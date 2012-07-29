@@ -20,7 +20,7 @@
 """Utility that generates monitoring messages for snf-image.
 
 This utility given a message type as option and the message body as input will
-print a monitoring message in stdout.
+print a monitoring message to stdout.
 """
 
 import sys
