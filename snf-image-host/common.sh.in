@@ -239,8 +239,10 @@ get_backend_type() {
             log_error "Retrieving images from the network is not supported."
             exit 1
         fi
+    elif [ "$id" = "null" ]; then
+        echo "null"
     else
-        echo "local";
+        echo "local"
     fi
 }
 

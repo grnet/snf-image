@@ -145,7 +145,7 @@ def main():
         for l in iof.readlines():
             if l.startswith("rchar:"):
                 message['position'] = int(l.split(': ')[1])
-                message['progress'] = float(100) if opts.read_bytes == 0 \
+                message['progress'] = float(0) if opts.read_bytes == 0 \
                     else float("%2.2f" % (
                         message['position'] * 100.0 / message['total']))
                 send_message(out, message)

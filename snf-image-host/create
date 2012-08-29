@@ -61,6 +61,12 @@ case $BACKEND_TYPE in
         fi
         image_size="$(stat -L -c %s "$image_file")"
         ;;
+    null)
+        image_file=/dev/null
+        image_size=0
+        # Treat it as local file from now on...
+        BACKEND_TYPE="local"
+        ;;
     network)
         image_cmd="$CURL $(printf "%q" "$IMAGE_NAME") 2> /dev/null"
         image_size=$($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
