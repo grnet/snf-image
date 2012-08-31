@@ -17,6 +17,8 @@
 # 02110-1301, USA.
 
 RESULT=/dev/ttyS1
+MONITOR=/dev/ttyS2
+
 FLOPPY_DEV=/dev/fd0
 PROGNAME=$(basename $0)
 
@@ -35,6 +37,13 @@ REGLOOKUP=reglookup
 CHNTPW=chntpw
 
 CLEANUP=( )
+ERRORS=( )
+WARNINGS=( )
+
+MSG_TYPE_TASK_START="TASK_START"
+MSG_TYPE_TASK_END="TASK_END"
+
+STDERR_LINE_SIZE=10
 
 add_cleanup() {
     local cmd=""
@@ -43,12 +52,36 @@ add_cleanup() {
 }
 
 log_error() {
+    ERRORS+=("$@")
     echo "ERROR: $@" | tee $RESULT >&2
     exit 1
 }
 
 warn() {
     echo "Warning: $@" >&2
+    echo "WARNING:$@" > "$MONITOR"
+}
+
+report_task_start() {
+    echo "$MSG_TYPE_TASK_START:${PROGNAME:2}" > "$MONITOR"
+}
+
+report_task_end() {
+    echo "$MSG_TYPE_TASK_END:${PROGNAME:2}" > "$MONITOR"
+}
+
+report_error() {
+    if [ ${#ERRORS[*]} -eq 0 ]; then
+        # No error message. Print stderr
+	local lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
+        echo -n "STDERR:${lines}:" > "$MONITOR"
+        tail --lines=$lines  "$STDERR_FILE" > "$MONITOR"
+    else
+        echo -n "ERROR:" > "$MONITOR"
+        for line in "${ERRORS[@]}"; do
+            echo "$line" > "$MONITOR"
+        done
+    fi
 }
 
 get_base_distro() {
@@ -64,6 +97,8 @@ get_base_distro() {
         echo "suse"
     elif [ -e "$root_dir/etc/gentoo-release" ]; then
         echo "gentoo"
+    elif [ -e "$root_dir/etc/arch-release" ]; then
+        echo "arch"
     else
         warn "Unknown base distro."
     fi
@@ -93,6 +128,8 @@ get_distro() {
         echo "suse"
     elif [ -e "$root_dir/etc/gentoo-release" ]; then
         echo "gentoo"
+    elif [ -e "$root_dir/etc/arch-release" ]; then
+        echo "arch"
     else
         warn "Unknown distro."
     fi
@@ -329,11 +366,23 @@ cleanup() {
   fi
 }
 
-check_if_excluded() {
+task_cleanup() {
+    rc=$?
 
-    local exclude=SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${PROGNAME:2}
+    if [ $rc -eq 0 ]; then
+       report_task_end
+    else
+       report_error
+    fi
+
+    cleanup
+}
+
+check_if_excluded() {
+    local name="$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
+    local exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${name}"
     if [ -n "${!exclude}" ]; then
-        warn "Task $PROGNAME was excluded and will not run."
+        warn "Task ${PROGNAME:2} was excluded and will not run."
         exit 0
     fi
 
@@ -342,5 +391,9 @@ check_if_excluded() {
 
 trap cleanup EXIT
 set -o pipefail
+
+STDERR_FILE=$(mktemp)
+add_cleanup rm -f "$STDERR_FILE"
+exec 2> >(tee -a "$STDERR_FILE" >&2)
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

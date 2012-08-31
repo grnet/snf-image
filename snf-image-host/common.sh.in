@@ -22,13 +22,20 @@ LOSETUP="losetup"
 SFDISK="sfdisk"
 QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
-TIMELIMIT="timelimit"
+TIMEOUT="timeout"
 CURL="curl"
 
+# Temporary use stderr as monitoring file descriptor.
+# `create' will overwrite this
+MONITOR_FD="2"
 
 network_backend_support="@network_backend_support@"
 
+MSG_TYPE_ERROR="image-error"
+MSG_TYPE_INFO="image-info"
+
 CLEANUP=( )
+ERROR_MSGS=( )
 
 add_cleanup() {
     local cmd=""
@@ -37,7 +44,39 @@ add_cleanup() {
 }
 
 log_error() {
-    echo "$@" >&2
+    ERROR_MSGS+=("$@")
+    echo "$*" >&2
+}
+
+
+log_info() {
+    echo "$*" >&2
+
+    local report="$(./host-monitor.py info <<< "$*")"
+
+    eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
+}
+
+
+close_fd() {
+    local fd="$1"
+    exec {fd}>&-
+}
+
+report_error() {
+    local error_file=$1
+    local report=""
+    if [ ${#ERROR_MSGS[@]} -gt 0 ]; then
+        local msg=""
+        for err in "${ERROR_MSGS[@]}"; do
+            msg+="$(echo "$err")"
+        done
+        report="$(./host-monitor.py error <<< "$msg")"
+    else
+        report=$(tail -10 "$error_file" | ./host-monitor.py stderr)
+    fi
+
+    eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
 }
 
 get_api5_arguments() {
@@ -200,8 +239,10 @@ get_backend_type() {
             log_error "Retrieving images from the network is not supported."
             exit 1
         fi
+    elif [ "$id" = "null" ]; then
+        echo "null"
     else
-        echo "local";
+        echo "local"
     fi
 }
 
@@ -286,9 +327,18 @@ EOF
     mv -f "$tmp_cache" "$HELPER_CACHE_FILE"
 }
 
+report_and_cleanup(){
+
+    local err_file="$1"
+
+    report_error "$err_file"
+    cleanup
+}
+
 cleanup() {
-# if something fails here, it souldn't call cleanup again...
+    # if something fails here, it souldn't call cleanup again...
     trap - EXIT
+
     if [ ${#CLEANUP[*]} -gt 0 ]; then
         LAST_ELEMENT=$((${#CLEANUP[*]}-1))
         REVERSE_INDEXES=$(seq ${LAST_ELEMENT} -1 0)
@@ -332,7 +382,7 @@ fi
 : ${HELPER_KERNEL:="@HELPER_KERNEL@"}
 : ${HELPER_INITRD:="@HELPER_INITRD@"}
 : ${HELPER_PKG:="@HELPER_DIR@/snf-image-helper.deb"}
-: ${HELPER_SOFT_TIMEOUT:=15}
+: ${HELPER_SOFT_TIMEOUT:=20}
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
 : ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
@@ -345,22 +395,5 @@ fi
 : ${UNATTEND:="@UNATTEND@"}
 
 SCRIPT_NAME=$(basename $0)
-
-if [ -f /sbin/blkid -a -x /sbin/blkid ]; then
-    VOL_ID="/sbin/blkid -c /dev/null -o value -s UUID"
-    VOL_TYPE="/sbin/blkid -c /dev/null -o value -s TYPE"
-else
-    for dir in /lib/udev /sbin; do
-        if [ -f $dir/vol_id -a -x $dir/vol_id ]; then
-            VOL_ID="$dir/vol_id -u"
-            VOL_TYPE="$dir/vol_id -t"
-        fi
-    done
-fi
-
-if [ -z "$VOL_ID" ]; then
-    log_error "vol_id or blkid not found, please install udev or util-linux"
-    exit 1
-fi
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

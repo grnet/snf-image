@@ -24,6 +24,34 @@ set -o pipefail
 
 ganeti_os_main
 
+# Save stderr to a file
+stderr=$(mktemp)
+add_cleanup rm "$stderr"
+exec 2> >(tee -a "$stderr" >&2)
+
+monitor_pipe=$(mktemp -u)
+mkfifo -m 600 "$monitor_pipe"
+add_cleanup rm -f "$monitor_pipe"
+
+if [ -n "$PROGRESS_MONITOR" ]; then
+    { sleep 1; $PROGRESS_MONITOR "$instance" < "$monitor_pipe" ; } &
+    monitor_pid="$!"
+else
+    sed -u 's|^|MONITOR MSG: |g' < "$monitor_pipe" &
+    monitor_pid="$!"
+fi
+
+# Create file descriptor to monitor_pipe
+exec {MONITOR_FD}>${monitor_pipe}
+add_cleanup  close_fd ${MONITOR_FD}
+
+# Ignore sigpipe signals. If progress monitor is dead and snf-image-host tries
+# to output something to the opened pipe, then a sigpipe will be raised. If we
+# do not catch this, the program will terminate.
+trap "" SIGPIPE
+
+trap "report_and_cleanup $(printf "%q" "$stderr")" EXIT
+
 case $BACKEND_TYPE in
     local)
         image_file="$IMAGE_DIR/$(echo "$IMAGE_NAME" | sed 's/^file://').$IMAGE_TYPE"
@@ -32,6 +60,12 @@ case $BACKEND_TYPE in
             exit 1
         fi
         image_size="$(stat -L -c %s "$image_file")"
+        ;;
+    null)
+        image_file=/dev/null
+        image_size=0
+        # Treat it as local file from now on...
+        BACKEND_TYPE="local"
         ;;
     network)
         image_cmd="$CURL $(printf "%q" "$IMAGE_NAME") 2> /dev/null"
@@ -45,12 +79,6 @@ case $BACKEND_TYPE in
         image_size=$(./pithcat -s  $cmd_args)
         ;;
 esac
-
-monitor="" # Empty if no progress monitor program is not defined.
-if [ -n "$PROGRESS_MONITOR" ]; then
-    monitor="$PROGRESS_MONITOR \
-        -i $(printf "%q" "$INSTANCE_NAME") -r $image_size"
-fi
 
 # If the target device is not a real block device we'll first losetup it.
 # This is needed for file disks.
@@ -86,6 +114,8 @@ case "$IMAGE_TYPE" in
         ;;
 esac
 
+log_info "Starting image copy..."
+monitor="./copy-monitor.py -o $MONITOR_FD -r $image_size"
 if [ "$BACKEND_TYPE" = "local" ]; then
     # dd the dump to its new home :-)
     # Deploying an image file on a target block device is a streaming copy
@@ -95,6 +125,7 @@ if [ "$BACKEND_TYPE" = "local" ]; then
 else
     $image_cmd | $monitor dd bs=4M of="$target" oflag=direct
 fi
+log_info "Image copy finished."
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
@@ -128,32 +159,49 @@ add_cleanup rm "$snapshot"
 
 "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
 
-echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Starting helper VM..."
-$TIMELIMIT -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
+echo -n "$(date +%Y:%m:%d-%H:%M:%S.%N) " >&2
+log_info "Starting customization VM..."
+set +e
+$TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
     -drive file="$blockdev",format=raw,if=virtio,cache=none \
-    -boot c -serial stdio -serial file:"$result_file" \
+    -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
+    -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
     -fda "$floppy" -vga none -nographic -parallel none -monitor null \
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
     -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper" \
-    2>&1 | sed 's|^|HELPER: |g'
-echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Helper VM finished."
-
-if [ $? -ne 0 ]; then
-    if [ $? -gt 128 ];  then
-        log_error "Helper was terminated. Did not finish on time."
+    2>&1 | sed -u 's|^|HELPER: |g'
+rc=$?
+set -e
+if [ $rc -ne 0 ]; then
+    if [ $rc -eq 124 ];  then
+        log_error "Image customization was terminated. Did not finish on time."
+    elif [ $rc -eq 137 ]; then # (128 + SIGKILL)
+        log_error "Image customization was killed. Did not finish on time."
+    elif [ $rc -eq 141 ]; then # (128 + SIGPIPE)
+        log_error "Image customization was terminated by a SIGPIPE."
+        log_error "Maybe progress monitor has died unexpectedly."
+    elif [ $rc -eq 125 ]; then
+        log_error "Internal Error. Image customization could not start."
+        log_error "timeout did not manage to run."
+    else
+        log_error "Image customization died unexpectedly (return code $rc)."
     fi
     exit 1
+else
+    echo -n "$(date +%Y:%m:%d-%H:%M:%S.%N)" >&2
+    log_info "Customization VM finished."
 fi
 
 # Read the first line. This will remove \r and \n chars
 result=$(sed 's|\r||g' "$result_file" | head -1)
 
 if [ "x$result" != "xSUCCESS" ]; then
-    log_error "Helper VM returned error:"
-    log_error "$result"
+    log_error "Image customization failed."
     exit 1
 fi
+
+log_info "Image customization finished successfully."
 
 # Execute cleanups
 cleanup

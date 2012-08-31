@@ -1,3 +1,17 @@
+2012-08-31, v0.5
+	* Add a new progress monitoring mechanism. With this new mechanism,
+	  snf-image can output progress and error messages to external programs
+	  when running.
+	* Make the name of image properties case insensitive
+	* Abandon timelimit command in favor of timeout
+	* Add support for null image backend type. This backend type can be
+	  used if we want snf-image to configure the VM disk without first
+	  copying an image to it.
+
+2012-06-29, v0.4.2
+
+2012-05-28, v0.4.1
+
 2012-05-17, v0.4
 	* Remove progress-monitor-support flag. An external progress monitor
 	  programm will be used if --with-progress-monitor flag is used in
@@ -10,7 +24,7 @@
 	  list to determine if it is OK to use this cache file or not.
 	* Add mechanism for overwritting the helper's Unattend.xml file
 
-2012-03-29, v0.3.5
+2012-03-29, v0.3.6
 	* Make snf-image-update-helper ask whether to use the found deboostrap
 	  cache file when in interactive mode.
 	* Make the system update the default debootstrap cache file when -c
