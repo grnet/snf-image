@@ -1,3 +1,7 @@
+2012-08-31, v0.5
+	* Add a new progress monitoring mechanish
+	* Add support for arch linux
+
 2012-06-29, v0.4.2
 	* Make the name of image properties case-insensitive
 
