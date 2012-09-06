@@ -19,16 +19,16 @@
 
 ### BEGIN TASK INFO
 # Provides:		DisableRemoteDesktopConnections
-# RunBefore:            UmountImage
+# RunBefore:            EnforcePersonality
 # RunAfter:		MountImage
 # Short-Description:	Temporary Disable Remote Desktop Connections
 ### END TASK INFO
 
 #
-# This task will change the value of `fDenyTSConnection' registry key located in
-# `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\' to
-# "true". This will disable RDP connections. The key will change back to "false"
-# during the specialize pass of the Windows setup.
+# This task will change the value of `fDenyTSConnection' registry key located
+# in `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\' to
+# "true". This will disable RDP connections. The key will change back to
+# "false" during the specialize pass of the Windows setup.
 #
 
 set -e

@@ -20,7 +20,7 @@
 ### BEGIN TASK INFO
 # Provides:		EnforcePersonality
 # RunBefore:		UmountImage
-# RunAfter:		DeleteSSHKeys
+# RunAfter:		MountImage
 # Short-Description:	Inject files to the instance
 ### END TASK INFO
 

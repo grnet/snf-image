@@ -19,7 +19,7 @@
 
 ### BEGIN TASK INFO
 # Provides:		InstallUnattend
-# RunBefore:		UmountImage
+# RunBefore:		EnforcePersonality
 # RunAfter:		MountImage
 # Short-Description:	Installs Unattend.xml for unattended windows setup
 ### END TASK INFO

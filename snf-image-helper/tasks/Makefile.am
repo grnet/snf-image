@@ -10,9 +10,9 @@ dist_tasks_SCRIPTS = \
 		40InstallUnattend \
 		40SELinuxAutorelabel \
 		50AssignHostname \
-		50EnforcePersonality \
-		50FilesystemResizeMounted \
 		50ChangePassword \
+		50FilesystemResizeMounted \
+		60EnforcePersonality \
 		80UmountImage
 
 edit = sed \

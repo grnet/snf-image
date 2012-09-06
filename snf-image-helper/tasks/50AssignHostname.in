@@ -19,7 +19,7 @@
 
 ### BEGIN TASK INFO
 # Provides:		AssignHostname
-# RunBefore:            UmountImage
+# RunBefore:            EnforcePersonality
 # RunAfter:		InstallUnattend
 # Short-Description:	Assign Hostname/Computer Name to the instance
 ### END TASK INFO

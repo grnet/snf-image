@@ -19,7 +19,7 @@
 
 ### BEGIN TASK INFO
 # Provides:		DeleteSSHKeys
-# RunBefore:            UmountImage
+# RunBefore:            EnforcePersonality
 # RunAfter:             MountImage
 # Short-Description:	Remove ssh keys and in some cases recreate them
 ### END TASK INFO
