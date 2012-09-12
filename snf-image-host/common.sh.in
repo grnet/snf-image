@@ -125,9 +125,9 @@ get_api10_arguments() {
     fi
     if [ "$SCRIPT_NAME" = "export" ]; then
         if [ -z "$EXPORT_DEVICE" ]; then
-        log_error "Missing OS API Variable EXPORT_DEVICE"
-    fi
-    blockdev=$EXPORT_DEVICE
+            log_error "Missing OS API Variable EXPORT_DEVICE"
+        fi
+        blockdev=$EXPORT_DEVICE
     elif [ "$SCRIPT_NAME" = "import" ]; then
         if [ -z "$IMPORT_DEVICE" ]; then
         log_error "Missing OS API Variable IMPORT_DEVICE"
