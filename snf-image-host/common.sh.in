@@ -144,28 +144,25 @@ get_api10_arguments() {
 
 get_api20_arguments() {
     get_api10_arguments
-    if [ -z "$OSP_IMG_ID" ]; then
-        log_error "Missing OS API Parameter: OSP_IMG_ID"
-        exit 1
-    fi
-    if [ -z "$OSP_IMG_FORMAT" ]; then
-        log_error "Missing OS API Parameter: OSP_IMG_FORMAT"
-        exit 1
-    fi
-    if [ -z "$OSP_IMG_PASSWD" ]; then
-        log_error "Missing OS API Parameter: OSP_IMG_PASSWD"
-        exit 1
+
+    local required_osparams="IMG_ID IMG_FORMAT IMG_PASSWD"
+    local osparams="$required_osparams IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+
+    # Store OSP_VAR in VAR
+    for param in $osparams; do
+        eval $param=\"\$OSP_$param\"
+    done
+
+    if [ -n "$CONFIG_URL" ]; then
+	source <($CURL -f "$CONFIG_URL" | ./decode-config.py $osparams)
     fi
 
-    IMG_ID=$OSP_IMG_ID
-    IMG_FORMAT=$OSP_IMG_FORMAT
-    IMG_PASSWD=$OSP_IMG_PASSWD
-    if [ -n "$OSP_IMG_PROPERTIES" ]; then
-        IMG_PROPERTIES="$OSP_IMG_PROPERTIES"
-    fi
-    if [ -n "$OSP_IMG_PERSONALITY" ]; then
-        IMG_PERSONALITY="$OSP_IMG_PERSONALITY"
-    fi
+    for var in $required_osparams; do
+        if [ -z "${!var}" ]; then
+             log_error "Missing OS API Parameter: ${var}"
+             exit 1
+        fi
+    done
 }
 
 map_disk0() {

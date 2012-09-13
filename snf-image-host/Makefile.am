@@ -12,7 +12,7 @@ variantsdir=${sysconfdir}/ganeti/snf-image/variants
 dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 	${srcdir}/rename ${srcdir}/verify ${srcdir}/pithcat \
 	${srcdir}/copy-monitor.py ${srcdir}/helper-monitor.py \
-	${srcdir}/host-monitor.py
+	${srcdir}/host-monitor.py ${srcdir}/decode-config.py
 
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list
