@@ -29,8 +29,6 @@ CURL="curl"
 # `create' will overwrite this
 MONITOR_FD="2"
 
-network_backend_support="@network_backend_support@"
-
 MSG_TYPE_ERROR="image-error"
 MSG_TYPE_INFO="image-info"
 

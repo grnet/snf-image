@@ -12,9 +12,6 @@ AC_ARG_ENABLE([network_backend],
     [enable support for network-hosted images
     (this depends on cURL)])
 )
-AS_IF([test "x$enable_network_backend" = "xyes"],,
-    [AC_MSG_NOTICE(network backend support not enabled)])
-AM_CONDITIONAL(NETWORKIMGSUPPORT, [test "x$enable_network_backend" = "xyes"])
 
 # --with-progress-monitor
 AC_ARG_WITH([progress-monitor],
@@ -135,13 +132,9 @@ if test -z "$TIMEOUT" ; then
   AC_MSG_ERROR([timeout not found in $PATH:/usr/sbin:/sbin])
 fi
 
-if test "x$enable_network_backend" = "xyes" ; then
-  AC_PATH_PROG(CURL, [curl], [], [$PATH:/usr/sbin:/sbin])
-    if test -z "$CURL" ; then
-      AC_MSG_ERROR([curl is needed for network backend support but was not \
-      found in $PATH:/usr/sbin:/sbin]
-      [To disable network backend support ommit --enable-network-backend])
-    fi
+AC_PATH_PROG(CURL, [curl], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$CURL" ; then
+  AC_MSG_ERROR([curl not found in $PATH:/usr/sbin:/sbin])
 fi
 
 AC_CONFIG_FILES([
