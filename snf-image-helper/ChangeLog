@@ -1,3 +1,8 @@
+2012-09-14, v0.6
+	* Make sure EnforcePersonality is the last task that runs before
+	  UmountImage. Doing this ensures that user-enjected files never
+	  get overwritten by any other configuration task.
+
 2012-08-31, v0.5
 	* Add a new progress monitoring mechanish
 	* Add support for arch linux
