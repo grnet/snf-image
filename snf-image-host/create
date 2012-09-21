@@ -24,6 +24,13 @@ set -o pipefail
 
 ganeti_os_main
 
+if [ "$IMAGE_DEBUG" = "yes" ]; then
+    PS4='$(date "+%s.%N ($LINENO) + ")'
+    set -x
+elif [ "$IMAGE_DEBUG" != "no" ]; then
+    echo "Warning: Unsupported IMAGE_DEBUG value: \`$IMAGE_DEBUG'"
+fi
+
 # Save stderr to a file
 stderr=$(mktemp)
 add_cleanup rm "$stderr"

@@ -10,7 +10,7 @@
 # IMAGE_DIR="/var/lib/snf-image"
 
 # IMAGE_DEBUG: turn on debugging output for the scripts
-# IMAGE_DEBUG=0
+# IMAGE_DEBUG=no
 
 # HELPER_DIR: Directory hosting the helper files
 # HELPER_DIR="/var/lib/snf-image/helper/"
