@@ -166,7 +166,7 @@ add_cleanup rm "$snapshot"
 
 "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
 
-echo -n "$(date +%Y:%m:%d-%H:%M:%S.%N) " >&2
+echo -n "$($DATE +%Y:%m:%d-%H:%M:%S.%N) " >&2
 log_info "Starting customization VM..."
 set +e
 $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
@@ -196,7 +196,7 @@ if [ $rc -ne 0 ]; then
     fi
     exit 1
 else
-    echo -n "$(date +%Y:%m:%d-%H:%M:%S.%N)" >&2
+    echo -n "$($DATE +%Y:%m:%d-%H:%M:%S.%N)" >&2
     log_info "Customization VM finished."
 fi
 
