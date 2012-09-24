@@ -24,6 +24,7 @@ QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
 TIMEOUT="timeout"
 CURL="curl"
+DATE="date -u" # Time in UTC
 
 # Temporary use stderr as monitoring file descriptor.
 # `create' will overwrite this

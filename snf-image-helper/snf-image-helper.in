@@ -90,7 +90,7 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
     echo "Execute all snf-image tasks...."
     $RUN_PARTS -v --exit-on-error "@tasksdir@" 2>&1|
         while IFS= read -r line; do
-            echo $(date +%Y:%m:%d-%H:%M:%S.%N) "$line"
+            echo $($DATE +%Y:%m:%d-%H:%M:%S.%N) "$line"
         done
 fi
 
