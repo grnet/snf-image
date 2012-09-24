@@ -33,6 +33,7 @@ BLKID=blkid
 BLOCKDEV=blockdev
 REGLOOKUP=reglookup
 CHNTPW=chntpw
+DATE="date -u" # Time in UTC
 
 CLEANUP=( )
 

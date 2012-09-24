@@ -24,6 +24,7 @@ QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
 TIMELIMIT="timelimit"
 CURL="curl"
+DATE="date -u" # Time in UTC
 
 
 network_backend_support="@network_backend_support@"
