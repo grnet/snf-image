@@ -85,6 +85,10 @@ report_error() {
     fi
 }
 
+system_poweroff() {
+    echo o > /proc/sysrq-trigger
+}
+
 get_base_distro() {
     local root_dir=$1
 

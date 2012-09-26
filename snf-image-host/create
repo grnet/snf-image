@@ -176,7 +176,7 @@ $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
     -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
     -fda "$floppy" -vga none -nographic -parallel none -monitor null \
     -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
-    -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper" \
+    -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper init=/usr/bin/snf-image-helper" \
     2>&1 | sed -u 's|^|HELPER: |g'
 rc=$?
 set -e

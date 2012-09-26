@@ -17,18 +17,24 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+
+if [ $$ -eq 1 ]; then
+    mount / -o remount
+    /etc/init.d/udev start
+    hwclock -u -s
+
+    (exec $0) &
+    wait
+    exit 0 # Hopefully this is never called...
+fi
+
 . @commondir@/common.sh
 
 set -e
 
-if [ "x$1" != "x--force" ]; then
-    echo "WARNING: Exiting, this command would cause the system to halt." >&2
-    echo "Use --force if you know what you're doing." >&2
-    exit 1
-fi
-
 # terminate helper vm when the script exits
-add_cleanup telinit 0
+add_cleanup system_poweroff
 
 if [ ! -b "$FLOPPY_DEV" ]; then
     log_error "Floppy device is not present!"
