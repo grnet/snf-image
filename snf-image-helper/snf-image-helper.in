@@ -33,8 +33,13 @@ fi
 
 set -e
 
-# terminate helper vm when the script exits
-add_cleanup system_poweroff
+if grep snf_image_activate_helper /proc/cmdline > /dev/null; then
+    # terminate helper vm when the script exits
+    add_cleanup system_poweroff
+else
+    log_error "Kernel command line activation flag: " \
+              "\`snf_image_activate_helper' is missing"
+fi
 
 if [ ! -b "$FLOPPY_DEV" ]; then
     log_error "Floppy device is not present!"
