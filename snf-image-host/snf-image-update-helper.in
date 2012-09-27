@@ -224,8 +224,8 @@ if [ ! -L "$target/vmlinuz" -o ! -L "$target/vmlinuz" ]; then
 fi
 echo "done"
 
-kernel=$(readlink -en "$target/vmlinuz")
-initrd=$(readlink -en "$target/initrd.img")
+kernel="$target/$(chroot "$target" readlink -en /vmlinuz)"
+initrd="$target/$(chroot "$target" readlink -en /initrd.img)"
 
 echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
 mv "$kernel" "$initrd" "$HELPER_DIR"
