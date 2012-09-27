@@ -16,10 +16,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-RESULT=/dev/ttyS1
-MONITOR=/dev/ttyS2
-
-FLOPPY_DEV=/dev/fd0
 PROGNAME=$(basename $0)
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
@@ -45,6 +41,38 @@ MSG_TYPE_TASK_END="TASK_END"
 
 STDERR_LINE_SIZE=10
 
+
+# hypervisor param is passed in /proc/cmdline
+case "$hypervisor" in
+  kvm)
+    FLOPPY_DEV=/dev/fd0
+    ROOT_FSTAB_ENTRY=/dev/sda1
+    IMG_DEV=/dev/vda
+    RESULT=/dev/ttyS1
+    MONITOR=/dev/ttyS2
+    ;;
+  xen-hvm|xen-pvm)
+    FLOPPY_DEV=/dev/xvdc1
+    ROOT_FSTAB_ENTRY=/dev/xvda1
+    IMG_DEV=/dev/xvdb
+    RESULT=/dev/hvc0
+    MONITOR=/dev/hvc0
+    ;;
+esac
+
+to_monitor() {
+
+    echo "HELPER_MONITOR_$@" > "$MONITOR"
+
+}
+
+to_result() {
+
+    echo "HELPER_RESULT_$@" > "$RESULT"
+
+}
+
+
 add_cleanup() {
     local cmd=""
     for arg; do cmd+=$(printf "%q " "$arg"); done
@@ -53,33 +81,36 @@ add_cleanup() {
 
 log_error() {
     ERRORS+=("$@")
-    echo "ERROR: $@" | tee $RESULT >&2
+    echo "ERROR: $@" >&2
+    to_result "ERROR: $@"
     exit 1
 }
 
 warn() {
     echo "Warning: $@" >&2
-    echo "WARNING:$@" > "$MONITOR"
+    to_monitor "WARNING:$@"
 }
 
 report_task_start() {
-    echo "$MSG_TYPE_TASK_START:${PROGNAME:2}" > "$MONITOR"
+    to_monitor "$MSG_TYPE_TASK_START:${PROGNAME:2}"
 }
 
 report_task_end() {
-    echo "$MSG_TYPE_TASK_END:${PROGNAME:2}" > "$MONITOR"
+    to_monitor "$MSG_TYPE_TASK_END:${PROGNAME:2}"
 }
 
 report_error() {
     if [ ${#ERRORS[*]} -eq 0 ]; then
         # No error message. Print stderr
-	local lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
-        echo -n "STDERR:${lines}:" > "$MONITOR"
-        tail --lines=$lines  "$STDERR_FILE" > "$MONITOR"
+	      lines="$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE")"
+        cnt=$(echo $lines | wc -l)
+        for line in lines; do
+          to_monitor "$STDERR:$cnt: $line"
+          let cnt--
+        done
     else
-        echo -n "ERROR:" > "$MONITOR"
         for line in "${ERRORS[@]}"; do
-            echo "$line" > "$MONITOR"
+            to_monitor "ERROR: $line"
         done
     fi
 }

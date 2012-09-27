@@ -37,6 +37,7 @@ MSG_TYPE_INFO="image-info"
 CLEANUP=( )
 ERROR_MSGS=( )
 
+
 add_cleanup() {
     local cmd=""
     for arg; do cmd+=$(printf "%q " "$arg"); done
@@ -387,12 +388,19 @@ fi
 : ${HELPER_USER:="nobody"}
 : ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
 : ${HELPER_CACHE_PKGS:="@HELPER_DIR@/packages"}
-: ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"}
+: ${HELPER_EXTRA_PKGS:="e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"}
+: ${HELPER_LINUX_IMAGE_PKG:="linux-image-amd64"}
+: ${HELPER_LINUX_IMAGE_XEN_PKG:="linux-image-xen-amd64"}
 : ${HELPER_MIRROR:=""}
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
 : ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
 : ${UNATTEND:="@UNATTEND@"}
+
+case $HYPERVISOR in
+    xen-hvm|xen-pvm) . xen-common.sh ;;
+    kvm) . kvm-common.sh ;;
+esac
 
 SCRIPT_NAME=$(basename $0)
 
