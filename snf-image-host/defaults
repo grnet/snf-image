@@ -50,15 +50,9 @@
 # HELPER_CACHE_PKGS: Debian Packages the cache file contains.
 # HELPER_CACHE_PKGS="${HELPER_DIR}/packages"
 
-# HELPER_EXTRA_PKGS: Extra packages that will need to be supplied
-# to debootstrap to make the resulting helper image workable.
-# DO NOT OVERWRITE THIS UNLESS YOU KNOW WHAT YOU ARE DOING
-# HELPER_EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"
-
-# HELPER_MIRROR: Debian mirror to use with debootstrap. Using a mirror close to
-# you will speed up the whole debootstraping process. By default we do not
-# define a mirror. Debootstrap will use it's default debian URL.
-# HELPER_MIRROR="http://ftp.debian.org/debian"
+# MULTISTRAP_CONFIG: Configuration file to be used with multistrap to create
+# the rootfs of the helper image.
+# MULTISTRAP_CONFIG="/etc/snf-image/multistrap.conf"
 
 # PITHOS_DB: Pithos database in SQLAlchemy format
 # PITHOS_DB="sqlite:////var/lib/pithos/backend.db"

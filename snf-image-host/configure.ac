@@ -39,6 +39,21 @@ AC_ARG_WITH([unattend-file],
     fi]
 )
 
+# --with-multistrap-config
+AC_ARG_WITH([multistrap-config],
+  [AS_HELP_STRING([--with-multistrap-config=MULTISTRAP_CONFIG_PATH],
+      [path to a multistrap configuration file
+      [SYSCONFDIR/snf-image/multistrap.conf]]
+    )],
+    [if test "$withval" != "yes" -a "$withval" != "no"; then
+	multistrap_config="$withval"
+        AC_MSG_NOTICE(using multistrap configuration file: $withval)
+     elif test "$withval" != "no"; then
+         AC_MSG_ERROR([you must specify an configuration file if --with-multistrap-config is specified])
+    fi],
+    [multistrap_config="$sysconfdir/snf-image/multistrap.conf"]
+)
+AC_SUBST(MULTISTRAP_CONFIG, $multistrap_config)
 
 # --with-helper-dir
 AC_ARG_WITH([helper-dir],

@@ -91,8 +91,15 @@ fi
 
 if [ ! -r "$HELPER_PKG" ]; then
     log_error "ERROR:"
-    log_error "Helper package \`$HELPER_PKG' does not exist or is not " \
+    log_error "Helper package \`$HELPER_PKG' does not exist or is not" \
     "readable by the script."
+    exit 1
+fi
+
+if [ ! -e "$MULTISTRAP_CONFIG" ]; then
+    log_error "ERROR:"
+    log_error "Multistrap configuration file: \`$MULTISTRAP_CONFIG' does not" \
+    "exist or is not readable by the script."
     exit 1
 fi
 
@@ -123,7 +130,7 @@ rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
 echo -n "Allocating space for helper disk image..."
 helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
 
-dd if=/dev/zero of="$helper_img" bs=1k count=400000 &> /dev/null
+dd if=/dev/zero of="$helper_img" bs=1k count=500000 &> /dev/null
 echo "done"
 
 echo "Creating partitions..."
@@ -160,21 +167,20 @@ if [ -f "$CACHE_FILE" ]; then
             missing_pkgs="yes"
             echo "packages file: \`$HELPER_CACHE_PKGS' does not exist"
         else
-            OLD_IFS="$IFS"
-            IFS=,; for pkg in $HELPER_EXTRA_PKGS; do
+            extra_pkgs=$(grep ^packages= "$MULTISTRAP_CONFIG" | cut -d= -f2 | tr  '\n' ' ')
+            for pkg in $extra_pkgs; do
                 if ! grep "^$pkg\$" "$HELPER_CACHE_PKGS" > /dev/null; then
 		    missing_pkgs="yes"
                     echo "$pkg is missing."
                     break
                 fi
             done
-            IFS="$OLD_IFS"
             if [ "$missing_pkgs" == "no" ]; then
                 echo "done"
             fi
 	fi
         if [ "$missing_pkgs" == "yes" ]; then
-                do_debootstrap "$target"
+                do_multistrap "$target"
         fi
     fi
 
@@ -191,14 +197,14 @@ if [ -f "$CACHE_FILE" ]; then
         if [ -z "$answer" -o "$(tr [A-Z] [a-z] <<< "$answer")" = "y" ]; then
             break;
         elif [ "$(tr [A-Z] [a-z] <<< "$answer" )" = "n" ]; then
-            do_debootstrap "$target"
+            do_multistrap "$target"
             break;
         fi
     done
 
 else
     echo "not found"
-    do_debootstrap "$target"
+    do_multistrap "$target"
 fi
 
 tar xf "$HELPER_CACHE_FILE" -C "$target"
@@ -242,34 +248,6 @@ cp "$HELPER_PKG" "$target/tmp/"
 pkg_name=$(basename "$HELPER_PKG")
 add_cleanup rm "$target/tmp/$pkg_name"
 chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
-
-cat > "$target/etc/rc.local" <<EOF
-#!/bin/sh -e
-#
-# rc.local
-#
-# This script is executed at the end of each multiuser runlevel.
-# Make sure that the script will "exit 0" on success or any other
-# value on error.
-#
-# In order to enable or disable this script just change the execution
-# bits.
-#
-# By default this script does nothing.
-
-if ! grep -q snf_image_activate_helper /proc/cmdline; then
-    echo "WARNING: NOT calling snf-image-helper, add snf_image_activate_helper"
-    echo "to the kernel command line if you want to do so."
-else
-    /usr/bin/snf-image-helper --force
-fi
-
-exit 0
-EOF
-
-chmod +x "$target/etc/rc.local"
-
-echo "done"
 
 cleanup
 
