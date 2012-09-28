@@ -97,7 +97,7 @@ fi
 # Disable the trap. If code reaches here, the filesystem is unmounted.
 trap - ERR
 
-echo "SUCCESS" > "$RESULT"
+return_success
 
 cleanup
 trap - EXIT

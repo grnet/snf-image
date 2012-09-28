@@ -289,6 +289,9 @@ else
             ;;
         esac
     done
+    case \$hypervisor in
+        xen-pvm|xen-kvm) mount -t xenfs xenfs /proc/xen ;;
+    esac
     /usr/bin/snf-image-helper --force
 fi
 

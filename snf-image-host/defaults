@@ -53,7 +53,7 @@
 # HELPER_EXTRA_PKGS: Extra packages that will need to be supplied
 # to debootstrap to make the resulting helper image workable.
 # DO NOT OVERWRITE THIS UNLESS YOU KNOW WHAT YOU ARE DOING
-# HELPER_EXTRA_PKGS="e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"
+# HELPER_EXTRA_PKGS="xenstore-utils,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"
 # HELPER_LINUX_IMAGE_PKG="linux-image-amd64"
 # HELPER_LINUX_XEN_IMAGE_PKG="linux-image-xen-amd64"
 

@@ -420,6 +420,21 @@ check_if_excluded() {
     return 0
 }
 
+
+return_success() {
+
+    case $hypervisor in
+      kvm)
+        echo "SUCCESS" > "$RESULT"
+        ;;
+      xen-pvm|xen-kvm)
+        domid=$(xenstore-read domid)
+        xenstore-write /local/domain/0/helper/$domid SUCCESS
+        ;;
+    esac
+
+}
+
 trap cleanup EXIT
 set -o pipefail
 
