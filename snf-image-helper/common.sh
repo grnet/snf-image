@@ -46,29 +46,39 @@ STDERR_LINE_SIZE=10
 case "$hypervisor" in
   kvm)
     FLOPPY_DEV=/dev/fd0
-    ROOT_FSTAB_ENTRY=/dev/sda1
     IMG_DEV=/dev/vda
     RESULT=/dev/ttyS1
     MONITOR=/dev/ttyS2
     ;;
   xen-hvm|xen-pvm)
     FLOPPY_DEV=/dev/xvdc1
-    ROOT_FSTAB_ENTRY=/dev/xvda1
     IMG_DEV=/dev/xvdb
-    RESULT=/dev/hvc0
-    MONITOR=/dev/hvc0
     ;;
 esac
 
 to_monitor() {
 
-    echo "HELPER_MONITOR_$@" > "$MONITOR"
-
+    case $hypervisor in
+      kvm)
+          echo "HELPER_MONITOR_$@" > "$MONITOR"
+          ;;
+      xen-pvm|xen-hvm)
+          echo  "HELPER_MONITOR_$@" | socat STDIO INTERFACE:eth0
+          ;;
+    esac
 }
 
 to_result() {
 
-    echo "HELPER_RESULT_$@" > "$RESULT"
+    case $hypervisor in
+      kvm)
+        echo "HELPER_RESULT_$@" > "$RESULT"
+        ;;
+      xen-pvm|xen-hvm)
+        domid=$(xenstore-read domid)
+        xenstore-write /local/domain/0/helper/$domid "HELPER_RESULT_$@"
+        ;;
+    esac
 
 }
 
@@ -88,7 +98,7 @@ log_error() {
 
 warn() {
     echo "Warning: $@" >&2
-    to_monitor "WARNING:$@"
+    to_monitor "WARNING: $@"
 }
 
 report_task_start() {
@@ -423,15 +433,7 @@ check_if_excluded() {
 
 return_success() {
 
-    case $hypervisor in
-      kvm)
-        echo "SUCCESS" > "$RESULT"
-        ;;
-      xen-pvm|xen-kvm)
-        domid=$(xenstore-read domid)
-        xenstore-write /local/domain/0/helper/$domid SUCCESS
-        ;;
-    esac
+    to_result SUCCESS
 
 }
 

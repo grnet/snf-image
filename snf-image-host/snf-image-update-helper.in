@@ -290,7 +290,11 @@ else
         esac
     done
     case \$hypervisor in
-        xen-pvm|xen-kvm) mount -t xenfs xenfs /proc/xen ;;
+        xen-pvm|xen-hvm)
+               mount -t xenfs xenfs /proc/xen
+               ip link set eth0 up
+               echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+               ;;
     esac
     /usr/bin/snf-image-helper --force
 fi

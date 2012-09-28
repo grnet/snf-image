@@ -388,7 +388,7 @@ fi
 : ${HELPER_USER:="nobody"}
 : ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
 : ${HELPER_CACHE_PKGS:="@HELPER_DIR@/packages"}
-: ${HELPER_EXTRA_PKGS:="xenstore-utils,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"}
+: ${HELPER_EXTRA_PKGS:="iproute,socat,xenstore-utils,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"}
 : ${HELPER_LINUX_IMAGE_PKG:="linux-image-amd64"}
 : ${HELPER_LINUX_IMAGE_XEN_PKG:="linux-image-xen-amd64"}
 : ${HELPER_MIRROR:=""}
