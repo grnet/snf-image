@@ -36,6 +36,7 @@ BLOCKDEV=blockdev
 REGLOOKUP=reglookup
 CHNTPW=chntpw
 DATE="date -u" # Time in UTC
+EATMYDATA=eatmydata
 
 CLEANUP=( )
 ERRORS=( )
