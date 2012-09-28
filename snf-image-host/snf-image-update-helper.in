@@ -19,6 +19,7 @@
 
 set -e
 set -o pipefail
+set -o errtrace
 
 . @osdir@/common.sh
 
@@ -129,6 +130,7 @@ rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
 
 echo -n "Allocating space for helper disk image..."
 helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
+trap "$(printf "rm -r %q" "${helper_img}")" ERR
 
 dd if=/dev/zero of="$helper_img" bs=1k count=500000 &> /dev/null
 echo "done"
