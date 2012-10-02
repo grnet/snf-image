@@ -291,10 +291,11 @@ else
     done
     case \$hypervisor in
         xen-pvm|xen-hvm)
-               mount -t xenfs xenfs /proc/xen
-               ip link set eth0 up
-               echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
-               ;;
+            mount -t xenfs xenfs /proc/xen
+            iptables -P OUTPUT DROP
+            ip6tables -P OUTPUT DROP
+            ip link set eth0 up
+            ;;
     esac
     /usr/bin/snf-image-helper --force
 fi

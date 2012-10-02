@@ -28,13 +28,13 @@ launch_helper() {
     xenstore-write helper/$helperid ""
     xenstore-chmod helper/$helperid r0 w$helperid
 
-    tail -f --pid=$$ "$result_file" | sed -u 's|^|HELPER: |' &
-
     brctl delif xenbr vif$helperid.0
-    screen -d -m -c /etc/screenrc bash -c 'socat STDIO INTERFACE:vif'$helperid'.0  | ./helper-monitor.py 1 > '$monitor_pipe' '
+
+    socat EXEC:"./helper-monitor.py ${MONITOR_FD}" INTERFACE:vif$helperid.0 &
 
     $TIMEOUT -k $HELPER_HARD_TIMEOUT $HELPER_SOFT_TIMEOUT \
-      screen -D -m -c /etc/screenrc bash -c ' xm console '$helper_name' > '$result_file''
+      socat EXEC:"xm console $helper_name",pty STDOUT \
+    | sed -u 's|^|HELPER: |g'
 
 }
 
