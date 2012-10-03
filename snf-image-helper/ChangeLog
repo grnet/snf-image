@@ -1,3 +1,8 @@
+2012-10-03, v0.4.3
+	* Use Coordinated Universal Time with date
+	* Suppress a very noisy reglookup warning. This warning is outputed
+	  when deploying Windows 2012 images.
+
 2012-06-29, v0.4.2
 	* Make the name of image properties case-insensitive
 

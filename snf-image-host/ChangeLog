@@ -1,3 +1,8 @@
+2012-10-03, v0.4.3
+	* Fix a bug in the way the helper VM image kernel and initrd links where read
+	  by snf-image-update-helper.
+	* Use Coordinated Universal Time when logging
+
 2012-06-29, v0.4.2
 
 2012-05-28, v0.4.1
