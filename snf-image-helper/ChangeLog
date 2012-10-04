@@ -1,3 +1,5 @@
+2012-10-04, v0.4.4
+
 2012-10-03, v0.4.3
 	* Use Coordinated Universal Time with date
 	* Suppress a very noisy reglookup warning. This warning is outputed
