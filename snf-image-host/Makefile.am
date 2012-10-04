@@ -22,6 +22,7 @@ edit = sed \
 	   -e 's|@osname[@]|$(osname)|g' \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
 	   -e 's|@HELPER_DIR[@]|$(HELPER_DIR)|g' \
+	   -e 's|@HELPER_CACHE_DIR[@]|$(HELPER_CACHE_DIR)|g' \
 	   -e 's|@HELPER_IMG[@]|$(HELPER_IMG)|g' \
 	   -e 's|@HELPER_KERNEL[@]|$(HELPER_KERNEL)|g' \
 	   -e 's|@HELPER_INITRD[@]|$(HELPER_INITRD)|g' \

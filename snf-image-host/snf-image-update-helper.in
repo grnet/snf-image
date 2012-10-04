@@ -35,10 +35,6 @@ the snf-image-helper package. This needs to be done before the first use of
 ganeti's \`snf-image' guest OS type.
 
 OPTIONS:
-    -c CACHE_FILE
-        Use this cache file, instead of the default
-        [default: $HELPER_CACHE_FILE]
-
     -d DIRECTORY
         Use this directory to host the created files, instead of the default
         [default: $HELPER_DIR]
@@ -49,6 +45,8 @@ OPTIONS:
         Install this deb package in the helper image, instead of the default
         [default: $HELPER_PKG]
 
+    -r  Don't use any existing cache
+
     -y  Assume Yes to all queries and do not prompt
 
 EOF
@@ -56,16 +54,15 @@ EOF
     exit "$rc"
 }
 
-while getopts "c:d:hp:y" opt; do
+while getopts "d:hp:ry" opt; do
     case $opt in
-        c) CACHE_FILE="$OPTARG"
-        OVERWRITTEN_CACHE_FILE="yes"
-            ;;
         d) HELPER_DIR="$OPTARG"
             ;;
         h) usage 0
             ;;
         p) HELPER_PKG="$OPTARG"
+            ;;
+        r) NO_CACHE="yes"
             ;;
         y) NO_PROMPT="yes"
             ;;
@@ -73,10 +70,6 @@ while getopts "c:d:hp:y" opt; do
             ;;
     esac
 done
-
-if [ x"$OVERWRITTEN_CACHE_FILE" != "xyes" ] ; then
-    CACHE_FILE="$HELPER_CACHE_FILE"
-fi
 
 echo
 echo "This is the update helper image script for snf-image."
@@ -157,35 +150,34 @@ add_cleanup rmdir "$target"
 mount "$root_dev" "$target"
 add_cleanup umount "$root_dev"
 
-echo -n "Checking for cached root filesystem file \`$CACHE_FILE'..."
-if [ -f "$CACHE_FILE" ]; then
+echo -n "Checking for cached root filesystem in \`$HELPER_CACHE_DIR'..."
+if [ "$NO_CACHE" == "yes" ]; then
+    echo "don't use cache (option -r applied)"
+    do_multistrap "$target" "$HELPER_CACHE_DIR/root.tar" "$HELPER_CACHE_DIR/packages"
+elif [ -f "$HELPER_CACHE_DIR/root.tar" ]; then
     echo "found"
 
-
     missing_pkgs="no"
-    if [ "$CACHE_FILE" == "$HELPER_CACHE_FILE" ]; then
-        echo -n "Checking if needed packages are present..."
-        if [ ! -f "$HELPER_CACHE_PKGS" ]; then
-            missing_pkgs="yes"
-            echo "packages file: \`$HELPER_CACHE_PKGS' does not exist"
-        else
-            extra_pkgs=$(grep ^packages= "$MULTISTRAP_CONFIG" | cut -d= -f2 | tr  '\n' ' ')
-            for pkg in $extra_pkgs; do
-                if ! grep "^$pkg\$" "$HELPER_CACHE_PKGS" > /dev/null; then
-		    missing_pkgs="yes"
-                    echo "$pkg is missing."
-                    break
-                fi
-            done
-            if [ "$missing_pkgs" == "no" ]; then
-                echo "done"
+    echo -n "Checking if needed packages are present..."
+    if [ ! -f "$HELPER_CACHE_DIR/packages" ]; then
+        missing_pkgs="yes"
+        echo "packages file: \`$HELPER_CACHE_DIR/packages' does not exist"
+    else
+        extra_pkgs=$(grep ^packages= "$MULTISTRAP_CONFIG" | cut -d= -f2 | tr  '\n' ' ')
+        for pkg in $extra_pkgs; do
+            if ! grep "^$pkg\$" "$HELPER_CACHE_DIR/packages" > /dev/null; then
+		missing_pkgs="yes"
+                echo "$pkg is missing."
+                break
             fi
-	fi
-        if [ "$missing_pkgs" == "yes" ]; then
-                do_multistrap "$target"
+        done
+        if [ "$missing_pkgs" == "no" ]; then
+            echo "done"
         fi
     fi
-
+    if [ "$missing_pkgs" == "yes" ]; then
+            do_multistrap "$target" "$HELPER_CACHE_DIR/root.tar" "$HELPER_CACHE_DIR/packages"
+    fi
 
     test "$missing_pkgs" == "no" && while [[ 1 ]]; do
         echo -n "Use the cached file [Y/n]? "
@@ -199,17 +191,17 @@ if [ -f "$CACHE_FILE" ]; then
         if [ -z "$answer" -o "$(tr [A-Z] [a-z] <<< "$answer")" = "y" ]; then
             break;
         elif [ "$(tr [A-Z] [a-z] <<< "$answer" )" = "n" ]; then
-            do_multistrap "$target"
+            do_multistrap "$target" "$HELPER_CACHE_DIR/root.tar" "$HELPER_CACHE_DIR/packages"
             break;
         fi
     done
 
 else
     echo "not found"
-    do_multistrap "$target"
+    do_multistrap "$target" "$HELPER_CACHE_DIR/root.tar" "$HELPER_CACHE_DIR/packages"
 fi
 
-tar xf "$HELPER_CACHE_FILE" -C "$target"
+tar xf "$HELPER_CACHE_DIR/root.tar" -C "$target"
 
 echo -n "Configuring the helper image..."
 echo snf-image-helper > "$target/etc/hostname"

@@ -15,6 +15,9 @@
 # HELPER_DIR: Directory hosting the helper files
 # HELPER_DIR="/var/lib/snf-image/helper/"
 
+# HELPER_CACHE_DIR: Directory hosting the helper cache files
+# HELPER_CACHE_DIR="/var/cache/snf-image/helper/"
+
 # HELPER_IMG: Path to the helper VM image
 # HELPER_IMG="${HELPER_DIR}/image"
 
@@ -42,13 +45,6 @@
 # runs as an unprivileged user. KVM drops root privileges and runs as
 # HELPER_USER imeddiately before starting execution of the helper VM.
 # HELPER_USER="nobody"
-
-# HELPER_CACHE_FILE: Cache file update-helper script uses to avoid running
-# `debootstrap' all the time.
-# HELPER_CACHE_FILE="${HELPER_DIR}/cache.tar"
-
-# HELPER_CACHE_PKGS: Debian Packages the cache file contains.
-# HELPER_CACHE_PKGS="${HELPER_DIR}/packages"
 
 # MULTISTRAP_CONFIG: Configuration file to be used with multistrap to create
 # the rootfs of the helper image.
