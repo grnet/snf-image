@@ -27,6 +27,7 @@ the URL as the user when connecting to the backend.
 
 from optparse import OptionParser
 from sys import exit, stdout, stderr
+from os import environ
 
 try:
     from pithos.backends.modular import ModularBackend
@@ -46,7 +47,7 @@ parser.add_option('-s', action='store_true', dest='size', default=False,
 
 def urlsplit(url):
     """Returns (accout, container, object) from a location string"""
-    
+
     assert url.startswith('pithos://'), "Invalid URL"
     t = url.split('/', 4)
     assert len(t) == 5, "Invalid URL"
@@ -55,7 +56,7 @@ def urlsplit(url):
 
 def print_size(backend, url):
     """Writes object's size to stdout."""
-    
+
     account, container, object = urlsplit(url)
     meta = backend.get_object_meta(account, account, container, object, None)
     print meta['bytes']
@@ -63,7 +64,7 @@ def print_size(backend, url):
 
 def print_data(backend, url):
     """Writes object's size to stdout."""
-    
+
     account, container, object = urlsplit(url)
     size, hashmap = backend.get_object_hashmap(account, account, container,
             object)
@@ -77,13 +78,27 @@ def print_data(backend, url):
 
 def main():
     options, args = parser.parse_args()
-    if len(args) != 1 or not options.db or not options.data:
+    if len(args) != 1:
         parser.print_help()
         exit(1)
 
     url = args[0]
-    backend = ModularBackend(None, options.db, None, options.data)
-    
+
+    if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
+        stderr.write("Pithos data directory path is missing.\n")
+        exit(1)
+
+    data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
+            options.data
+
+    if not options.db and 'PITHCAT_INPUT_DB' not in environ:
+        stderr.write("Pithos database uri is missing.\n")
+        exit(1)
+
+    db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
+
+    backend = ModularBackend(None, db_uri, None, data_path)
+
     if options.size:
         print_size(backend, url)
     else:

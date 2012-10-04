@@ -79,9 +79,11 @@ case $BACKEND_TYPE in
         image_size=$($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
         ;;
     pithos)
-        cmd_args="--db $(printf "%q" "${PITHOS_DB}") \
-                  --data $(printf "%q" "${PITHOS_DATA}") \
-                  $(printf "%q" "${IMAGE_NAME}")"
+        # For security reasons pass the database url to pithcat as an
+        # environmental variable.
+        export PITHCAT_INPUT_DB="$PITHOS_DB"
+        export PITHCAT_INPUT_DATA="$PITHOS_DATA"
+        cmd_args="$(printf "%q" "${IMAGE_NAME}")"
         image_cmd="./pithcat $cmd_args"
         image_size=$(./pithcat -s  $cmd_args)
         ;;
