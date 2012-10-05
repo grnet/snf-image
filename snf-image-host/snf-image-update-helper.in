@@ -83,13 +83,6 @@ if [ ! -d "$HELPER_DIR" -o ! -w "$HELPER_DIR" ]; then
     exit 1
 fi
 
-if [ ! -r "$HELPER_PKG" ]; then
-    log_error "ERROR:"
-    log_error "Helper package \`$HELPER_PKG' does not exist or is not" \
-    "readable by the script."
-    exit 1
-fi
-
 if [ ! -e "$MULTISTRAP_CONFIG" ]; then
     log_error "ERROR:"
     log_error "Multistrap configuration file: \`$MULTISTRAP_CONFIG' does not" \
@@ -237,11 +230,25 @@ initrd=$(basename "$initrd")
 
 rm "$target/vmlinuz" "$target/initrd.img"
 
-echo "Installing snf-image-helper pkg in the new image..."
-cp "$HELPER_PKG" "$target/tmp/"
-pkg_name=$(basename "$HELPER_PKG")
-add_cleanup rm "$target/tmp/$pkg_name"
-chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
+
+pkg_installed=$(grep snf-image-helper "$HELPER_CACHE_DIR/packages" > /dev/null && echo yes)
+
+if [ ! -r "$HELPER_PKG" -a -z "$pkg_installed" ]; then
+    log_error "ERROR:"
+    log_error "Helper package \`$HELPER_PKG' does not exist or is not" \
+    "readable by the script."
+    exit 1
+fi
+
+if [ -r "$HELPER_PKG" ]; then
+    echo "Installing snf-image-helper pkg in the new image..."
+    cp "$HELPER_PKG" "$target/tmp/"
+    pkg_name=$(basename "$HELPER_PKG")
+    add_cleanup rm "$target/tmp/$pkg_name"
+    chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
+else
+    echo "snf-image-helper pkg was installed from the apt repository."
+fi
 
 cleanup
 
