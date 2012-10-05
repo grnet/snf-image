@@ -1,3 +1,11 @@
+2012-10-05, v0.6.1
+	* Use Coordinated Universal Time when logging.
+	* Fix a bug in the way snf-image-update-helper reads the links of the
+	  kernel and the initrd in the helper VM.
+	* Use environmental variables instead of input options to pass sensitive
+	  data to pithcat. This is needed because when pithcat is running, every
+	  user can see the program's command line by using ps.
+
 2012-09-15, v0.6
 	* Fix import and export scripts
 	* Add new config_url os parameter. This can be used by snf-image to
