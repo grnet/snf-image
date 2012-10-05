@@ -1,3 +1,9 @@
+2012-10-05, v0.6.1
+	* Supress a very noisy warning in 40DisableRemoteDesktopConnections
+	  task created by reglookup. This is triggered only when reading
+	  registry files from windows 2012 systems.
+	* User Coordinated Universal Time when logging.
+
 2012-09-14, v0.6
 	* Make sure EnforcePersonality is the last task that runs before
 	  UmountImage. Doing this ensures that user-enjected files never
