@@ -83,14 +83,12 @@ echo "If you don't know what to do, use \`-h'."
 echo
 
 if [ ! -d "$HELPER_DIR" -o ! -w "$HELPER_DIR" ]; then
-    log_error "ERROR:"
     log_error "Helper directory \`$HELPER_DIR' does not exist or the script" \
     "has no write permission on it."
     exit 1
 fi
 
 if [ ! -r "$HELPER_PKG" ]; then
-    log_error "ERROR:"
     log_error "Helper package \`$HELPER_PKG' does not exist or is not " \
     "readable by the script."
     exit 1

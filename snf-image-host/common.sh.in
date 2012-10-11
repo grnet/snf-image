@@ -43,13 +43,15 @@ add_cleanup() {
 }
 
 log_error() {
-    ERROR_MSGS+=("$@")
-    echo "$*" >&2
+    echo "[ERROR] $*" >&2
 }
 
+report_error() {
+    ERROR_MSGS+=("$@")
+}
 
-log_info() {
-    echo "$*" >&2
+report_info() {
+    echo "[INFO] $*" >&2
 
     local report="$(./host-monitor.py info <<< "$*")"
 
@@ -62,8 +64,7 @@ close_fd() {
     exec {fd}>&-
 }
 
-report_error() {
-    local error_file=$1
+send_errors() {
     local report=""
     if [ ${#ERROR_MSGS[@]} -gt 0 ]; then
         local msg=""
@@ -72,7 +73,7 @@ report_error() {
         done
         report="$(./host-monitor.py error <<< "$msg")"
     else
-        report=$(tail -10 "$error_file" | ./host-monitor.py stderr)
+        report=$(./host-monitor.py error <<< "Internal Error")
     fi
 
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
@@ -324,10 +325,7 @@ EOF
 }
 
 report_and_cleanup(){
-
-    local err_file="$1"
-
-    report_error "$err_file"
+    send_errors
     cleanup
 }
 
