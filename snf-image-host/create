@@ -32,7 +32,7 @@ if [ -n "$PROGRESS_MONITOR" ]; then
     { sleep 1; $PROGRESS_MONITOR "$instance" < "$monitor_pipe" ; } &
     monitor_pid="$!"
 else
-    sed -u 's|^|MONITOR MSG: |g' < "$monitor_pipe" &
+    sed -u 's|^|[MONITOR] |g' < "$monitor_pipe" &
     monitor_pid="$!"
 fi
 
@@ -52,7 +52,7 @@ case $BACKEND_TYPE in
         image_file="$IMAGE_DIR/$(echo "$IMAGE_NAME" | sed 's/^file://').$IMAGE_TYPE"
         if [ ! -e "$image_file" ]; then
             log_error "Image file \`$image_file' does not exit."
-            report_error "Unable to retrieve image."
+            report_error "Unable to retrieve image file."
             exit 1
         fi
         image_size="$(stat -L -c %s "$image_file")"
@@ -158,8 +158,8 @@ add_cleanup rm "$snapshot"
 
 "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
 
-echo -n "$($DATE +%Y:%m:%d-%H:%M:%S.%N) " >&2
 report_info "Starting customization VM..."
+echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM START" >&2
 set +e
 $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
     kvm -runas "$HELPER_USER" -drive file="$snapshot" \
@@ -172,28 +172,29 @@ $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
     2>&1 | sed -u 's|^|HELPER: |g'
 rc=$?
 set -e
+echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM STOP" >&2
 if [ $rc -ne 0 ]; then
     if [ $rc -eq 124 ];  then
-        log_error "Image customization was terminated. Did not finish on time."
-        report_error "Image customization was terminated. Did not finish on time."
+        log_error "Customization VM was terminated. Did not finish on time."
+        report_error "Image customization failed. Did not finish on time."
     elif [ $rc -eq 137 ]; then # (128 + SIGKILL)
-        log_error "Image customization was killed. Did not finish on time."
-        report_error "Image customization was killed. Did not finish on time."
+        log_error "Customization VM was killed. Did not finish on time."
+        report_error "Image customization failed. Did not finish on time."
     elif [ $rc -eq 141 ]; then # (128 + SIGPIPE)
-        log_error "Image customization was terminated by a SIGPIPE."
+        log_error "Customization VM was terminated by a SIGPIPE."
         log_error "Maybe progress monitor has died unexpectedly."
     elif [ $rc -eq 125 ]; then
         log_error "Internal Error. Image customization could not start."
         log_error "timeout did not manage to run."
     else
-        log_error "Image customization died unexpectedly (return code $rc)."
+        log_error "Customization VM died unexpectedly (return code $rc)."
     fi
     exit 1
 else
-    echo -n "$($DATE +%Y:%m:%d-%H:%M:%S.%N)" >&2
-    report_info "Customization VM finished."
+    report_info "Customization VM exited normally."
 fi
 
+report_info "Checking customization status..."
 # Read the first line. This will remove \r and \n chars
 result=$(sed 's|\r||g' "$result_file" | head -1)
 
