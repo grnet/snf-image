@@ -1,3 +1,8 @@
+2012-10-12, v0.6.2
+	* Remove the rule of updating the password for user `user' in Fedora
+	  and Ubuntu when the USERS image property is missing.
+        * Check if a user exists before updating its password.
+
 2012-10-05, v0.6.1
 	* Supress a very noisy warning in 40DisableRemoteDesktopConnections
 	  task created by reglookup. This is triggered only when reading
