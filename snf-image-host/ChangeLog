@@ -1,3 +1,9 @@
+2012-10-12, v0.6.2
+	* Seperate the error messages that should be logged by the system from
+	  those that should be propagated to the user through the monitoring
+	  mechanism. Don't allow internal configuration options get revieled to
+	  the user.
+
 2012-10-05, v0.6.1
 	* Use Coordinated Universal Time when logging.
 	* Fix a bug in the way snf-image-update-helper reads the links of the
