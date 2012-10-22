@@ -73,7 +73,7 @@ send_errors() {
         done
         report="$(./host-monitor.py error <<< "$msg")"
     else
-        report=$(./host-monitor.py error <<< "Internal Error")
+        report=$(./host-monitor.py error <<< "Internal Error: Image deployment failed.")
     fi
 
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
