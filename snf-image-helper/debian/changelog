@@ -1,6 +1,6 @@
-snf-image-helper (0.6.2-1) stable; urgency=low
+snf-image-helper (0.6.2-2) stable; urgency=low
 
-  * New upstream version
+  * Fix package content
 
  -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 12 Oct 2012 13:51:43 +0300
 
