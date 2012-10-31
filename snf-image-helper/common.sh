@@ -52,9 +52,24 @@ add_cleanup() {
     CLEANUP+=("$cmd")
 }
 
+report_error() {
+    if [ ${#ERRORS[*]} -eq 0 ]; then
+        # No error message. Print stderr
+	local lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
+        echo -n "STDERR:${lines}:" > "$MONITOR"
+        tail --lines=$lines  "$STDERR_FILE" > "$MONITOR"
+    else
+        echo -n "ERROR:" > "$MONITOR"
+        for line in "${ERRORS[@]}"; do
+            echo "$line" > "$MONITOR"
+        done
+    fi
+}
+
 log_error() {
     ERRORS+=("$@")
     echo "ERROR: $@" | tee $RESULT >&2
+    report_error
     exit 1
 }
 
@@ -69,20 +84,6 @@ report_task_start() {
 
 report_task_end() {
     echo "$MSG_TYPE_TASK_END:${PROGNAME:2}" > "$MONITOR"
-}
-
-report_error() {
-    if [ ${#ERRORS[*]} -eq 0 ]; then
-        # No error message. Print stderr
-	local lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
-        echo -n "STDERR:${lines}:" > "$MONITOR"
-        tail --lines=$lines  "$STDERR_FILE" > "$MONITOR"
-    else
-        echo -n "ERROR:" > "$MONITOR"
-        for line in "${ERRORS[@]}"; do
-            echo "$line" > "$MONITOR"
-        done
-    fi
 }
 
 get_base_distro() {
@@ -372,8 +373,6 @@ task_cleanup() {
 
     if [ $rc -eq 0 ]; then
        report_task_end
-    else
-       report_error
     fi
 
     cleanup
