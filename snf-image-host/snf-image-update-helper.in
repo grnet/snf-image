@@ -122,6 +122,7 @@ echo -n "Allocating space for helper disk image..."
 helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
 
 dd if=/dev/zero of="$helper_img" bs=1k count=400000 &> /dev/null
+add_cleanup rm -f "$helper_img"
 echo "done"
 
 echo "Creating partitions..."
