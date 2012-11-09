@@ -90,6 +90,14 @@ trap '{ umount "$target"; }' ERR
 
 if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
 
+    if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "" ]; then
+        log_error "Required image property \`OSFAMILY' is missing or empty."
+    fi
+
+    if [ "$SNF_IMAGE_PROPERTY_ROOT_PARTITION" = "" ]; then
+        log_error "Required image property \`ROOT_PARTITION' is missing or empty."
+    fi
+
     export SNF_IMAGE_RESIZE_PART="$(get_partition_to_resize "$SNF_IMAGE_DEV")"
 
     if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows)$ ]]; then
