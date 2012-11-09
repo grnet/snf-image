@@ -34,13 +34,15 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
 fi
 
 if [ -z "$SNF_IMAGE_PROPERTY_ROOT_PARTITION" ]; then
-    log_error "Root Partition image property not defined"
+    log_error "Required image property \`ROOT_PARTITION' not defined or empty"
 fi
 
 rootdev="${SNF_IMAGE_DEV}${SNF_IMAGE_PROPERTY_ROOT_PARTITION}"
 
 if [ ! -b "$rootdev" ]; then
-    log_error "Image root partition device:\`$rootdev' is not a block device"
+    log_error "Root partition device:\`$rootdev' is not a block device. " \
+        "Please check if the value for image property \`ROOT_PARTITION' " \
+        "(=$SNF_IMAGE_PROPERTY_ROOT_PARTITION) is valid."
 fi
 
 mount "$rootdev" "$SNF_IMAGE_TARGET" -o rw
