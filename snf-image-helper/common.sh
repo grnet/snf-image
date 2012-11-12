@@ -144,7 +144,7 @@ get_partition_table() {
     # secondary gpt is not it the end of the disk, and a warning that has to
     # do with the "Last Usable LBA" entry in gpt.
     if ! output="$("$PARTED" -s -m "$dev" unit s print | grep -E -v "^(Warning|Error): ")"; then
-        log_error "Unable to read partition table for device \`${dev}'"
+        log_error "Unable to read partition table for device \`${dev}'. The image seems corrupted."
     fi
 
     echo "$output"
