@@ -53,8 +53,12 @@ fi
 if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
     properties=$(mktemp --tmpdir properties.XXXXXX)
     add_cleanup rm "$properties"
-    echo "$SNF_IMAGE_PROPERTIES" |
-        "@scriptsdir@/decode-properties.py" "$properties"
+    if ! echo "$SNF_IMAGE_PROPERTIES" | \
+        "@scriptsdir@/decode-properties.py" "$properties"; then
+
+        log_error "Unable to decode image properties. " \
+             "Please check if the variable is in valid json format."
+    fi
     source "$properties"
 fi
 
