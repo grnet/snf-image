@@ -60,15 +60,14 @@ report_error() {
         echo -n "STDERR:${lines}:" > "$MONITOR"
         tail --lines=$lines  "$STDERR_FILE" > "$MONITOR"
     else
-        echo -n "ERROR:" > "$MONITOR"
         for line in "${ERRORS[@]}"; do
-            echo "$line" > "$MONITOR"
+            echo "ERROR:$line" > "$MONITOR"
         done
     fi
 }
 
 log_error() {
-    ERRORS+=("$@")
+    ERRORS+=("$*")
     echo "ERROR: $@" | tee $RESULT >&2
     report_error
     exit 1
