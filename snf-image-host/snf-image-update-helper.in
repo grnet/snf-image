@@ -247,11 +247,7 @@ else
     echo "snf-image-helper pkg was installed from the apt repository."
 fi
 
-cleanup
-
 mv "$helper_img" "$HELPER_DIR/image"
-
-trap - EXIT
 
 echo "Files in \`$HELPER_DIR' were updated successfully"
 exit 0
