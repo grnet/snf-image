@@ -1,3 +1,5 @@
+2012-11-15, v0.6.4
+
 2012-11-13, v0.6.3
 	* Don't overwrite C:\Unattend.xml file in windows images, unless the
 	  image property USE_DEFAULT_UNATTEND is defined.
