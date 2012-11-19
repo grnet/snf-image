@@ -340,6 +340,18 @@ get_last_free_sector() {
     fi
 }
 
+get_unattend() {
+    local target="$1"
+
+    # Workaround to search for $target/Unattend.xml in an case insensitive way.
+    exists=$(find "$target"/ -maxdepth 1 -iname unattend.xml)
+    if [ $(wc -l <<< "$exists") -gt 1 ]; then
+        log_error "Found multiple Unattend.xml files in the image:" $exists
+    fi
+
+    echo "$exists"
+}
+
 cleanup() {
     # if something fails here, it shouldn't call cleanup again...
     trap - EXIT

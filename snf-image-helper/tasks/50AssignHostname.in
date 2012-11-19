@@ -37,16 +37,21 @@ windows_hostname() {
     local target="$1"
     local password="$2"
 
-    local tmp_unattend=`mktemp` || exit 1
+    local tmp_unattend=$(mktemp) || exit 1
     add_cleanup rm "$tmp_unattend"
 
     echo -n "Assigning new computer name..."
 
     local namespace="urn:schemas-microsoft-com:unattend"
-    
-    "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$password" "$target/Unattend.xml" > "$tmp_unattend"
 
-    cat "$tmp_unattend" > "$target/Unattend.xml"
+    unattend=$(get_unattend "$target")
+    if [ -z "$unattend" ]; then
+        log_error "Unattend.xml is missing."
+    fi
+    
+    "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$password" "$unattend" > "$tmp_unattend"
+
+    cat "$tmp_unattend" > "$unattend"
     echo done
 }
 
