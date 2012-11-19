@@ -45,13 +45,12 @@ fi
 target=$SNF_IMAGE_TARGET
 mkdir -p "$target/Windows/Setup/Scripts"
 
-# Workaround to search for C:\Unattend.xml in an case insensitive way.
-exists=$(find "$target"/ -maxdepth 1 -iname unattend.xml)
+unattend=$(get_unattend "$target")
 
-if [ -n "$exists" -a -z "$SNF_IMAGE_PROPERTY_USE_DEFAULT_UNATTEND" ]; then
+if [ -n "$unattend" -a -z "$SNF_IMAGE_PROPERTY_USE_DEFAULT_UNATTEND" ]; then
     warn "Using the Unattend.xml file found in the image"
 else
-    xargs rm -f <<< "$exists"
+    rm -f "$unattend"
     if [ -n "$SNF_IMAGE_UNATTEND" ]; then
         echo "Installing custom Unattend.xml file..."
         if [ -f "$SNF_IMAGE_UNATTEND" ]; then
