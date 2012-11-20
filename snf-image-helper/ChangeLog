@@ -1,3 +1,8 @@
+2012-11-20, v0.6.5
+	* Fix a bug in AssignHostname configuration task where the script did
+	  not search for the presence of the Unattend.xml file in the VM, in
+	  a case-insensitive way
+
 2012-11-15, v0.6.4
 
 2012-11-13, v0.6.3
