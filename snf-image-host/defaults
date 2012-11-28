@@ -50,6 +50,10 @@
 # the rootfs of the helper image.
 # MULTISTRAP_CONFIG="/etc/snf-image/multistrap.conf"
 
+# MULTISTRAP_APTPREFDIR: Directory where apt preference files are hosted. Those
+# files will be injected to the helper image before multistrap is called.
+# MULTISTRAP_APTPREFDIR="/etc/snf-image/apt.pref.d"
+
 # PITHOS_DB: Pithos database in SQLAlchemy format
 # PITHOS_DB="sqlite:////var/lib/pithos/backend.db"
 

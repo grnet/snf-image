@@ -331,6 +331,12 @@ do_multistrap() {
    local cache="$2"
    local pkgs="$3"
 
+    # Create preferences.d for apt
+    mkdir -p "$target/etc/apt/preferences.d"
+    if [ -d "$MULTISTRAP_APTPREFDIR" ]; then
+        find "$MULTISTRAP_APTPREFDIR" -maxdepth 1 -type f -exec cp {} "$target/etc/apt/preferences.d" \;
+    fi
+
     # Create a policy-rc.d file to deny init script execution
     mkdir -p "$target/usr/sbin"
     cat > "$target/usr/sbin/policy-rc.d" <<EOF
@@ -418,6 +424,7 @@ fi
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
 : ${UNATTEND:="@UNATTEND@"}
 : ${MULTISTRAP_CONFIG:="@MULTISTRAP_CONFIG@"}
+: ${MULTISTRAP_APTPREFDIR:="@MULTISTRAP_APTPREFDIR@"}
 
 SCRIPT_NAME=$(basename $0)
 

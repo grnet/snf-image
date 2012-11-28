@@ -55,6 +55,22 @@ AC_ARG_WITH([multistrap-config],
 )
 AC_SUBST(MULTISTRAP_CONFIG, $multistrap_config)
 
+# --with-multistrap-aptprefdir
+AC_ARG_WITH([multistrap-aptprefdir],
+  [AS_HELP_STRING([--with-multistrap-aptprefdir=MULTISTRAP_APTPREFDIR],
+      [path to a directory where preferences files for apt are hosted. Those files will be used during multistrap
+      [SYSCONFDIR/snf-image/apt.pref.d]]
+    )],
+    [if test "$withval" != "yes" -a "$withval" != "no"; then
+	multistrap_aptprefdir="$withval"
+        AC_MSG_NOTICE(using apt preferences directory for multistrap: $withval)
+     elif test "$withval" != "no"; then
+         AC_MSG_ERROR([you must specify a directory if --with-multistrap-aptprefdir is specified])
+    fi],
+    [multistrap_aptprefdir="$sysconfdir/snf-image/apt.pref.d"]
+)
+AC_SUBST(MULTISTRAP_APTPREFDIR, $multistrap_aptprefdir)
+
 # --with-helper-dir
 AC_ARG_WITH([helper-dir],
     [AS_HELP_STRING([--with-helper-dir=DIR],
