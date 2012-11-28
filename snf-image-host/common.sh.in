@@ -345,19 +345,10 @@ exit 101
 EOF
     chmod +x "$target/usr/sbin/policy-rc.d"
 
-   multistrap -d "$target" -a $(dpkg --print-architecture) \
-        -f "$MULTISTRAP_CONFIG" 2>&1 | sed -u -e 's/^/MULTISTRAP: /g'
-
-   # Save the package list
-   chroot "$target" dpkg-query -W -f "\${Package}\n" > "$pkgs"
+   multistrap -d "$target" -f "$MULTISTRAP_CONFIG" 2>&1 | sed -u -e 's/^/MULTISTRAP: /g'
 
    rm "$target/usr/sbin/policy-rc.d"
-
-   local tmp_cache=$(mktemp "$cache.XXXXXX")
-   tar cf "$tmp_cache" --one-file-system -C "$target" . || \
-        { rm "$tmp_cache"; false; }
-   # Overwrite the default cache file. Not the user specified if present.
-   mv -f "$tmp_cache" "$cache"
+   rm -rf "$target/etc/apt/preferences.d"
 }
 
 report_and_cleanup(){
@@ -409,7 +400,6 @@ fi
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
 : ${IMAGE_DEBUG:="no"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
-: ${HELPER_CACHE_DIR:="@HELPER_CACHE_DIR@"}
 : ${HELPER_IMG:="@HELPER_IMG@"}
 : ${HELPER_KERNEL:="@HELPER_KERNEL@"}
 : ${HELPER_INITRD:="@HELPER_INITRD@"}

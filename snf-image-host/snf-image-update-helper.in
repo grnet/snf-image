@@ -140,58 +140,10 @@ add_cleanup rmdir "$target"
 mount "$root_dev" "$target"
 add_cleanup umount "$root_dev"
 
-echo -n "Checking for cached root filesystem in \`$HELPER_CACHE_DIR'..."
-if [ "$NO_CACHE" == "yes" ]; then
-    echo "don't use cache (option -r applied)"
-    do_multistrap "$target" "$HELPER_CACHE_DIR/root.tar" "$HELPER_CACHE_DIR/packages"
-elif [ -f "$HELPER_CACHE_DIR/root.tar" ]; then
-    echo "found"
+do_multistrap "$target"
 
-    missing_pkgs="no"
-    echo -n "Checking if needed packages are present..."
-    if [ ! -f "$HELPER_CACHE_DIR/packages" ]; then
-        missing_pkgs="yes"
-        echo "packages file: \`$HELPER_CACHE_DIR/packages' does not exist"
-    else
-        extra_pkgs=$(grep ^packages= "$MULTISTRAP_CONFIG" | cut -d= -f2 | tr  '\n' ' ')
-        for pkg in $extra_pkgs; do
-            if ! grep "^$pkg\$" "$HELPER_CACHE_DIR/packages" > /dev/null; then
-		missing_pkgs="yes"
-                echo "$pkg is missing."
-                break
-            fi
-        done
-        if [ "$missing_pkgs" == "no" ]; then
-            echo "done"
-        fi
-    fi
-    if [ "$missing_pkgs" == "yes" ]; then
-            do_multistrap "$target" "$HELPER_CACHE_DIR/root.tar" "$HELPER_CACHE_DIR/packages"
-    fi
-
-    test "$missing_pkgs" == "no" && while [[ 1 ]]; do
-        echo -n "Use the cached file [Y/n]? "
-        if [ "x$NO_PROMPT" = "xyes" ]; then
-            echo "y";
-            break;
-        fi
-
-        read answer
-    
-        if [ -z "$answer" -o "$(tr [A-Z] [a-z] <<< "$answer")" = "y" ]; then
-            break;
-        elif [ "$(tr [A-Z] [a-z] <<< "$answer" )" = "n" ]; then
-            do_multistrap "$target" "$HELPER_CACHE_DIR/root.tar" "$HELPER_CACHE_DIR/packages"
-            break;
-        fi
-    done
-
-else
-    echo "not found"
-    do_multistrap "$target" "$HELPER_CACHE_DIR/root.tar" "$HELPER_CACHE_DIR/packages"
-fi
-
-tar xf "$HELPER_CACHE_DIR/root.tar" -C "$target"
+# Save the package list
+chroot "$target" dpkg-query -W  > "$HELPER_DIR/packages"
 
 echo -n "Configuring the helper image..."
 echo snf-image-helper > "$target/etc/hostname"
@@ -228,7 +180,7 @@ initrd=$(basename "$initrd")
 rm "$target/vmlinuz" "$target/initrd.img"
 
 
-pkg_installed=$(grep snf-image-helper "$HELPER_CACHE_DIR/packages" > /dev/null && echo yes)
+pkg_installed=$(grep snf-image-helper "$HELPER_DIR/packages" > /dev/null && echo yes)
 
 if [ ! -r "$HELPER_PKG" -a -z "$pkg_installed" ]; then
     log_error "ERROR:"
@@ -243,6 +195,9 @@ if [ -r "$HELPER_PKG" ]; then
     pkg_name=$(basename "$HELPER_PKG")
     add_cleanup rm "$target/tmp/$pkg_name"
     chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
+
+    # Recreate package list
+    chroot "$target" dpkg-query -W  > "$HELPER_DIR/packages"
 else
     echo "snf-image-helper pkg was installed from the apt repository."
 fi

@@ -81,16 +81,6 @@ AC_ARG_WITH([helper-dir],
     [helper_dir="$localstatedir/lib/snf-image/helper"])
 AC_SUBST(HELPER_DIR, $helper_dir)
 
-# --with-helper-cache-dir
-AC_ARG_WITH([helper-cache-dir],
-    [AS_HELP_STRING([--with-helper-cache-dir=DIR],
-        [top-level directory to host the helper VM cache files
-        [LOCALSTATEDIR/cache/snf-image/helper]]
-    )],
-    [helper_cache_dir="$withval"],
-    [helper_cache_dir="$localstatedir/cache/snf-image/helper"])
-AC_SUBST(HELPER_CACHE_DIR, $helper_cache_dir)
-
 # --with-helper-img
 AC_ARG_WITH([helper-img],
     [AS_HELP_STRING([--with-helper-img=IMG_PATH],
