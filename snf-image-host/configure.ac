@@ -13,6 +13,16 @@ AC_ARG_ENABLE([network_backend],
     (this depends on cURL)])
 )
 
+
+AC_ARG_ENABLE([version_consistency_check],
+   AS_HELP_STRING([--enable-version-consistency-check],
+    [Check if the host and the helper packages have the same version]),
+    version_check="$enableval", version_check="no"
+)
+if test ${version_check} = yes; then
+    AC_SUBST(VERSION_CHECK, yes)
+fi
+
 # --with-progress-monitor
 AC_ARG_WITH([progress-monitor],
   [AS_HELP_STRING([--with-progress-monitor=PRGRM],

@@ -399,6 +399,7 @@ fi
 : ${VARIANTS_DIR:="@sysconfdir@/ganeti/snf-image/variants"}
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
 : ${IMAGE_DEBUG:="no"}
+: ${VERSION_CHECK:="@VERSION_CHECK@"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
 : ${HELPER_IMG:="@HELPER_IMG@"}
 : ${HELPER_KERNEL:="@HELPER_KERNEL@"}

@@ -21,6 +21,7 @@ edit = sed \
 	   -e 's|@osdir[@]|$(osdir)|g' \
 	   -e 's|@osname[@]|$(osname)|g' \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
+	   -e 's|@VERSION_CHECK[@]|$(VERSION_CHECK)|g' \
 	   -e 's|@HELPER_DIR[@]|$(HELPER_DIR)|g' \
 	   -e 's|@HELPER_IMG[@]|$(HELPER_IMG)|g' \
 	   -e 's|@HELPER_KERNEL[@]|$(HELPER_KERNEL)|g' \

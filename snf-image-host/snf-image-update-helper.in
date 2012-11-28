@@ -202,6 +202,15 @@ else
     echo "snf-image-helper pkg was installed from the apt repository."
 fi
 
+if [ "$VERSION_CHECK" == yes ]; then
+    helper_version="$(grep ^snf-image-helper[[:space:]] "$HELPER_DIR/packages" | cut -f2)"
+    host_version="$(dpkg-query -W -f "\${Version}\n" snf-image-host)"
+    if [ "$host_version" != "$helper_version" ]; then
+        log_error "snf-image-host version (=$host_version) and " \
+            "snf-image-helper version (=$helper_version) don't match."
+    fi
+fi
+
 mv "$helper_img" "$HELPER_DIR/image"
 
 echo "Files in \`$HELPER_DIR' were updated successfully"
