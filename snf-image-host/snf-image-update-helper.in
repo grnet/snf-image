@@ -208,6 +208,7 @@ if [ "$VERSION_CHECK" == yes ]; then
     if [ "$host_version" != "$helper_version" ]; then
         log_error "snf-image-host version (=$host_version) and " \
             "snf-image-helper version (=$helper_version) don't match."
+        exit 1
     fi
 fi
 
