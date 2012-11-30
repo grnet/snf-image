@@ -1,3 +1,3 @@
-Packages: snf-image-helper
+Package: snf-image-helper
 Pin: version 0.7*
 Pin-Priority: 1001
