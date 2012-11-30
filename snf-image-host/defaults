@@ -32,9 +32,6 @@
 # HELPER_INITRD: Path to the helper VM initial ramdisk
 # HELPER_INITRD="${HELPER_DIR}/initrd"
 
-# HELPER_PKG: Path to the snf-image-helper package
-# HELPER_PKG="${HELPER_DIR}/snf-image-helper.deb"
-
 # HELPER_TIMOUT: Soft and hard timeout limits for helper instance.
 # The helper instance will be terminated after a given time if it hasn't exited
 # by itself. A TERM signal will be send if the instance is running after

@@ -43,7 +43,6 @@ OPTIONS:
 
     -p PACKAGE
         Install this deb package in the helper image, instead of the default
-        [default: $HELPER_PKG]
 
     -r  Don't use any existing cache
 
@@ -182,10 +181,8 @@ rm "$target/vmlinuz" "$target/initrd.img"
 
 pkg_installed=$(grep snf-image-helper "$HELPER_DIR/packages" > /dev/null && echo yes)
 
-if [ ! -r "$HELPER_PKG" -a -z "$pkg_installed" ]; then
-    log_error "ERROR:"
-    log_error "Helper package \`$HELPER_PKG' does not exist or is not" \
-    "readable by the script."
+if [ -z "$HELPER_PKG" -a -z "$pkg_installed" ]; then
+    log_error "No helper package was specified and non was found by the apt."
     exit 1
 fi
 
@@ -202,7 +199,7 @@ else
     echo "snf-image-helper pkg was installed from the apt repository."
 fi
 
-if [ "$VERSION_CHECK" == yes ]; then
+if [ "$VERSION_CHECK" == yes -a -z "$HELPER_PKG" ]; then
     helper_version="$(grep ^snf-image-helper[[:space:]] "$HELPER_DIR/packages" | cut -f2)"
     host_version="$(dpkg-query -W -f "\${Version}\n" snf-image-host)"
     if [ "$host_version" != "$helper_version" ]; then
