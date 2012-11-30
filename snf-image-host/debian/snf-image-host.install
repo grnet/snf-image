@@ -1,1 +1,2 @@
 *.pref etc/snf-image/apt.pref.d
+multistrap.conf etc/snf-image
