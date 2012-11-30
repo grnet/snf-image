@@ -48,8 +48,6 @@ install: build
 
 	# Add here commands to install the package into debian/ganeti-instance-image.
 	install -D -m 0600 defaults $(CURDIR)/debian/snf-image-host/etc/default/snf-image
-	install -D multistrap.conf $(CURDIR)/debian/snf-image-host/etc/snf-image/multistrap.conf
-	install -D pinning.pref $(CURDIR)/debian/snf-image-host/etc/snf-image/apt.pref.d/pinning.pref
 	$(MAKE) DESTDIR=$(CURDIR)/debian/snf-image-host install
 
 
