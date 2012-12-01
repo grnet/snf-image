@@ -154,7 +154,10 @@ get_api20_arguments() {
     done
 
     if [ -n "$CONFIG_URL" ]; then
-	source <($CURL -f "$CONFIG_URL" | ./decode-config.py $osparams)
+        local config config_params
+        config=$($CURL -f "$CONFIG_URL")
+        config_params=$(./decode-config.py $osparams <<< "$config")
+        eval "$config_params"
     fi
 
     for var in $required_osparams; do
