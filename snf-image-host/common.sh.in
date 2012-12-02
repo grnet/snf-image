@@ -51,10 +51,9 @@ report_error() {
 }
 
 report_info() {
+    local report
     echo "[INFO] $*" >&2
-
-    local report="$(./host-monitor.py info <<< "$*")"
-
+    report="$(./host-monitor.py info <<< "$*")"
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
 }
 
@@ -207,9 +206,11 @@ EOF
 }
 
 create_floppy() {
-    local img=$1
+    local img target
 
-    local target=$(mktemp -d)
+    img=$1
+
+    target=$(mktemp -d)
     add_cleanup rmdir "$target"
 
     dd bs=512 count=2880 if=/dev/zero of="$img"

@@ -34,15 +34,16 @@ report_task_start
 check_if_excluded
 
 windows_hostname() {
-    local target="$1"
-    local password="$2"
+    local target password unattend tmp_unattend namespace
+    target="$1"
+    password="$2"
 
-    local tmp_unattend=$(mktemp) || exit 1
+    tmp_unattend=$(mktemp)
     add_cleanup rm "$tmp_unattend"
 
     echo -n "Assigning new computer name..."
 
-    local namespace="urn:schemas-microsoft-com:unattend"
+    namespace="urn:schemas-microsoft-com:unattend"
 
     unattend=$(get_unattend "$target")
     if [ -z "$unattend" ]; then
@@ -56,10 +57,11 @@ windows_hostname() {
 }
 
 linux_hostname() {
-    local target="$1"
-    local hostname="$2"
+    local target hostname distro
+    target="$1"
+    hostname="$2"
 
-    local distro=$(get_base_distro "$target")
+    distro=$(get_base_distro "$target")
 
     case "$distro" in
         debian)
