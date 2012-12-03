@@ -1,3 +1,10 @@
+2012-12-03, v0.6.5
+        * Make snf-image-helper the init process of the system
+        * Shutdown the helper image fast using the apropriate SysRq key
+        * Use eatmydata to omit the syncs performed by resize2fs when
+          resizing a file system. You can supress this behaviour by defining
+          the DO_SYNC image property.
+
 2012-11-20, v0.6.5
 	* Fix a bug in AssignHostname configuration task where the script did
 	  not search for the presence of the Unattend.xml file in the VM, in
