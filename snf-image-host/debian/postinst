@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+    configure|reconfigure)
+	echo "NOTE:"
+        echo "NOTE: Please make sure to create or update the helper image by running:"
+        echo "NOTE:"
+        echo "NOTE: $ snf-image-update-helper"
+        echo "NOTE:"
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
+
+
+
+
+
+
