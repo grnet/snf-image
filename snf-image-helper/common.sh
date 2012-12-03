@@ -88,6 +88,7 @@ report_task_end() {
 }
 
 system_poweroff() {
+    # Credits to psomas@grnet.gr for this ...
     echo o > /proc/sysrq-trigger
 }
 
