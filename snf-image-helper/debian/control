@@ -12,7 +12,8 @@ Vcs-Browser: https://code.grnet.gr/git/snf-image
 Package: snf-image-helper
 Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}, xmlstarlet,
- e2fsprogs (>= 1.41.12), ntfs-3g, ntfsprogs, parted, reglookup, chntpw
+ e2fsprogs (>= 1.41.12), ntfs-3g, ntfsprogs, parted, reglookup, chntpw,
+ eatmydata
 Breaks: ganeti (<< 1.2.7)
 Replaces: snf-ganeti-instance-image
 Enhances: ganeti
