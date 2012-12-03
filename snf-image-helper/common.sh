@@ -35,6 +35,8 @@ BLKID=blkid
 BLOCKDEV=blockdev
 REGLOOKUP=reglookup
 CHNTPW=chntpw
+DATE="date -u" # Time in UTC
+EATMYDATA=eatmydata
 
 CLEANUP=( )
 ERRORS=( )
@@ -51,9 +53,24 @@ add_cleanup() {
     CLEANUP+=("$cmd")
 }
 
+report_error() {
+    if [ ${#ERRORS[*]} -eq 0 ]; then
+        # No error message. Print stderr
+        local lines
+        lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
+        echo -n "STDERR:${lines}:" > "$MONITOR"
+        tail --lines=$lines  "$STDERR_FILE" > "$MONITOR"
+    else
+        for line in "${ERRORS[@]}"; do
+            echo "ERROR:$line" > "$MONITOR"
+        done
+    fi
+}
+
 log_error() {
-    ERRORS+=("$@")
+    ERRORS+=("$*")
     echo "ERROR: $@" | tee $RESULT >&2
+    report_error
     exit 1
 }
 
@@ -70,18 +87,9 @@ report_task_end() {
     echo "$MSG_TYPE_TASK_END:${PROGNAME:2}" > "$MONITOR"
 }
 
-report_error() {
-    if [ ${#ERRORS[*]} -eq 0 ]; then
-        # No error message. Print stderr
-	local lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
-        echo -n "STDERR:${lines}:" > "$MONITOR"
-        tail --lines=$lines  "$STDERR_FILE" > "$MONITOR"
-    else
-        echo -n "ERROR:" > "$MONITOR"
-        for line in "${ERRORS[@]}"; do
-            echo "$line" > "$MONITOR"
-        done
-    fi
+system_poweroff() {
+    # Credits to psomas@grnet.gr for this ...
+    echo o > /proc/sysrq-trigger
 }
 
 get_base_distro() {
@@ -105,7 +113,8 @@ get_base_distro() {
 }
 
 get_distro() {
-    local root_dir=$1
+    local root_dir distro
+    root_dir=$1
 
     if [ -e "$root_dir/etc/debian_version" ]; then
         distro="debian"
@@ -137,22 +146,23 @@ get_distro() {
 
 
 get_partition_table() {
-    local dev="$1"
+    local dev output
+    dev="$1"
     # If the partition table is gpt then parted will raise an error if the
     # secondary gpt is not it the end of the disk, and a warning that has to
     # do with the "Last Usable LBA" entry in gpt.
     if ! output="$("$PARTED" -s -m "$dev" unit s print | grep -E -v "^(Warning|Error): ")"; then
-        log_error "Unable to read partition table for device \`${dev}'"
+        log_error "Unable to read partition table for device \`${dev}'. The image seems corrupted."
     fi
 
     echo "$output"
 }
 
 get_partition_table_type() {
-    local ptable="$1"
+    local ptable dev field
+    ptable="$1"
 
-    local dev="$(sed -n 2p <<< "$ptable")"
-    declare -a field
+    dev="$(sed -n 2p <<< "$ptable")"
     IFS=':' read -ra field <<< "$dev"
 
     echo "${field[5]}"
@@ -190,8 +200,9 @@ is_extended_partition() {
 }
 
 get_extended_partition() {
-    local ptable="$1"
-    local dev="$(echo "$ptable" | sed -n 2p | cut -d':' -f1)"
+    local ptable dev
+    ptable="$1"
+    dev="$(echo "$ptable" | sed -n 2p | cut -d':' -f1)"
 
     tail -n +3 <<< "$ptable" | while read line; do
         part_num=$(cut -d':' -f1 <<< "$line")
@@ -204,7 +215,8 @@ get_extended_partition() {
 }
 
 get_logical_partitions() {
-    local ptable="$1"
+    local ptable part_num
+    ptable="$1"
 
     tail -n +3 <<< "$ptable" | while read line; do
         part_num=$(cut -d':' -f1 <<< "$line")
@@ -217,8 +229,9 @@ get_logical_partitions() {
 }
 
 get_last_primary_partition() {
-    local ptable="$1"
-    local dev=$(echo "ptable" | sed -n 2p | cut -d':' -f1)
+    local ptable dev output
+    ptable="$1"
+    dev=$(echo "ptable" | sed -n 2p | cut -d':' -f1)
 
     for i in 4 3 2 1; do
         if output=$(grep "^$i:" <<< "$ptable"); then
@@ -230,7 +243,9 @@ get_last_primary_partition() {
 }
 
 get_partition_to_resize() {
-    local dev="$1"
+    local dev table table_type last_part last_part_num extended last_primary \
+        ext_num prim_num
+    dev="$1"
 
     table=$(get_partition_table "$dev")
 
@@ -263,7 +278,7 @@ create_partition() {
     local part="$2"
     local ptype="$3"
 
-    declare -a fields
+    local fields=()
     IFS=":;" read -ra fields <<< "$part"
     local id="${fields[0]}"
     local start="${fields[1]}"
@@ -280,20 +295,21 @@ create_partition() {
 }
 
 enlarge_partition() {
-    local device="$1"
-    local part="$2"
-    local ptype="$3"
-    local new_end="$4"
+    local device part ptype new_end fields new_part table logical id
+    device="$1"
+    part="$2"
+    ptype="$3"
+    new_end="$4"
 
     if [ -z "$new_end" ]; then
         new_end=$(cut -d: -f 3 <<< "$(get_last_free_sector "$device")")
     fi
 
-    declare -a fields
+    fields=()
     IFS=":;" read -ra fields <<< "$part"
     fields[2]="$new_end"
 
-    local new_part=""
+    new_part=""
     for ((i = 0; i < ${#fields[*]}; i = i + 1)); do
         new_part="$new_part":"${fields[$i]}"
     done
@@ -302,8 +318,8 @@ enlarge_partition() {
     # If this is an extended partition, removing it will also remove the
     # logical partitions it contains. We need to save them for later.
     if [ "$ptype" = "extended" ]; then
-        local table="$(get_partition_table "$device")"
-        local logical="$(get_logical_partitions "$table")"
+        table="$(get_partition_table "$device")"
+        logical="$(get_logical_partitions "$table")"
     fi
 
     id=${fields[0]}
@@ -319,19 +335,33 @@ enlarge_partition() {
 }
 
 get_last_free_sector() {
-    local dev="$1"
-    local unit="$2"
+    local dev unit last_line ptype
+    dev="$1"
+    unit="$2"
 
     if [ -n "$unit" ]; then
         unit="unit $unit"
     fi
 
-    local last_line="$("$PARTED" -s -m "$dev" "$unit" print free | tail -1)"
-    local ptype="$(cut -d: -f 5 <<< "$last_line")"
+    last_line="$($PARTED -s -m "$dev" "$unit" print free | tail -1)"
+    ptype="$(cut -d: -f 5 <<< "$last_line")"
 
     if [ "$ptype" = "free;" ]; then
         echo "$last_line"
     fi
+}
+
+get_unattend() {
+    local target exists
+    target="$1"
+
+    # Workaround to search for $target/Unattend.xml in an case insensitive way.
+    exists=$(find "$target"/ -maxdepth 1 -iname unattend.xml)
+    if [ $(wc -l <<< "$exists") -gt 1 ]; then
+        log_error "Found multiple Unattend.xml files in the image:" $exists
+    fi
+
+    echo "$exists"
 }
 
 cleanup() {
@@ -367,20 +397,19 @@ cleanup() {
 }
 
 task_cleanup() {
-    rc=$?
+    local rc=$?
 
     if [ $rc -eq 0 ]; then
        report_task_end
-    else
-       report_error
     fi
 
     cleanup
 }
 
 check_if_excluded() {
-    local name="$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
-    local exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${name}"
+    local name exclude
+    name="$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
+    exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${name}"
     if [ -n "${!exclude}" ]; then
         warn "Task ${PROGNAME:2} was excluded and will not run."
         exit 0

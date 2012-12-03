@@ -1,9 +1,3 @@
-if NETWORKIMGSUPPORT
-network_backend_support=yes
-else
-network_backend_support=no
-endif
-
 osname=$(PACKAGE)
 osdir=$(OS_DIR)/$(osname)
 defaultdir=$(DEFAULT_DIR)
@@ -12,7 +6,7 @@ variantsdir=${sysconfdir}/ganeti/snf-image/variants
 dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 	${srcdir}/rename ${srcdir}/verify ${srcdir}/pithcat \
 	${srcdir}/copy-monitor.py ${srcdir}/helper-monitor.py \
-	${srcdir}/host-monitor.py
+	${srcdir}/host-monitor.py ${srcdir}/decode-config.py
 
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list
@@ -27,6 +21,7 @@ edit = sed \
 	   -e 's|@osdir[@]|$(osdir)|g' \
 	   -e 's|@osname[@]|$(osname)|g' \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
+	   -e 's|@VERSION_CHECK[@]|$(VERSION_CHECK)|g' \
 	   -e 's|@HELPER_DIR[@]|$(HELPER_DIR)|g' \
 	   -e 's|@HELPER_IMG[@]|$(HELPER_IMG)|g' \
 	   -e 's|@HELPER_KERNEL[@]|$(HELPER_KERNEL)|g' \
@@ -41,8 +36,8 @@ edit = sed \
 	   -e 's|@INSTALL_MBR[@]|$(INSTALL_MBR)|g' \
 	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g' \
 	   -e 's|@UNATTEND[@]|$(UNATTEND)|g' \
-	   -e 's|@progress_monitor_support[@]|$(progress_monitor_support)|g' \
-	   -e 's|@network_backend_support[@]|$(network_backend_support)|g'
+           -e 's|@MULTISTRAP_CONFIG[@]|$(MULTISTRAP_CONFIG)|g' \
+           -e 's|@MULTISTRAP_APTPREFDIR[@]|$(MULTISTRAP_APTPREFDIR)|g'
 
 %:%.in Makefile
 	rm -f $@ $@.tmp

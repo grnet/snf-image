@@ -24,12 +24,11 @@ QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
 TIMEOUT="timeout"
 CURL="curl"
+DATE="date -u" # Time in UTC
 
 # Temporary use stderr as monitoring file descriptor.
 # `create' will overwrite this
 MONITOR_FD="2"
-
-network_backend_support="@network_backend_support@"
 
 MSG_TYPE_ERROR="image-error"
 MSG_TYPE_INFO="image-info"
@@ -44,16 +43,17 @@ add_cleanup() {
 }
 
 log_error() {
-    ERROR_MSGS+=("$@")
-    echo "$*" >&2
+    echo "[ERROR] $*" >&2
 }
 
+report_error() {
+    ERROR_MSGS+=("$@")
+}
 
-log_info() {
-    echo "$*" >&2
-
-    local report="$(./host-monitor.py info <<< "$*")"
-
+report_info() {
+    local report
+    echo "[INFO] $*" >&2
+    report="$(./host-monitor.py info <<< "$*")"
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
 }
 
@@ -63,8 +63,7 @@ close_fd() {
     exec {fd}>&-
 }
 
-report_error() {
-    local error_file=$1
+send_errors() {
     local report=""
     if [ ${#ERROR_MSGS[@]} -gt 0 ]; then
         local msg=""
@@ -73,7 +72,7 @@ report_error() {
         done
         report="$(./host-monitor.py error <<< "$msg")"
     else
-        report=$(tail -10 "$error_file" | ./host-monitor.py stderr)
+        report=$(./host-monitor.py error <<< "Internal Error: Image deployment failed.")
     fi
 
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
@@ -125,9 +124,9 @@ get_api10_arguments() {
     fi
     if [ "$SCRIPT_NAME" = "export" ]; then
         if [ -z "$EXPORT_DEVICE" ]; then
-        log_error "Missing OS API Variable EXPORT_DEVICE"
-    fi
-    blockdev=$EXPORT_DEVICE
+            log_error "Missing OS API Variable EXPORT_DEVICE"
+        fi
+        blockdev=$EXPORT_DEVICE
     elif [ "$SCRIPT_NAME" = "import" ]; then
         if [ -z "$IMPORT_DEVICE" ]; then
         log_error "Missing OS API Variable IMPORT_DEVICE"
@@ -144,28 +143,28 @@ get_api10_arguments() {
 
 get_api20_arguments() {
     get_api10_arguments
-    if [ -z "$OSP_IMG_ID" ]; then
-        log_error "Missing OS API Parameter: OSP_IMG_ID"
-        exit 1
-    fi
-    if [ -z "$OSP_IMG_FORMAT" ]; then
-        log_error "Missing OS API Parameter: OSP_IMG_FORMAT"
-        exit 1
-    fi
-    if [ -z "$OSP_IMG_PASSWD" ]; then
-        log_error "Missing OS API Parameter: OSP_IMG_PASSWD"
-        exit 1
+
+    local required_osparams="IMG_ID IMG_FORMAT IMG_PASSWD"
+    local osparams="$required_osparams IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+
+    # Store OSP_VAR in VAR
+    for param in $osparams; do
+        eval $param=\"\$OSP_$param\"
+    done
+
+    if [ -n "$CONFIG_URL" ]; then
+        local config config_params
+        config=$($CURL -f "$CONFIG_URL")
+        config_params=$(./decode-config.py $osparams <<< "$config")
+        eval "$config_params"
     fi
 
-    IMG_ID=$OSP_IMG_ID
-    IMG_FORMAT=$OSP_IMG_FORMAT
-    IMG_PASSWD=$OSP_IMG_PASSWD
-    if [ -n "$OSP_IMG_PROPERTIES" ]; then
-        IMG_PROPERTIES="$OSP_IMG_PROPERTIES"
-    fi
-    if [ -n "$OSP_IMG_PERSONALITY" ]; then
-        IMG_PERSONALITY="$OSP_IMG_PERSONALITY"
-    fi
+    for var in $required_osparams; do
+        if [ -z "${!var}" ]; then
+             log_error "Missing OS API Parameter: ${var}"
+             exit 1
+        fi
+    done
 }
 
 map_disk0() {
@@ -207,9 +206,11 @@ EOF
 }
 
 create_floppy() {
-    local img=$1
+    local img target
 
-    local target=$(mktemp -d)
+    img=$1
+
+    target=$(mktemp -d)
     add_cleanup rmdir "$target"
 
     dd bs=512 count=2880 if=/dev/zero of="$img"
@@ -294,10 +295,16 @@ ganeti_os_main() {
 
 }
 
-do_debootstrap() {
-    local target="$1"
+do_multistrap() {
+   local target="$1"
+   local cache="$2"
+   local pkgs="$3"
 
-    echo "Debootstraping to create a new root filesystem:"
+    # Create preferences.d for apt
+    mkdir -p "$target/etc/apt/preferences.d"
+    if [ -d "$MULTISTRAP_APTPREFDIR" ]; then
+        find "$MULTISTRAP_APTPREFDIR" -maxdepth 1 -type f -exec cp {} "$target/etc/apt/preferences.d" \;
+    fi
 
     # Create a policy-rc.d file to deny init script execution
     mkdir -p "$target/usr/sbin"
@@ -307,31 +314,14 @@ exit 101
 EOF
     chmod +x "$target/usr/sbin/policy-rc.d"
 
-    debootstrap --arch $(dpkg --print-architecture) \
-        --include "$HELPER_EXTRA_PKGS" --variant=minbase stable "$target" \
-        "$HELPER_MIRROR" 2>&1 | sed -e 's/^/DEBOOTSTRAP: /g'
+   multistrap -d "$target" -f "$MULTISTRAP_CONFIG" 2>&1 | sed -u -e 's/^/MULTISTRAP: /g'
 
-    # Save the package list
-    chroot "$target" dpkg-query -W -f "\${Package}\n" > "$HELPER_CACHE_PKGS"
-
-    rm "$target/usr/sbin/policy-rc.d"
-
-    # remove the downloaded debs, as they are no longer needed
-    find "$target/var/cache/apt/archives" -type f -name '*.deb' -print0 | \
-        xargs -r0 rm -f
-
-    local tmp_cache=$(mktemp "$CACHE_FILE.XXXXXX")
-    tar cf "$tmp_cache" --one-file-system -C "$target" . || \
-        { rm "$tmp_cache"; false; }
-    # Overwrite the default cache file. Not the user specified if present.
-    mv -f "$tmp_cache" "$HELPER_CACHE_FILE"
+   rm "$target/usr/sbin/policy-rc.d"
+   rm -rf "$target/etc/apt/preferences.d"
 }
 
 report_and_cleanup(){
-
-    local err_file="$1"
-
-    report_error "$err_file"
+    send_errors
     cleanup
 }
 
@@ -377,22 +367,23 @@ fi
 
 : ${VARIANTS_DIR:="@sysconfdir@/ganeti/snf-image/variants"}
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
+: ${IMAGE_DEBUG:="no"}
+: ${VERSION_CHECK:="@VERSION_CHECK@"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
 : ${HELPER_IMG:="@HELPER_IMG@"}
 : ${HELPER_KERNEL:="@HELPER_KERNEL@"}
 : ${HELPER_INITRD:="@HELPER_INITRD@"}
-: ${HELPER_PKG:="@HELPER_DIR@/snf-image-helper.deb"}
 : ${HELPER_SOFT_TIMEOUT:=20}
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
-: ${HELPER_CACHE_FILE:="@HELPER_DIR@/cache.tar"}
-: ${HELPER_CACHE_PKGS:="@HELPER_DIR@/packages"}
 : ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"}
 : ${HELPER_MIRROR:=""}
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
 : ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
 : ${UNATTEND:="@UNATTEND@"}
+: ${MULTISTRAP_CONFIG:="@MULTISTRAP_CONFIG@"}
+: ${MULTISTRAP_APTPREFDIR:="@MULTISTRAP_APTPREFDIR@"}
 
 SCRIPT_NAME=$(basename $0)
 

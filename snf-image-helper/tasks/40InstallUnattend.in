@@ -19,7 +19,7 @@
 
 ### BEGIN TASK INFO
 # Provides:		InstallUnattend
-# RunBefore:		UmountImage
+# RunBefore:		EnforcePersonality
 # RunAfter:		MountImage
 # Short-Description:	Installs Unattend.xml for unattended windows setup
 ### END TASK INFO
@@ -45,15 +45,22 @@ fi
 target=$SNF_IMAGE_TARGET
 mkdir -p "$target/Windows/Setup/Scripts"
 
-if [ -n "$SNF_IMAGE_UNATTEND" ]; then
-    echo "Installing custom Unattend.xml file..."
-    if [ -f "$SNF_IMAGE_UNATTEND" ]; then
-        cat "$SNF_IMAGE_UNATTEND" > "$target/Unattend.xml"
-    else
-        log_error "Custom unattend file: \`"$SNF_IMAGE_UNATTEND"' is missing"
-    fi
+unattend=$(get_unattend "$target")
+
+if [ -n "$unattend" -a -z "$SNF_IMAGE_PROPERTY_USE_DEFAULT_UNATTEND" ]; then
+    warn "Using the Unattend.xml file found in the image"
 else
-    cat "@commondir@/unattend.xml" > "$target/Unattend.xml"
+    rm -f "$unattend"
+    if [ -n "$SNF_IMAGE_UNATTEND" ]; then
+        echo "Installing custom Unattend.xml file..."
+        if [ -f "$SNF_IMAGE_UNATTEND" ]; then
+            cat "$SNF_IMAGE_UNATTEND" > "$target/Unattend.xml"
+        else
+            log_error "Custom unattend file: \`"$SNF_IMAGE_UNATTEND"' is missing"
+        fi
+    else
+        cat "@commondir@/unattend.xml" > "$target/Unattend.xml"
+    fi
 fi
 
 echo "del /Q /F C:\Unattend.xml" > \

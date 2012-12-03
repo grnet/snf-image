@@ -41,6 +41,10 @@ if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then
     exit 0
 fi
 
+if [ -n "$SNF_IMAGE_PROPERTY_DO_SYNC" ]; then
+    unset EATMYDATA
+fi
+
 table=$(get_partition_table "$SNF_IMAGE_DEV")
 partition=$(get_partition_by_num "$table" "$SNF_IMAGE_RESIZE_PART")
 id=$(cut -d: -f1 <<< "$partition")
@@ -57,7 +61,7 @@ if [[ "$ptype" == ext[234] ]]; then
     # system that has been mounted after the last fs check, but since we are
     # sure the file system is clean it's safe enough to bypass this.
     if [ "$state" = "clean" ]; then
-        $RESIZE2FS -f "$device"
+        $EATMYDATA $RESIZE2FS -f "$device"
     else
         log_error "The file system state of partition: \`$device' " \
             " is not clean (state = $state)"

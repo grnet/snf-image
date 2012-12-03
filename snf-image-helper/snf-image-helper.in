@@ -17,18 +17,29 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+
+if [ $$ -eq 1 ]; then
+    mount / -o remount
+    /etc/init.d/udev start
+    hwclock -u -s
+
+    (exec $0) &
+    wait
+    exit 0 # Hopefully this is never called...
+fi
+
 . @commondir@/common.sh
 
 set -e
 
-if [ "x$1" != "x--force" ]; then
-    echo "WARNING: Exiting, this command would cause the system to halt." >&2
-    echo "Use --force if you know what you're doing." >&2
-    exit 1
+if grep snf_image_activate_helper /proc/cmdline > /dev/null; then
+    # terminate helper vm when the script exits
+    add_cleanup system_poweroff
+else
+    log_error "Kernel command line activation flag: " \
+              "\`snf_image_activate_helper' is missing"
 fi
-
-# terminate helper vm when the script exits
-add_cleanup telinit 0
 
 if [ ! -b "$FLOPPY_DEV" ]; then
     log_error "Floppy device is not present!"
@@ -53,8 +64,12 @@ fi
 if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
     properties=$(mktemp --tmpdir properties.XXXXXX)
     add_cleanup rm "$properties"
-    echo "$SNF_IMAGE_PROPERTIES" |
-        "@scriptsdir@/decode-properties.py" "$properties"
+    if ! echo "$SNF_IMAGE_PROPERTIES" | \
+        "@scriptsdir@/decode-properties.py" "$properties"; then
+
+        log_error "Unable to decode image properties. " \
+             "Please check if the variable is in valid json format."
+    fi
     source "$properties"
 fi
 
@@ -79,6 +94,14 @@ trap '{ umount "$target"; }' ERR
 
 if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
 
+    if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "" ]; then
+        log_error "Required image property \`OSFAMILY' is missing or empty."
+    fi
+
+    if [ "$SNF_IMAGE_PROPERTY_ROOT_PARTITION" = "" ]; then
+        log_error "Required image property \`ROOT_PARTITION' is missing or empty."
+    fi
+
     export SNF_IMAGE_RESIZE_PART="$(get_partition_to_resize "$SNF_IMAGE_DEV")"
 
     if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows)$ ]]; then
@@ -90,7 +113,7 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
     echo "Execute all snf-image tasks...."
     $RUN_PARTS -v --exit-on-error "@tasksdir@" 2>&1|
         while IFS= read -r line; do
-            echo $(date +%Y:%m:%d-%H:%M:%S.%N) "$line"
+            echo $($DATE +%Y:%m:%d-%H:%M:%S.%N) "$line"
         done
 fi
 

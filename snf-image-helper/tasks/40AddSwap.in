@@ -19,7 +19,7 @@
 
 ### BEGIN TASK INFO
 # Provides:		AddSwap
-# RunBefore:            UmountImage
+# RunBefore:            EnforcePersonality
 # RunAfter:             MountImage
 # Short-Description:    Set up the swap partition and add an entry in fstab
 ### END TASK INFO

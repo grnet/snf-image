@@ -19,6 +19,7 @@
 
 set -e
 set -o pipefail
+set -o errtrace
 
 . @osdir@/common.sh
 
@@ -34,10 +35,6 @@ the snf-image-helper package. This needs to be done before the first use of
 ganeti's \`snf-image' guest OS type.
 
 OPTIONS:
-    -c CACHE_FILE
-        Use this cache file, instead of the default
-        [default: $HELPER_CACHE_FILE]
-
     -d DIRECTORY
         Use this directory to host the created files, instead of the default
         [default: $HELPER_DIR]
@@ -46,7 +43,8 @@ OPTIONS:
 
     -p PACKAGE
         Install this deb package in the helper image, instead of the default
-        [default: $HELPER_PKG]
+
+    -r  Don't use any existing cache
 
     -y  Assume Yes to all queries and do not prompt
 
@@ -55,16 +53,15 @@ EOF
     exit "$rc"
 }
 
-while getopts "c:d:hp:y" opt; do
+while getopts "d:hp:ry" opt; do
     case $opt in
-        c) CACHE_FILE="$OPTARG"
-        OVERWRITTEN_CACHE_FILE="yes"
-            ;;
         d) HELPER_DIR="$OPTARG"
             ;;
         h) usage 0
             ;;
         p) HELPER_PKG="$OPTARG"
+            ;;
+        r) NO_CACHE="yes"
             ;;
         y) NO_PROMPT="yes"
             ;;
@@ -73,26 +70,20 @@ while getopts "c:d:hp:y" opt; do
     esac
 done
 
-if [ x"$OVERWRITTEN_CACHE_FILE" != "xyes" ] ; then
-    CACHE_FILE="$HELPER_CACHE_FILE"
-fi
-
 echo
 echo "This is the update helper image script for snf-image."
 echo "If you don't know what to do, use \`-h'."
 echo
 
 if [ ! -d "$HELPER_DIR" -o ! -w "$HELPER_DIR" ]; then
-    log_error "ERROR:"
     log_error "Helper directory \`$HELPER_DIR' does not exist or the script" \
     "has no write permission on it."
     exit 1
 fi
 
-if [ ! -r "$HELPER_PKG" ]; then
-    log_error "ERROR:"
-    log_error "Helper package \`$HELPER_PKG' does not exist or is not " \
-    "readable by the script."
+if [ ! -e "$MULTISTRAP_CONFIG" ]; then
+    log_error "Multistrap configuration file: \`$MULTISTRAP_CONFIG' does not" \
+    "exist or is not readable by the script."
     exit 1
 fi
 
@@ -122,7 +113,7 @@ rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
 
 echo -n "Allocating space for helper disk image..."
 helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
-
+add_cleanup rm -f "$helper_img"
 dd if=/dev/zero of="$helper_img" bs=1k count=400000 &> /dev/null
 echo "done"
 
@@ -148,60 +139,10 @@ add_cleanup rmdir "$target"
 mount "$root_dev" "$target"
 add_cleanup umount "$root_dev"
 
-echo -n "Checking for cached root filesystem file \`$CACHE_FILE'..."
-if [ -f "$CACHE_FILE" ]; then
-    echo "found"
+do_multistrap "$target"
 
-
-    missing_pkgs="no"
-    if [ "$CACHE_FILE" == "$HELPER_CACHE_FILE" ]; then
-        echo -n "Checking if needed packages are present..."
-        if [ ! -f "$HELPER_CACHE_PKGS" ]; then
-            missing_pkgs="yes"
-            echo "packages file: \`$HELPER_CACHE_PKGS' does not exist"
-        else
-            OLD_IFS="$IFS"
-            IFS=,; for pkg in $HELPER_EXTRA_PKGS; do
-                if ! grep "^$pkg\$" "$HELPER_CACHE_PKGS" > /dev/null; then
-		    missing_pkgs="yes"
-                    echo "$pkg is missing."
-                    break
-                fi
-            done
-            IFS="$OLD_IFS"
-            if [ "$missing_pkgs" == "no" ]; then
-                echo "done"
-            fi
-	fi
-        if [ "$missing_pkgs" == "yes" ]; then
-                do_debootstrap "$target"
-        fi
-    fi
-
-
-    test "$missing_pkgs" == "no" && while [[ 1 ]]; do
-        echo -n "Use the cached file [Y/n]? "
-        if [ "x$NO_PROMPT" = "xyes" ]; then
-            echo "y";
-            break;
-        fi
-
-        read answer
-    
-        if [ -z "$answer" -o "$(tr [A-Z] [a-z] <<< "$answer")" = "y" ]; then
-            break;
-        elif [ "$(tr [A-Z] [a-z] <<< "$answer" )" = "n" ]; then
-            do_debootstrap "$target"
-            break;
-        fi
-    done
-
-else
-    echo "not found"
-    do_debootstrap "$target"
-fi
-
-tar xf "$HELPER_CACHE_FILE" -C "$target"
+# Save the package list
+chroot "$target" dpkg-query -W  > "$HELPER_DIR/packages"
 
 echo -n "Configuring the helper image..."
 echo snf-image-helper > "$target/etc/hostname"
@@ -224,11 +165,11 @@ if [ ! -L "$target/vmlinuz" -o ! -L "$target/vmlinuz" ]; then
 fi
 echo "done"
 
-kernel=$(readlink -en "$target/vmlinuz")
-initrd=$(readlink -en "$target/initrd.img")
+kernel="$target/$(chroot "$target" readlink -en /vmlinuz)"
+initrd="$target/$(chroot "$target" readlink -en /initrd.img)"
 
 echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
-mv "$kernel" "$initrd" "$HELPER_DIR"
+cp "$kernel" "$initrd" "$HELPER_DIR"
 
 kernel=$(basename "$kernel")
 initrd=$(basename "$initrd")
@@ -237,45 +178,38 @@ initrd=$(basename "$initrd")
 
 rm "$target/vmlinuz" "$target/initrd.img"
 
-echo "Installing snf-image-helper pkg in the new image..."
-cp "$HELPER_PKG" "$target/tmp/"
-pkg_name=$(basename "$HELPER_PKG")
-add_cleanup rm "$target/tmp/$pkg_name"
-chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
 
-cat > "$target/etc/rc.local" <<EOF
-#!/bin/sh -e
-#
-# rc.local
-#
-# This script is executed at the end of each multiuser runlevel.
-# Make sure that the script will "exit 0" on success or any other
-# value on error.
-#
-# In order to enable or disable this script just change the execution
-# bits.
-#
-# By default this script does nothing.
+pkg_installed=$(grep snf-image-helper "$HELPER_DIR/packages" > /dev/null && echo yes)
 
-if ! grep -q snf_image_activate_helper /proc/cmdline; then
-    echo "WARNING: NOT calling snf-image-helper, add snf_image_activate_helper"
-    echo "to the kernel command line if you want to do so."
-else
-    /usr/bin/snf-image-helper --force
+if [ -z "$HELPER_PKG" -a -z "$pkg_installed" ]; then
+    log_error "No helper package was specified and non was found by the apt."
+    exit 1
 fi
 
-exit 0
-EOF
+if [ -r "$HELPER_PKG" ]; then
+    echo "Installing snf-image-helper pkg in the new image..."
+    cp "$HELPER_PKG" "$target/tmp/"
+    pkg_name=$(basename "$HELPER_PKG")
+    add_cleanup rm "$target/tmp/$pkg_name"
+    chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
 
-chmod +x "$target/etc/rc.local"
+    # Recreate package list
+    chroot "$target" dpkg-query -W  > "$HELPER_DIR/packages"
+else
+    echo "snf-image-helper pkg was installed from the apt repository."
+fi
 
-echo "done"
-
-cleanup
+if [ "$VERSION_CHECK" == yes -a -z "$HELPER_PKG" ]; then
+    helper_version="$(grep ^snf-image-helper[[:space:]] "$HELPER_DIR/packages" | cut -f2)"
+    host_version="$(dpkg-query -W -f "\${Version}\n" snf-image-host)"
+    if [ "$host_version" != "$helper_version" ]; then
+        log_error "snf-image-host version (=$host_version) and " \
+            "snf-image-helper version (=$helper_version) don't match."
+        exit 1
+    fi
+fi
 
 mv "$helper_img" "$HELPER_DIR/image"
-
-trap - EXIT
 
 echo "Files in \`$HELPER_DIR' were updated successfully"
 exit 0

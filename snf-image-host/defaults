@@ -10,10 +10,18 @@
 # IMAGE_DIR="/var/lib/snf-image"
 
 # IMAGE_DEBUG: turn on debugging output for the scripts
-# IMAGE_DEBUG=0
+# IMAGE_DEBUG=no
+
+# VERSION_CHECK: Check if host and helper have the
+# same version. This is usefull if snf-image-host is
+# installed as debian package and not from source.
+# VERSION_CHECK="no"
 
 # HELPER_DIR: Directory hosting the helper files
 # HELPER_DIR="/var/lib/snf-image/helper/"
+
+# HELPER_CACHE_DIR: Directory hosting the helper cache files
+# HELPER_CACHE_DIR="/var/cache/snf-image/helper/"
 
 # HELPER_IMG: Path to the helper VM image
 # HELPER_IMG="${HELPER_DIR}/image"
@@ -23,9 +31,6 @@
 
 # HELPER_INITRD: Path to the helper VM initial ramdisk
 # HELPER_INITRD="${HELPER_DIR}/initrd"
-
-# HELPER_PKG: Path to the snf-image-helper package
-# HELPER_PKG="${HELPER_DIR}/snf-image-helper.deb"
 
 # HELPER_TIMOUT: Soft and hard timeout limits for helper instance.
 # The helper instance will be terminated after a given time if it hasn't exited
@@ -43,22 +48,13 @@
 # HELPER_USER imeddiately before starting execution of the helper VM.
 # HELPER_USER="nobody"
 
-# HELPER_CACHE_FILE: Cache file update-helper script uses to avoid running
-# `debootstrap' all the time.
-# HELPER_CACHE_FILE="${HELPER_DIR}/cache.tar"
+# MULTISTRAP_CONFIG: Configuration file to be used with multistrap to create
+# the rootfs of the helper image.
+# MULTISTRAP_CONFIG="/etc/snf-image/multistrap.conf"
 
-# HELPER_CACHE_PKGS: Debian Packages the cache file contains.
-# HELPER_CACHE_PKGS="${HELPER_DIR}/packages"
-
-# HELPER_EXTRA_PKGS: Extra packages that will need to be supplied
-# to debootstrap to make the resulting helper image workable.
-# DO NOT OVERWRITE THIS UNLESS YOU KNOW WHAT YOU ARE DOING
-# HELPER_EXTRA_PKGS="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"
-
-# HELPER_MIRROR: Debian mirror to use with debootstrap. Using a mirror close to
-# you will speed up the whole debootstraping process. By default we do not
-# define a mirror. Debootstrap will use it's default debian URL.
-# HELPER_MIRROR="http://ftp.debian.org/debian"
+# MULTISTRAP_APTPREFDIR: Directory where apt preference files are hosted. Those
+# files will be injected to the helper image before multistrap is called.
+# MULTISTRAP_APTPREFDIR="/etc/snf-image/apt.pref.d"
 
 # PITHOS_DB: Pithos database in SQLAlchemy format
 # PITHOS_DB="sqlite:////var/lib/pithos/backend.db"
