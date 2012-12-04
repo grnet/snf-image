@@ -233,6 +233,8 @@ get_backend_type() {
 
     if [[ "$id" =~ ^pithos: ]]; then
         echo "pithos"
+    elif [[ "$id" =~ ^pithosmap: ]]; then
+        echo "pithos"
     elif [[ "$id" =~ ^(http|ftp)s?: ]]; then
         if [ "$network_backend_support" = "yes" ]; then
             echo "network";
