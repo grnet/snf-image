@@ -1,1 +1,3 @@
-/var/lib/snf-image/helper
+etc/snf-image
+etc/snf-image/apt.pref.d
+var/lib/snf-image/helper
