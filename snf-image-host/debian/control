@@ -12,7 +12,7 @@ Vcs-Browser: https://code.grnet.gr/git/snf-image
 Package: snf-image-host
 Architecture: all
 Depends: ${misc:Depends}, kpartx, multistrap, curl,
- qemu-kvm (>= 0.11), qemu-utils, mbr, python
+ qemu-kvm (>= 0.11), qemu-utils, mbr, python, python-prctl
 Breaks: ganeti (<< 1.2.7)
 Replaces: snf-ganeti-instance-image
 Enhances: ganeti
