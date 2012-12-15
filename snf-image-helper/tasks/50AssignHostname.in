@@ -61,35 +61,31 @@ linux_hostname() {
     target="$1"
     hostname="$2"
 
-    distro=$(get_base_distro "$target")
+    if [ -f "$target/etc/hostname" ]; then
+            echo "$hostname" > "$target/etc/hostname"
+    else
+        distro=$(get_base_distro "$target")
+        case "$distro" in
+            redhat)
+                sed -ie "s/HOSTNAME=.*$/HOSTNAME=$hostname/g" "$target/etc/sysconfig/network";;
+            slackware|suse)
+                #local domain=$(sed -e 's/^[^\.]*//g' < /etc/HOSTNAME)
 
-    case "$distro" in
-        debian)
-            echo "$hostname" > "$target/etc/hostname";;
-        redhat)
-            sed -ie "s/HOSTNAME=.*$/HOSTNAME=$hostname/g" "$target/etc/sysconfig/network";;
-        slackware|suse)
-            #local domain=$(sed -e 's/^[^\.]*//g' < /etc/HOSTNAME)
-
-            # In slackware hostname and domain name are joined together. For now
-            # I will not retain the domain name.
-            echo "$hostname" > "${target}/etc/HOSTNAME";;
-        gentoo)
-            sed -ie "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;
-        arch)
-            # In newer archlinux systems /etc/hostname is used to assign the hostname
-            if [[ -f "$target/etc/hostname" ]]; then
-                echo "$hostname" > "$target/etc/hostname"
-            fi
-            # Older ones use the HOSTNAME variable in /etc/rc.conf
-            sed -ie "s/^HOSTNAME=.*$/HOSTNAME=\"$hostname\"/" "$target/etc/rc.conf"
-            if grep "^127\.0\.0\.1[ \t]*" "$target/etc/hosts" > /dev/null; then
-               sed -ie "s/127\.0\.0\.1[ \t]*.*$/127.0.0.1\t$hostname/" "$target/etc/hosts"
-            else
-               echo -e "127.0.0.1\t$hostname" >> "$target/etc/hosts"
-            fi;;
-        *) log_error "Don't know how to assign hostname. Unknown linux distribution.";;
-    esac
+                # In slackware hostname and domain name are joined together. For now
+                # I will not retain the domain name.
+                echo "$hostname" > "${target}/etc/HOSTNAME";;
+            gentoo)
+                sed -ie "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;
+            arch)
+                sed -ie "s/^HOSTNAME=.*$/HOSTNAME=\"$hostname\"/" "$target/etc/rc.conf"
+                if grep "^127\.0\.0\.1[ \t]*" "$target/etc/hosts" > /dev/null; then
+                   sed -ie "s/127\.0\.0\.1[ \t]*.*$/127.0.0.1\t$hostname/" "$target/etc/hosts"
+                else
+                   echo -e "127.0.0.1\t$hostname" >> "$target/etc/hosts"
+                fi;;
+            *) log_error "Don't know how to assign hostname. Unknown linux distribution.";;
+        esac
+    fi
 
     # Some Linux distributions assign the hostname to 127.0.1.1 in order to be
     # resolvable to an IP address. Lets replace this if found in /etc/hosts
