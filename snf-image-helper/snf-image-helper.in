@@ -33,6 +33,11 @@ fi
 
 set -e
 
+# Enable errtrace to make functions inherit the ERR trap
+set -o errtrace
+
+trap report_error ERR
+
 if grep snf_image_activate_helper /proc/cmdline > /dev/null; then
     # terminate helper vm when the script exits
     add_cleanup system_poweroff
@@ -88,9 +93,6 @@ if [ -z "$RUN_PARTS" ]; then
     log_error "run-parts program is missing from the system"
 fi
 
-# If something goes wrong with the tasks, try to umount the target filesystem
-# in case it is left mounted...
-trap '{ umount "$target"; }' ERR
 
 if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
 
@@ -108,6 +110,10 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
         log_error "Supported values for OSFAMILY property are: linux|windows"
     fi
 
+    # If something goes wrong with the tasks, try to umount the target
+    # file system in case it is left mounted...
+    trap '{ umount "$target"; }' ERR
+
     # Redirect standard error to standard output,
     # prepend a timestamp before each line of output.
     echo "Execute all snf-image tasks...."
@@ -115,10 +121,10 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
         while IFS= read -r line; do
             echo $($DATE +%Y:%m:%d-%H:%M:%S.%N) "$line"
         done
+
+    trap report_error ERR
 fi
 
-# Disable the trap. If code reaches here, the filesystem is unmounted.
-trap - ERR
 
 echo "SUCCESS" > "$RESULT"
 

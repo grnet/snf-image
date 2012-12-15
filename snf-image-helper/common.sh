@@ -70,8 +70,10 @@ report_error() {
 log_error() {
     ERRORS+=("$*")
     echo "ERROR: $@" | tee $RESULT >&2
-    report_error
-    exit 1
+
+    # Use return instead of exit. The set -x options will terminate the script
+    # but will also trigger ERR traps if defined.
+    return 1
 }
 
 warn() {
@@ -404,6 +406,8 @@ task_cleanup() {
 
     if [ $rc -eq 0 ]; then
        report_task_end
+    else
+       report_error
     fi
 
     cleanup
