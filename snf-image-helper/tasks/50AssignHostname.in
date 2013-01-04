@@ -62,7 +62,7 @@ linux_hostname() {
     hostname="$2"
 
     if [ -f "$target/etc/hostname" ]; then
-            echo "$hostname" > "$target/etc/hostname"
+        echo "$hostname" > "$target/etc/hostname"
     else
         distro=$(get_base_distro "$target")
         case "$distro" in
@@ -77,7 +77,13 @@ linux_hostname() {
             gentoo)
                 sed -ie "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;
             arch)
-                sed -ie "s/^HOSTNAME=.*$/HOSTNAME=\"$hostname\"/" "$target/etc/rc.conf"
+                if [ -f "$target/etc/rc.conf" ]; then
+                    sed -ie "s/^HOSTNAME=.*$/HOSTNAME=\"$hostname\"/" "$target/etc/rc.conf"
+                else
+                    # In new versions of arch, /etc/rc.conf is missing
+                    echo "$hostname" > "$target/etc/hostname"
+                fi
+
                 if grep "^127\.0\.0\.1[ \t]*" "$target/etc/hosts" > /dev/null; then
                    sed -ie "s/127\.0\.0\.1[ \t]*.*$/127.0.0.1\t$hostname/" "$target/etc/hosts"
                 else
