@@ -1,3 +1,6 @@
+2013-01-04, v0.7.3
+	* Fix multistrap.conf to work with apt2.dev.grnet.gr
+
 2013-01-04, v0.7.2
 	* Change snf-image-helper repository to apt2.dev.grnet.gr
 
