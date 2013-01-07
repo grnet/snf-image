@@ -110,18 +110,19 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
         log_error "Supported values for OSFAMILY property are: linux|windows"
     fi
 
-    # If something goes wrong with the tasks, try to umount the target
-    # file system in case it is left mounted...
-    trap '{ umount "$target"; }' ERR
+    # If something goes wrong with the tasks, try to umount the disk file
+    # systems that are still mounted.
+    trap '{ umount_all "$target"; }' ERR
 
     # Redirect standard error to standard output,
     # prepend a timestamp before each line of output.
     echo "Execute all snf-image tasks...."
     $RUN_PARTS -v --exit-on-error "@tasksdir@" 2>&1|
-        while IFS= read -r line; do
+        while read -r line; do
             echo $($DATE +%Y:%m:%d-%H:%M:%S.%N) "$line"
         done
 
+    # Reset the handler to its original value
     trap report_error ERR
 fi
 

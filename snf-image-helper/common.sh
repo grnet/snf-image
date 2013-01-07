@@ -369,6 +369,18 @@ get_unattend() {
     echo "$exists"
 }
 
+umount_all() {
+    local target mpoints
+    target="$1"
+
+    # Unmount file systems mounted under directory `target'
+    mpoints="$({ awk "{ if (match(\$2, \"^$target\")) { print \$2 } }" < /proc/mounts; } | sort -rbd | uniq)"
+
+    for mpoint in $mpoints; do
+        umount $mpoint
+    done
+}
+
 cleanup() {
     # if something fails here, it shouldn't call cleanup again...
     trap - EXIT

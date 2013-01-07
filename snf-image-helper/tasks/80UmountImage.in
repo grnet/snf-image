@@ -31,10 +31,19 @@ trap task_cleanup EXIT
 report_task_start
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-	log_error "Target dir:\`$SNF_IMAGE_TARGET' is missing"
+    log_error "Target dir:\`$SNF_IMAGE_TARGET' is missing"
 fi
 
-umount "$SNF_IMAGE_TARGET"
+umount_all "$SNF_IMAGE_TARGET"
+
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
+    # Sleep for a second after umounting windows file systems just to be on
+    # the safe side. The ntfs driver is over fuse and umount with fuse is not
+    # synchronous. Since the helper VM gets killed using a sysrq call, there
+    # is a 0.0000000001% posibility that the altered data are not written back
+    # to the disk when the OS dies, unless you wait a little bit.
+    sleep 1
+fi
 
 exit 0
 
