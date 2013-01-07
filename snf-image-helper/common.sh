@@ -266,7 +266,7 @@ get_partition_to_resize() {
         extended=$(get_extended_partition "$table")
         last_primary=$(get_last_primary_partition "$table")
         ext_num=$(cut -d: -f1 <<< "$extended")
-        prim_num=$(cut -d: -f1 <<< "$last_primary")
+        last_prim_num=$(cut -d: -f1 <<< "$last_primary")
 
         if [ "$ext_num" != "$last_prim_num" ]; then
             echo "$last_prim_num"
