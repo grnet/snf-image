@@ -7,13 +7,7 @@ AC_CONFIG_SRCDIR(configure)
 AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability])
 AM_INIT_AUTOMAKE([subdir-objects])
 
-AC_ARG_ENABLE([network_backend],
-   AS_HELP_STRING([--enable-network-backend],
-    [enable support for network-hosted images
-    (this depends on cURL)])
-)
-
-
+# --enable-version-consistency-ckeck
 AC_ARG_ENABLE([version_consistency_check],
    AS_HELP_STRING([--enable-version-consistency-check],
     [Check if the host and the helper packages have the same version]),
@@ -90,33 +84,6 @@ AC_ARG_WITH([helper-dir],
     [helper_dir="$withval"],
     [helper_dir="$localstatedir/lib/snf-image/helper"])
 AC_SUBST(HELPER_DIR, $helper_dir)
-
-# --with-helper-img
-AC_ARG_WITH([helper-img],
-    [AS_HELP_STRING([--with-helper-img=IMG_PATH],
-        [Path to helper VM image [HELPERDIR/image]]
-    )],
-    [helper_img="$withval"],
-    [helper_img="$helper_dir/image"])
-AC_SUBST(HELPER_IMG, $helper_img)
-
-# --with-helper-kernel
-AC_ARG_WITH([helper-kernel],
-    [AS_HELP_STRING([--with-helper-kernel=KERNEL_PATH],
-        [Path to the helper VM kernel [HELPERDIR/kernel]]
-    )],
-    [helper_ernel="$withval"],
-    [helper_kernel="$helper_dir/kernel"])
-AC_SUBST(HELPER_KERNEL, ${helper_kernel})
-
-# --with-helper-initrd..
-AC_ARG_WITH([helper-initrd],
-    [AS_HELP_STRING([--with-helper-initrd=INITRD_PATH],
-        [Path to the helper VM initial ramdist [HELPERDIR/initrd]]
-    )],
-    [helper_initrd="$withval"],
-    [helper_initrd="$helper_dir/initrd"])
-AC_SUBST(HELPER_INITRD, ${helper_initrd})
 
 # --with-os-dir=...
 AC_ARG_WITH([os-dir],

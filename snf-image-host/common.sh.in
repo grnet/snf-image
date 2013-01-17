@@ -17,8 +17,8 @@
 # 02110-1301, USA.
 
 AWK="awk"
-KPARTX="kpartx"
 LOSETUP="losetup"
+KPARTX="kpartx"
 SFDISK="sfdisk"
 QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
@@ -372,14 +372,9 @@ fi
 : ${IMAGE_DEBUG:="no"}
 : ${VERSION_CHECK:="@VERSION_CHECK@"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
-: ${HELPER_IMG:="@HELPER_IMG@"}
-: ${HELPER_KERNEL:="@HELPER_KERNEL@"}
-: ${HELPER_INITRD:="@HELPER_INITRD@"}
 : ${HELPER_SOFT_TIMEOUT:=20}
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
-: ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"}
-: ${HELPER_MIRROR:=""}
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
 : ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}

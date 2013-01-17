@@ -163,7 +163,7 @@ add_cleanup rm "$result_file"
 snapshot=$(mktemp --tmpdir="$jail" helperXXXXXX.img)
 add_cleanup rm "$snapshot"
 
-"$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
+"$QEMU_IMG" create -f qcow2 -b "$HELPER_DIR/image" "$snapshot"
 
 report_info "Starting customization VM..."
 echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM START" >&2
@@ -174,7 +174,7 @@ $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
     -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
     -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
     -fda "$floppy" -vga none -nographic -parallel none -monitor null \
-    -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
+    -kernel "$HELPER_DIR/kernel" -initrd "$HELPER_DIR/initrd" \
     -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper init=/usr/bin/snf-image-helper" \
     2>&1 | sed -u 's|^|HELPER: |g'
 rc=$?
