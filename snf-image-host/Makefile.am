@@ -1,6 +1,7 @@
-osname=$(PACKAGE)
+osname=snf-image
 osdir=$(OS_DIR)/$(osname)
 defaultdir=$(DEFAULT_DIR)
+exampledir = $(datarootdir)/doc/$(PACKAGE)
 variantsdir=${sysconfdir}/ganeti/snf-image/variants
 
 dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
@@ -14,6 +15,8 @@ dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
 dist_bin_SCRIPTS = snf-image-update-helper
 
 os_DATA = common.sh
+
+example_DATA = defaults multistrap.conf version_pinning.pref repo_pinning.pref
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \

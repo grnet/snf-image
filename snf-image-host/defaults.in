@@ -7,7 +7,7 @@
 # IMAGE_NAME=""
 
 # IMAGE_DIR: directory location for disk images
-# IMAGE_DIR="/var/lib/snf-image"
+# IMAGE_DIR="@localstatedir@/lib/snf-image"
 
 # IMAGE_DEBUG: turn on debugging output for the scripts
 # IMAGE_DEBUG=no
@@ -15,10 +15,10 @@
 # VERSION_CHECK: Check if host and helper have the
 # same version. This is usefull if snf-image-host is
 # installed as debian package and not from source.
-# VERSION_CHECK="no"
+# VERSION_CHECK="@VERSION_CHECK@"
 
 # HELPER_DIR: Directory hosting the helper files
-# HELPER_DIR="/var/lib/snf-image/helper/"
+# HELPER_DIR="@localstatedir@/lib/snf-image/helper/"
 
 # HELPER_TIMOUT: Soft and hard timeout limits for helper instance. The helper
 # instance will be terminated after a given time if it hasn't exited by itself.
@@ -37,28 +37,28 @@
 
 # MULTISTRAP_CONFIG: Configuration file to be used with multistrap to create
 # the rootfs of the helper image.
-# MULTISTRAP_CONFIG="/etc/snf-image/multistrap.conf"
+# MULTISTRAP_CONFIG="@MULTISTRAP_CONFIG@"
 
 # MULTISTRAP_APTPREFDIR: Directory where apt preference files are hosted. Those
 # files will be injected to the helper image before multistrap is called.
-# MULTISTRAP_APTPREFDIR="/etc/snf-image/apt.pref.d"
+# MULTISTRAP_APTPREFDIR="@MULTISTRAP_APTPREFDIR@"
 
 # PITHOS_DB: Pithos database in SQLAlchemy format
-# PITHOS_DB="sqlite:////var/lib/pithos/backend.db"
+# PITHOS_DB="sqlite:////@localstatedir@/lib/pithos/backend.db"
 
 # PITHOS_DATA: Directory where pithos data are hosted
-# PITHOS_DATA="/var/lib/pithos/data"
+# PITHOS_DATA="/@localstatedir@/lib/pithos/data"
 
 # PROGRESS_MONITOR: External program that monitors the progress of the image
 # deployment. The snf-image monitor messages will be redirected to the standard
 # input of this program.
-# PROGRESS_MONITOR=""
+# PROGRESS_MONITOR="@PROGRESS_MONITOR@"
 
 # UNATTEND: This variables overwrites the unattend.xml file used when deploying
 # a windows image. snf-image-helper will use its own unattend.xml file if this
 # variable is empty. Please unless you really know what you are doing, leave
 # this empty.
-# UNATTEND=""
+# UNATTEND="@UNATTEND@"
 
 # Paths for needed programs. Uncommend and change the variables below if you
 # don't want to use the default one.
