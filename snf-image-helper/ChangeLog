@@ -1,3 +1,5 @@
+2013-01-17, v0.7.5
+
 2013-01-08, v0.7.4
 	* Fix a bug in the code that determines which partition to resize
 	* On linux images, mount all local partition during deployment. Not
