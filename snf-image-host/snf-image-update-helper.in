@@ -114,7 +114,7 @@ rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
 echo -n "Allocating space for helper disk image..."
 helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
 add_cleanup rm -f "$helper_img"
-dd if=/dev/zero of="$helper_img" bs=1k count=400000 &> /dev/null
+dd if=/dev/zero of="$helper_img" bs=1M count="$HELPER_SIZE" &> /dev/null
 echo "done"
 
 echo "Creating partitions..."

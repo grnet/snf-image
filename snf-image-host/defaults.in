@@ -20,6 +20,9 @@
 # HELPER_DIR: Directory hosting the helper files
 # HELPER_DIR="@localstatedir@/lib/snf-image/helper/"
 
+# HELPER_SIZE: Size of the helper VM image in MB
+# HELPER_SIZE="400"
+
 # HELPER_TIMOUT: Soft and hard timeout limits for helper instance. The helper
 # instance will be terminated after a given time if it hasn't exited by itself.
 # A TERM signal will be send if the instance is running after a
