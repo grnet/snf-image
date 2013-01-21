@@ -77,24 +77,24 @@ if [ ! -e "$config" ]; then
 fi
 
 # Remove non-default keys...
-grep ^HostKey "$config" || true | while read key_line; do
+{ grep ^HostKey "$config" || true; } | while read key_line; do
     key=$(echo $key_line | cut -d" " -f2)
     if [ "$key" = $HOST_KEY -o "$key" = $RSA_KEY -o \
             "$key" = $DSA_KEY -o "$key" = $ECDSA_KEY ]; then
-        continue;
+        continue
     fi
 
     if [ "x$distro" = "xdebian" ]; then
         # Most distros recreate missing keys...debian complains
         type=""
         if [ -e "$target/$key" ]; then
-            if grep -e "-----BEGIN DSA PRIVATE KEY-----" "$target/$key"; then
+            if grep -e "-----BEGIN DSA PRIVATE KEY-----" "$target/$key" > /dev/null; then
                 type=dsa
-            elif grep -e "-----BEGIN EC PRIVATE KEY-----" "$target/$key"; then
+            elif grep -e "-----BEGIN EC PRIVATE KEY-----" "$target/$key" > /dev/null; then
                 type=ecdsa
-            elif grep -e "-----BEGIN RSA PRIVATE KEY-----" "$target/$key"; then
+            elif grep -e "-----BEGIN RSA PRIVATE KEY-----" "$target/$key" > /dev/null; then
                 type=rsa
-            elif grep -e "SSH PRIVATE KEY FILE FORMAT" "$target/$key"; then
+            elif grep -e "SSH PRIVATE KEY FILE FORMAT" "$target/$key" > /dev/null; then
                 type=rsa1
             fi
         else # do some guessing...
