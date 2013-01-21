@@ -50,6 +50,11 @@ ECDSA_KEY="/etc/ssh/ssh_host_ecdsa_key"
 
 target="$SNF_IMAGE_TARGET"
 
+mount -o bind /proc "$target/proc"
+add_cleanup umount "$target/proc"
+mount -o bind /dev "$target/dev"
+add_cleanup umount "$target/dev"
+
 #Remove the default keys
 for pair in "$HOST_KEY@rsa1" "$RSA_KEY@rsa" "$DSA_KEY@dsa" "$ECDSA_KEY@ecdsa"; do
     key=$(echo $pair | cut -d@ -f1)
