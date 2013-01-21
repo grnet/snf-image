@@ -1,3 +1,6 @@
+2013-01-21, v0.7.6
+	* Make the size of the helper VM image configurable
+
 2013-01-17, v0.7.5
 	* Cleanup defaults file and remove redundant variables
 	* Make defaults file inherit the configuration options

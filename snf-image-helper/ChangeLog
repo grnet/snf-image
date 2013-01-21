@@ -1,3 +1,8 @@
+2013-01-21, v0.7.6
+	* Mount /proc and /dev before chrooting
+	* Fix a bug in DeleteSSHKeys task where the code for checking for
+	  non-default keys was never called.
+
 2013-01-17, v0.7.5
 
 2013-01-08, v0.7.4
