@@ -236,12 +236,7 @@ get_backend_type() {
     elif [[ "$id" =~ ^pithosmap: ]]; then
         echo "pithos"
     elif [[ "$id" =~ ^(http|ftp)s?: ]]; then
-        if [ "$network_backend_support" = "yes" ]; then
-            echo "network";
-        else
-            log_error "Retrieving images from the network is not supported."
-            exit 1
-        fi
+        echo "network"
     elif [ "$id" = "null" ]; then
         echo "null"
     else
