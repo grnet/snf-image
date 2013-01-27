@@ -372,8 +372,8 @@ fi
 : ${IMAGE_DEBUG:="no"}
 : ${VERSION_CHECK:="@VERSION_CHECK@"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
-: ${HELPER_SIZE:="400"}
-: ${HELPER_SOFT_TIMEOUT:=20}
+: ${HELPER_SIZE:="600"}
+: ${HELPER_SOFT_TIMEOUT:=120}
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}

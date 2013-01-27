@@ -21,7 +21,7 @@
 # HELPER_DIR="@localstatedir@/lib/snf-image/helper/"
 
 # HELPER_SIZE: Size of the helper VM image in MB
-# HELPER_SIZE="400"
+# HELPER_SIZE="600"
 
 # HELPER_TIMOUT: Soft and hard timeout limits for helper instance. The helper
 # instance will be terminated after a given time if it hasn't exited by itself.
@@ -30,7 +30,7 @@
 # still running after a HELPER_HARD_TIMEOUT interval since the initial signal
 # was sent. The timeout values are integer numbers with an optional suffix: `s'
 # for seconds (the default), `m' for minutes, `h' for hours or `d' for days.
-# HELPER_SOFT_TIMEOUT="20"
+# HELPER_SOFT_TIMEOUT="120"
 # HELPER_HARD_TIMEOUT="5"
 
 # HELPER_USER: For security reasons, it is recommended that the helper VM
