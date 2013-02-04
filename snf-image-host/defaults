@@ -79,6 +79,9 @@
 # this empty.
 # UNATTEND=""
 
+# XEN_BRIDGE: Bridge to connect the helper VM on
+# XEN_BRIDGE=xenbr
+
 # Paths for needed programs. Uncommend and change the variables below if you
 # don't want to use the default one.
 # LOSETUP="losetup"

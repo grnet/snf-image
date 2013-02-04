@@ -17,7 +17,7 @@ launch_helper() {
       disk="file:$snapshot,xvda,w" \
       disk="phy:$blockdev,xvdb,w" \
       disk="file:$floppy,xvdc1,w" \
-      vif="mac=aa:00:00:00:00:11,bridge=xenbr" \
+      vif="mac=aa:00:00:00:00:11,bridge=$XEN_BRIDGE" \
       memory="256" root="/dev/xvda1 quiet ro boot=local" boot="c" vcpus=1 \
       name="$helper_name"
 
