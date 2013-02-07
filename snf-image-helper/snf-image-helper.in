@@ -30,6 +30,8 @@ fi
 # terminate helper vm when the script exits
 add_cleanup telinit 0
 
+prepare_helper
+
 if [ ! -b "$FLOPPY_DEV" ]; then
     log_error "Floppy device is not present!"
 fi

@@ -141,57 +141,11 @@ if [ -n "$IMG_PERSONALITY" ]; then
     snf_export_PERSONALITY="$IMG_PERSONALITY"
 fi
 
+snf_export_DEV=$(get_img_dev)
+
 create_floppy "$floppy"
 
-# Invoke the helper vm to do the dirty job...
-jail=$(mktemp -d --tmpdir tmpfsXXXXXXX)
-add_cleanup rmdir "$jail"
-
-mount tmpfs -t tmpfs "$jail" -o size=1G
-add_cleanup umount -l "$jail"
-
-result_file=$(mktemp --tmpdir="$jail" result.XXXXXX)
-add_cleanup rm "$result_file"
-
-snapshot=$(mktemp --tmpdir="$jail" helperXXXXXX.img)
-add_cleanup rm "$snapshot"
-
-mk_snapshot
-
-echo -n "$(date +%Y:%m:%d-%H:%M:%S.%N) " >&2
-log_info "Starting customization VM..."
-set +e
-
-launch_helper
-
-rc=$?
-set -e
-if [ $rc -ne 0 ]; then
-    if [ $rc -eq 124 ];  then
-        log_error "Image customization was terminated. Did not finish on time."
-    elif [ $rc -eq 137 ]; then # (128 + SIGKILL)
-        log_error "Image customization was killed. Did not finish on time."
-    elif [ $rc -eq 141 ]; then # (128 + SIGPIPE)
-        log_error "Image customization was terminated by a SIGPIPE."
-        log_error "Maybe progress monitor has died unexpectedly."
-    elif [ $rc -eq 125 ]; then
-        log_error "Internal Error. Image customization could not start."
-        log_error "timeout did not manage to run."
-    else
-        log_error "Image customization died unexpectedly (return code $rc)."
-    fi
-    exit 1
-else
-    echo -n "$(date +%Y:%m:%d-%H:%M:%S.%N)" >&2
-    log_info "Customization VM finished."
-fi
-
-get_helper_result
-
-if [ "x$result" != "xHELPER_RESULT_SUCCESS" ]; then
-    log_error "Image customization failed."
-    exit 1
-fi
+launch_helper "$blockdev" "$floppy"
 
 log_info "Image customization finished successfully."
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2012, 2013 GRNET S.A.
 # Copyright (C) 2007, 2008, 2009 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -41,86 +41,88 @@ MSG_TYPE_TASK_END="TASK_END"
 
 STDERR_LINE_SIZE=10
 
-
-# hypervisor param is passed in /proc/cmdline
-case "$hypervisor" in
-  kvm)
-    FLOPPY_DEV=/dev/fd0
-    IMG_DEV=/dev/vda
-    RESULT=/dev/ttyS1
-    MONITOR=/dev/ttyS2
-    ;;
-  xen-hvm|xen-pvm)
-    FLOPPY_DEV=/dev/xvdc1
-    IMG_DEV=/dev/xvdb
-    ;;
-esac
-
-to_monitor() {
-
-    case $hypervisor in
-      kvm)
-          echo "HELPER_MONITOR_$@" > "$MONITOR"
-          ;;
-      xen-pvm|xen-hvm)
-          echo  "HELPER_MONITOR_$@" | socat STDIO INTERFACE:eth0
-          ;;
-    esac
-}
-
-to_result() {
-
-    case $hypervisor in
-      kvm)
-        echo "HELPER_RESULT_$@" > "$RESULT"
-        ;;
-      xen-pvm|xen-hvm)
-        domid=$(xenstore-read domid)
-        xenstore-write /local/domain/0/helper/$domid "HELPER_RESULT_$@"
-        ;;
-    esac
-
-}
-
-
 add_cleanup() {
     local cmd=""
     for arg; do cmd+=$(printf "%q " "$arg"); done
     CLEANUP+=("$cmd")
 }
 
+close_fd() {
+    local fd=$1
+
+    exec {fd}>&-
+}
+
+prepare_helper() {
+	local cmdline item key val hypervisor domid
+
+	read -a cmdline	 < /proc/cmdline
+	for item in "${cmdline[@]}"; do
+        key=$(cut -d= -f1 <<< "$item")
+        if [ "$key" = "hypervisor" ]; then
+            val=$(cut -d= -f2 <<< "$item")
+            hypervisor="$val"
+        fi
+	done
+
+    case "$hypervisor" in
+    kvm)
+        FLOPPY_DEV=/dev/fd0
+        exec {RESULT_FD}> /dev/ttyS1
+        add_cleanup close_fd ${RESULT_FD}
+        exec {MONITOR_FD}> /dev/ttyS2
+        add_cleanup close_fd ${MONITOR_FD}
+        ;;
+    xen-hvm|xen-pvm)
+		mount -t xenfs xenfs /proc/xen
+		iptables -P OUTPUT DROP
+		ip6tables -P OUTPUT DROP
+		ip link set eth0 up
+        FLOPPY_DEV=/dev/xvdc
+        domid=$(xenstore-read domid)
+        exec {RESULT_FD}> >(xargs -l1 xenstore-write /local/domain/0/snf-image-helper/$domid)
+        add_cleanup close_fd ${RESULT_FD}
+        exec {MONITOR_FD}> >(socat STDIN INTERFACE:eth0)
+        add_cleanup close_fd ${MONITOR_FD}
+        ;;
+    *)
+        echo "ERROR: Unknown hypervisor: \`$hypervisor'" >&2
+        exit 1
+        ;;
+    esac
+
+    export RESULT_FD MONITOR_FD
+}
+
 log_error() {
     ERRORS+=("$@")
     echo "ERROR: $@" >&2
-    to_result "ERROR: $@"
+	echo "ERROR: $@" >&${MONITOR_FD}
     exit 1
 }
 
 warn() {
     echo "Warning: $@" >&2
-    to_monitor "WARNING: $@"
+	echo "WARNING: $@" >&${MONITOR_FD}
 }
 
 report_task_start() {
-    to_monitor "$MSG_TYPE_TASK_START:${PROGNAME:2}"
+    echo "$MSG_TYPE_TASK_START:${PROGNAME:2}" >&${MONITOR_FD}
 }
 
 report_task_end() {
-    to_monitor "$MSG_TYPE_TASK_END:${PROGNAME:2}"
+    echo "$MSG_TYPE_TASK_END:${PROGNAME:2}" >&${MONITOR_FD}
 }
 
 report_error() {
     if [ ${#ERRORS[*]} -eq 0 ]; then
         # No error message. Print stderr
-	      lines="$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE")"
-        cnt=$(echo $lines | wc -l)
-        for line in lines; do
-          to_monitor "$STDERR:$cnt: $line"
-          let cnt--
-        done
+        local lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
+        echo -n "STDERR:${lines}:" >&${MONITOR_FD}
+        tail --lines=$lines  "$STDERR_FILE" >&${MONITOR_FD}
     else
         for line in "${ERRORS[@]}"; do
-            to_monitor "ERROR: $line"
+            echo "ERROR:$line" >&${MONITOR_FD}
         done
     fi
 }
@@ -432,9 +434,7 @@ check_if_excluded() {
 
 
 return_success() {
-
-    to_result SUCCESS
-
+    echo SUCCESS >&${RESULT_FD}
 }
 
 trap cleanup EXIT

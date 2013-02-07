@@ -123,7 +123,7 @@ rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
 echo -n "Allocating space for helper disk image..."
 helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
 
-dd if=/dev/zero of="$helper_img" bs=1k count=800000 &> /dev/null
+dd if=/dev/zero of="$helper_img" bs=1k count=400000 &> /dev/null
 echo "done"
 
 echo "Creating partitions..."
@@ -142,7 +142,7 @@ mkfs.ext3 "$root_dev" 2>&1 | sed -e 's/^/MKFS.EXT3: /g'
 # The helper vm should never do filesystem checks...
 tune2fs -i 0 -c 0 "$root_dev" 2>&1 | sed -e 's/^/TUNE2FS: /g'
 
-blkid=$(blkid -s UUID -o value $root_dev)
+root_uuid=$(blkid -s UUID -o value "$root_dev")
 
 target=$(mktemp -d)
 add_cleanup rmdir "$target"
@@ -212,52 +212,32 @@ cat > "$target/etc/fstab" <<EOF
 # /etc/fstab: static file system information.
 #
 # <file system>   <mount point>   <type>  <options>       <dump>  <pass>
-UUID=$blkid         /               ext3    defaults        0       1
+UUID=$root_uuid         /               ext3    defaults        0       1
 proc              /proc           proc    defaults        0       0
 EOF
 echo "done"
 
+echo -n "Extracting kernel..."
+if [ ! -L "$target/vmlinuz" -o ! -L "$target/vmlinuz" ]; then
+    echo -e "\033[1;31mfailed\033[0m"
+    log_error "vmlinuz or initrd.img link in root is missing."
+    log_error "I don't know how to find a usable kernel/initrd pair."
+    exit 1
+fi
+echo "done"
 
+kernel=$(readlink -en "$target/vmlinuz")
+initrd=$(readlink -en "$target/initrd.img")
 
+echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
+mv "$kernel" "$initrd" "$HELPER_DIR"
 
-setup_image() {
-    # setup_image pkg suffix
+kernel=$(basename "$kernel")
+initrd=$(basename "$initrd")
 
-    echo "Getting linux image $1"
-    chroot "$target" apt-get install -y --force-yes -qq "$1" &>/dev/null
+(cd "$HELPER_DIR"; ln -fs "$kernel" kernel; ln -fs "$initrd" initrd)
 
-    echo -n "Extracting kernel..."
-    if [ ! -L "$target/vmlinuz" -o ! -L "$target/vmlinuz" ]; then
-        echo -e "\033[1;31mfailed\033[0m"
-        log_error "vmlinuz or initrd.img link in root is missing."
-        log_error "I don't know how to find a usable kernel/initrd pair."
-        exit 1
-    fi
-    echo "done"
-
-    kernel=$(readlink -en "$target/vmlinuz")
-    initrd=$(readlink -en "$target/initrd.img")
-
-    echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
-    mv "$kernel" "$initrd" "$HELPER_DIR"
-
-    kernel=$(basename "$kernel")
-    initrd=$(basename "$initrd")
-
-    (
-        cd "$HELPER_DIR";
-        ln -fs "$kernel" kernel$2;
-        ln -fs "$initrd" initrd$2;
-    )
-
-    rm "$target/vmlinuz" "$target/initrd.img"
-
-}
-
-
-setup_image $HELPER_LINUX_IMAGE_PKG ""
-setup_image $HELPER_LINUX_IMAGE_XEN_PKG "-xen"
-
+rm "$target/vmlinuz" "$target/initrd.img"
 
 echo "Installing snf-image-helper pkg in the new image..."
 cp "$HELPER_PKG" "$target/tmp/"
@@ -283,20 +263,6 @@ if ! grep -q snf_image_activate_helper /proc/cmdline; then
     echo "WARNING: NOT calling snf-image-helper, add snf_image_activate_helper"
     echo "to the kernel command line if you want to do so."
 else
-    for x in \$(cat /proc/cmdline); do
-        case x in
-            hypervisor*) eval \$x
-            ;;
-        esac
-    done
-    case \$hypervisor in
-        xen-pvm|xen-hvm)
-            mount -t xenfs xenfs /proc/xen
-            iptables -P OUTPUT DROP
-            ip6tables -P OUTPUT DROP
-            ip link set eth0 up
-            ;;
-    esac
     /usr/bin/snf-image-helper --force
 fi
 
