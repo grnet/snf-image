@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(snf-image, 0.5, synnefo@lists.grnet.gr)
+AC_INIT(snf-image-host, 0.7.6, synnefo@lists.grnet.gr)
 
 AC_CONFIG_AUX_DIR(autotools)
 AC_CONFIG_SRCDIR(configure)
@@ -7,14 +7,15 @@ AC_CONFIG_SRCDIR(configure)
 AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability])
 AM_INIT_AUTOMAKE([subdir-objects])
 
-AC_ARG_ENABLE([network_backend],
-   AS_HELP_STRING([--enable-network-backend],
-    [enable support for network-hosted images
-    (this depends on cURL)])
+# --enable-version-consistency-ckeck
+AC_ARG_ENABLE([version_consistency_check],
+   AS_HELP_STRING([--enable-version-consistency-check],
+    [Check if the host and the helper packages have the same version]),
+    version_check="$enableval", version_check="no"
 )
-AS_IF([test "x$enable_network_backend" = "xyes"],,
-    [AC_MSG_NOTICE(network backend support not enabled)])
-AM_CONDITIONAL(NETWORKIMGSUPPORT, [test "x$enable_network_backend" = "xyes"])
+if test ${version_check} = yes; then
+    AC_SUBST(VERSION_CHECK, yes)
+fi
 
 # --with-progress-monitor
 AC_ARG_WITH([progress-monitor],
@@ -42,6 +43,37 @@ AC_ARG_WITH([unattend-file],
     fi]
 )
 
+# --with-multistrap-config
+AC_ARG_WITH([multistrap-config],
+  [AS_HELP_STRING([--with-multistrap-config=MULTISTRAP_CONFIG_PATH],
+      [path to a multistrap configuration file
+      [SYSCONFDIR/snf-image/multistrap.conf]]
+    )],
+    [if test "$withval" != "yes" -a "$withval" != "no"; then
+	multistrap_config="$withval"
+        AC_MSG_NOTICE(using multistrap configuration file: $withval)
+     elif test "$withval" != "no"; then
+         AC_MSG_ERROR([you must specify an configuration file if --with-multistrap-config is specified])
+    fi],
+    [multistrap_config="$sysconfdir/snf-image/multistrap.conf"]
+)
+AC_SUBST(MULTISTRAP_CONFIG, $multistrap_config)
+
+# --with-multistrap-aptprefdir
+AC_ARG_WITH([multistrap-aptprefdir],
+  [AS_HELP_STRING([--with-multistrap-aptprefdir=MULTISTRAP_APTPREFDIR],
+      [path to a directory where preferences files for apt are hosted. Those files will be used during multistrap
+      [SYSCONFDIR/snf-image/apt.pref.d]]
+    )],
+    [if test "$withval" != "yes" -a "$withval" != "no"; then
+	multistrap_aptprefdir="$withval"
+        AC_MSG_NOTICE(using apt preferences directory for multistrap: $withval)
+     elif test "$withval" != "no"; then
+         AC_MSG_ERROR([you must specify a directory if --with-multistrap-aptprefdir is specified])
+    fi],
+    [multistrap_aptprefdir="$sysconfdir/snf-image/apt.pref.d"]
+)
+AC_SUBST(MULTISTRAP_APTPREFDIR, $multistrap_aptprefdir)
 
 # --with-helper-dir
 AC_ARG_WITH([helper-dir],
@@ -52,33 +84,6 @@ AC_ARG_WITH([helper-dir],
     [helper_dir="$withval"],
     [helper_dir="$localstatedir/lib/snf-image/helper"])
 AC_SUBST(HELPER_DIR, $helper_dir)
-
-# --with-helper-img
-AC_ARG_WITH([helper-img],
-    [AS_HELP_STRING([--with-helper-img=IMG_PATH],
-        [Path to helper VM image [HELPERDIR/image]]
-    )],
-    [helper_img="$withval"],
-    [helper_img="$helper_dir/image"])
-AC_SUBST(HELPER_IMG, $helper_img)
-
-# --with-helper-kernel
-AC_ARG_WITH([helper-kernel],
-    [AS_HELP_STRING([--with-helper-kernel=KERNEL_PATH],
-        [Path to the helper VM kernel [HELPERDIR/kernel]]
-    )],
-    [helper_ernel="$withval"],
-    [helper_kernel="$helper_dir/kernel"])
-AC_SUBST(HELPER_KERNEL, ${helper_kernel})
-
-# --with-helper-initrd..
-AC_ARG_WITH([helper-initrd],
-    [AS_HELP_STRING([--with-helper-initrd=INITRD_PATH],
-        [Path to the helper VM initial ramdist [HELPERDIR/initrd]]
-    )],
-    [helper_initrd="$withval"],
-    [helper_initrd="$helper_dir/initrd"])
-AC_SUBST(HELPER_INITRD, ${helper_initrd})
 
 # --with-os-dir=...
 AC_ARG_WITH([os-dir],
@@ -135,13 +140,9 @@ if test -z "$TIMEOUT" ; then
   AC_MSG_ERROR([timeout not found in $PATH:/usr/sbin:/sbin])
 fi
 
-if test "x$enable_network_backend" = "xyes" ; then
-  AC_PATH_PROG(CURL, [curl], [], [$PATH:/usr/sbin:/sbin])
-    if test -z "$CURL" ; then
-      AC_MSG_ERROR([curl is needed for network backend support but was not \
-      found in $PATH:/usr/sbin:/sbin]
-      [To disable network backend support ommit --enable-network-backend])
-    fi
+AC_PATH_PROG(CURL, [curl], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$CURL" ; then
+  AC_MSG_ERROR([curl not found in $PATH:/usr/sbin:/sbin])
 fi
 
 AC_CONFIG_FILES([

@@ -24,10 +24,12 @@ set -o pipefail
 
 ganeti_os_main
 
-# Save stderr to a file
-stderr=$(mktemp)
-add_cleanup rm "$stderr"
-exec 2> >(tee -a "$stderr" >&2)
+if [ "$IMAGE_DEBUG" = "yes" ]; then
+    PS4='$(date "+%s.%N ($LINENO) + ")'
+    set -x
+elif [ "$IMAGE_DEBUG" != "no" ]; then
+    echo "Warning: Unsupported IMAGE_DEBUG value: \`$IMAGE_DEBUG'"
+fi
 
 monitor_pipe=$(mktemp -u)
 mkfifo -m 600 "$monitor_pipe"
@@ -37,7 +39,7 @@ if [ -n "$PROGRESS_MONITOR" ]; then
     { sleep 1; $PROGRESS_MONITOR "$instance" < "$monitor_pipe" ; } &
     monitor_pid="$!"
 else
-    sed -u 's|^|MONITOR MSG: |g' < "$monitor_pipe" &
+    sed -u 's|^|[MONITOR] |g' < "$monitor_pipe" &
     monitor_pid="$!"
 fi
 
@@ -50,13 +52,14 @@ add_cleanup  close_fd ${MONITOR_FD}
 # do not catch this, the program will terminate.
 trap "" SIGPIPE
 
-trap "report_and_cleanup $(printf "%q" "$stderr")" EXIT
+trap report_and_cleanup EXIT
 
 case $BACKEND_TYPE in
     local)
         image_file="$IMAGE_DIR/$(echo "$IMAGE_NAME" | sed 's/^file://').$IMAGE_TYPE"
         if [ ! -e "$image_file" ]; then
             log_error "Image file \`$image_file' does not exit."
+            report_error "Unable to retrieve image file."
             exit 1
         fi
         image_size="$(stat -L -c %s "$image_file")"
@@ -72,9 +75,11 @@ case $BACKEND_TYPE in
         image_size=$($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
         ;;
     pithos)
-        cmd_args="--db $(printf "%q" "${PITHOS_DB}") \
-                  --data $(printf "%q" "${PITHOS_DATA}") \
-                  $(printf "%q" "${IMAGE_NAME}")"
+        # For security reasons pass the database url to pithcat as an
+        # environmental variable.
+        export PITHCAT_INPUT_DB="$PITHOS_DB"
+        export PITHCAT_INPUT_DATA="$PITHOS_DATA"
+        cmd_args="$(printf "%q" "${IMAGE_NAME}")"
         image_cmd="./pithcat $cmd_args"
         image_size=$(./pithcat -s  $cmd_args)
         ;;
@@ -110,11 +115,12 @@ case "$IMAGE_TYPE" in
         ;;
     *)
         log_error "Unknown Image format: \`$IMAGE_TYPE'"
+        report_error "Unknown Image Format"
         exit 1
         ;;
 esac
 
-log_info "Starting image copy..."
+report_info "Starting image copy..."
 monitor="./copy-monitor.py -o $MONITOR_FD -r $image_size"
 if [ "$BACKEND_TYPE" = "local" ]; then
     # dd the dump to its new home :-)
@@ -125,7 +131,7 @@ if [ "$BACKEND_TYPE" = "local" ]; then
 else
     $image_cmd | $monitor dd bs=4M of="$target" oflag=direct
 fi
-log_info "Image copy finished."
+report_info "Image copy finished."
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
@@ -147,7 +153,7 @@ create_floppy "$floppy"
 
 launch_helper "$blockdev" "$floppy"
 
-log_info "Image customization finished successfully."
+report_info "Image customization finished successfully."
 
 # Execute cleanups
 cleanup

@@ -22,36 +22,29 @@ set -e
 . common.sh
 
 
-if [ -z "$OSP_IMG_ID" ]; then
-    log_error "Missing OS API Parameter: OSP_IMG_ID"
-    exit 1
-fi
-if [ -z "$OSP_IMG_FORMAT" ]; then
-    log_error "Missing OS API Parameter: OSP_IMG_FORMAT"
-    exit 1
-fi
-if [ -z "$OSP_IMG_PASSWD" ]; then
-    log_error "Missing OS API Parameter: OSP_IMG_PASSWD"
-    exit 1
-fi
+check_required() {
+    local required_params="IMG_ID IMG_FORMAT IMG_PASSWD"
+    local osparams="$required_params IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
 
-IMG_ID=$OSP_IMG_ID
-IMG_FORMAT=$OSP_IMG_FORMAT
-IMG_PASSWD=$OSP_IMG_PASSWD
-if [ -n "$OSP_IMG_PROPERTIES" ]; then
-    IMG_PROPERTIES="$OSP_IMG_PROPERTIES"
-fi
-if [ -n "$OSP_IMG_PERSONALITY" ]; then
-    IMG_PERSONALITY="$OSP_IMG_PERSONALITY"
-fi
+    # Store OSP_VAR in VAR
+    for param in $osparams; do
+        eval $param=\"\$OSP_$param\"
+    done
 
+    for var in $required_params; do
+        if [ -z "${!var}" ]; then
+             log_error "Missing OS API Parameter: ${var}"
+             exit 1
+        fi
+    done
 
-case $IMG_FORMAT in
-    extdump|ntfsdump)
+    case $IMG_FORMAT in
+        extdump|ntfsdump)
         ;;
-    diskdump)
+	diskdump)
         if [ -z "$IMG_PROPERTIES" ]; then
-            log_error "\`img_properties' parameter must be present when using \`diskdump' format."
+            log_error "\`img_properties' parameter must be present when"
+            log_error "using \`diskdump' format."
             exit 1
         fi
         ;;
@@ -60,5 +53,12 @@ case $IMG_FORMAT in
         exit 1
         ;;
 esac
+}
+
+if [ -z "$OSP_CONFIG_URL" ]; then
+    check_required
+fi
 
 exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

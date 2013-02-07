@@ -48,6 +48,11 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
         @scriptsdir@/inject-files.py "$SNF_IMAGE_TARGET"
     exit 0
 elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
+    mount -o bind /proc "$SNF_IMAGE_TARGET/proc"
+    add_cleanup umount "$SNF_IMAGE_TARGET/proc"
+    mount -o bind /dev "$SNF_IMAGE_TARGET/dev"
+    add_cleanup umount "$SNF_IMAGE_TARGET/dev"
+
     tmpdir=$(chroot "$SNF_IMAGE_TARGET" mktemp -d)
     add_cleanup rm -rf "$SNF_IMAGE_TARGET/$tmpdir"
     echo "$SNF_IMAGE_PERSONALITY" |

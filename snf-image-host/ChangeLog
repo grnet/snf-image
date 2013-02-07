@@ -1,3 +1,63 @@
+2013-01-21, v0.7.6
+	* Make the size of the helper VM image configurable
+
+2013-01-17, v0.7.5
+	* Cleanup defaults file and remove redundant variables
+	* Make defaults file inherit the configuration options
+	  passed with ./configure
+
+2013-01-08, v0.7.4
+
+2013-01-04, v0.7.3
+	* Fix multistrap.conf to work with apt2.dev.grnet.gr
+
+2013-01-04, v0.7.2
+	* Change snf-image-helper repository to apt2.dev.grnet.gr
+
+2012-12-07, v0.7.1
+	* Make pithcat work with pithosmap URLs
+
+2012-12-03, v0.7
+	* Abandon debootstrap in favor of multistrap. This way we can define
+          more than 1 repositories to retrieve packages from.
+        * Add a mechanism for pinning repositories and package versions
+        * Add a version check in snf-image-update-helper. After the creation
+          of the helper, check if the versions of snf-image-{host,helper} match
+        * Remove the HELPER_PKG variable from common.sh. The helper package by
+          default should get downloaded from a repo using
+          snf-image-update-helper. You can still install a package from the
+          local file system using the -p variable.
+        * Specify snf-image-helper as the init process when running the helper
+          VM
+
+2012-11-20, v0.6.5
+
+2012-11-15, v0.6.4
+	* Fix a bug in snf-image-update-helper introduced in v0.6.3
+
+2012-11-13, v0.6.3
+	* Fix a bug in snf-image-update-helper where the temporary image file
+	  was not removed if an error occured.
+
+2012-10-12, v0.6.2
+	* Seperate the error messages that should be logged by the system from
+	  those that should be propagated to the user through the monitoring
+	  mechanism. Don't allow internal configuration options get revieled to
+	  the user.
+
+2012-10-05, v0.6.1
+	* Use Coordinated Universal Time when logging.
+	* Fix a bug in the way snf-image-update-helper reads the links of the
+	  kernel and the initrd in the helper VM.
+	* Use environmental variables instead of input options to pass sensitive
+	  data to pithcat. This is needed because when pithcat is running, every
+	  user can see the program's command line by using ps.
+
+2012-09-15, v0.6
+	* Fix import and export scripts
+	* Add new config_url os parameter. This can be used by snf-image to
+	  download a json file that contains the value for other os parameters
+
 2012-08-31, v0.5
 	* Add a new progress monitoring mechanism. With this new mechanism,
 	  snf-image can output progress and error messages to external programs
