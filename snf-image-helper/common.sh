@@ -33,6 +33,7 @@ REGLOOKUP=reglookup
 CHNTPW=chntpw
 DATE="date -u" # Time in UTC
 EATMYDATA=eatmydata
+MOUNT="mount -n"
 
 CLEANUP=( )
 ERRORS=( )
@@ -76,7 +77,7 @@ prepare_helper() {
         add_cleanup close_fd ${MONITOR_FD}
         ;;
     xen-hvm|xen-pvm)
-		mount -t xenfs xenfs /proc/xen
+		$MOUNT -t xenfs xenfs /proc/xen
 		iptables -P OUTPUT DROP
 		ip6tables -P OUTPUT DROP
 		ip link set eth0 up

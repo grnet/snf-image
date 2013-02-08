@@ -14,11 +14,12 @@ launch_helper() {
 	echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM START" >&2
 
     xm create /dev/null \
-      kernel="$HELPER_DIR/kernel-xen" ramdisk="$HELPER_DIR/initrd-xen"  root="/dev/xvda1" \
-      extra="console=hvc0 hypervisor=$HYPERVISOR snf_image_activate_helper quiet ro boot=local init=/usr/bin/snf-image-helper" \
-      disk="file:$HELPER_DIR/image,xvda,w" disk="phy:$blockdev,xvdb,w" \
+      kernel="$HELPER_DIR/kernel-xen" ramdisk="$HELPER_DIR/initrd-xen" \
+	  root="/dev/xvda1" memory="256" boot="c" vcpus=1 name="$name" \
+      extra="console=hvc0 hypervisor=$HYPERVISOR snf_image_activate_helper \
+      rules_dev=/dev/xvdc quiet ro boot=local init=/usr/bin/snf-image-helper" \
+      disk="file:$HELPER_DIR/image,xvda,r" disk="phy:$blockdev,xvdb,w" \
       disk="file:$floppy,xvdc,r" vif="mac=aa:00:00:00:00:11,bridge=$XEN_BRIDGE" \
-      memory="256" boot="c" vcpus=1 name="$name"
 
     if ! xenstore-exists snf-image-helper; then
         xenstore-write snf-image-helper ""

@@ -159,6 +159,10 @@ cat > "$target/etc/fstab" <<EOF
 UUID=$root_uuid         /               ext3    defaults        0       1
 proc              /proc           proc    defaults        0       0
 EOF
+
+# We need this since we mount the helper VM ro
+ln -sf /proc/mounts "$target/etc/mtab"
+
 echo "done"
 
 echo -n "Extracting kernel..."

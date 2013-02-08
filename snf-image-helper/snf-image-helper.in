@@ -20,14 +20,17 @@
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
 if [ $$ -eq 1 ]; then
-    mount / -o remount
+    #mount / -o remount
+    mount -t tmpfs -o size=20m tmpfs /tmp
     /etc/init.d/udev start
-    hwclock -u -s
+    #hwclock -u -s
 
     (exec $0) &
     wait
     exit 0 # Hopefully this is never called...
 fi
+
+export PATH
 
 . @commondir@/common.sh
 
@@ -55,7 +58,7 @@ fi
 floppy=$(mktemp -d --tmpdir floppy.XXXXXX)
 add_cleanup rmdir "$floppy"
 
-mount $FLOPPY_DEV $floppy
+$MOUNT $FLOPPY_DEV $floppy
 add_cleanup umount "$floppy"
 
 if [ -f "$floppy/rules" ]; then
