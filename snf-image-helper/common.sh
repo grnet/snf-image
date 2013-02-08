@@ -62,15 +62,17 @@ prepare_helper() {
 	read -a cmdline	 < /proc/cmdline
 	for item in "${cmdline[@]}"; do
         key=$(cut -d= -f1 <<< "$item")
+        val=$(cut -d= -f2 <<< "$item")
         if [ "$key" = "hypervisor" ]; then
-            val=$(cut -d= -f2 <<< "$item")
             hypervisor="$val"
+        fi
+        if [ "$key" = "rules_dev" ]; then
+            export RULES_DEV="$val"
         fi
 	done
 
     case "$hypervisor" in
     kvm)
-        FLOPPY_DEV=/dev/fd0
         exec {RESULT_FD}> /dev/ttyS1
         add_cleanup close_fd ${RESULT_FD}
         exec {MONITOR_FD}> /dev/ttyS2
@@ -81,7 +83,6 @@ prepare_helper() {
 		iptables -P OUTPUT DROP
 		ip6tables -P OUTPUT DROP
 		ip link set eth0 up
-        FLOPPY_DEV=/dev/xvdc
         domid=$(xenstore-read domid)
         exec {RESULT_FD}> >(xargs -l1 xenstore-write /local/domain/0/snf-image-helper/$domid)
         add_cleanup close_fd ${RESULT_FD}

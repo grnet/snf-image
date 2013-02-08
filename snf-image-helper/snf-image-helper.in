@@ -51,24 +51,24 @@ fi
 
 prepare_helper
 
-if [ ! -b "$FLOPPY_DEV" ]; then
-    log_error "Floppy device is not present!"
+if [ ! -b "$RULES_DEV" ]; then
+    log_error "Device file hosting the rules file: \`$RULES_DEV' does not exist"
 fi
 
-floppy=$(mktemp -d --tmpdir floppy.XXXXXX)
-add_cleanup rmdir "$floppy"
+rules=$(mktemp -d --tmpdir rules.XXXXXX)
+add_cleanup rmdir "$rules"
 
-$MOUNT $FLOPPY_DEV $floppy
-add_cleanup umount "$floppy"
+$MOUNT $RULES_DEV $rules
+add_cleanup umount "$rules"
 
-if [ -f "$floppy/rules" ]; then
-    source "$floppy/rules"
+if [ -f "$rules/rules" ]; then
+    source "$rules/rules"
 else
-    log_error "Floppy does not contain \`rules\' file"
+    log_error "$RULES_DEV does not contain \`rules\' file"
 fi
 
-if [ -f "$floppy/unattend.xml" ]; then
-    export SNF_IMAGE_UNATTEND="$floppy/unattend.xml"
+if [ -f "$rules/unattend.xml" ]; then
+    export SNF_IMAGE_UNATTEND="$rules/unattend.xml"
 fi
 
 if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
