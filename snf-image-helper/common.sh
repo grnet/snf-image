@@ -56,6 +56,22 @@ close_fd() {
     exec {fd}>&-
 }
 
+send_result_kvm() {
+    echo "$@" > /dev/ttyS1
+}
+
+send_monitor_message_kvm() {
+    echo "$@" > /dev/ttyS2
+}
+
+send_result_xen() {
+    xenstore-write /local/domain/0/snf-image-helper/$DOMID "$*"
+}
+
+send_monitor_message_xen() {
+    echo "$@" | socat STDIN INTERFACE:eth0
+}
+
 prepare_helper() {
 	local cmdline item key val hypervisor domid
 
@@ -73,21 +89,15 @@ prepare_helper() {
 
     case "$hypervisor" in
     kvm)
-        exec {RESULT_FD}> /dev/ttyS1
-        add_cleanup close_fd ${RESULT_FD}
-        exec {MONITOR_FD}> /dev/ttyS2
-        add_cleanup close_fd ${MONITOR_FD}
+        HYPERVISOR=kvm
         ;;
     xen-hvm|xen-pvm)
-		$MOUNT -t xenfs xenfs /proc/xen
-		iptables -P OUTPUT DROP
-		ip6tables -P OUTPUT DROP
-		ip link set eth0 up
-        domid=$(xenstore-read domid)
-        exec {RESULT_FD}> >(xargs -l1 xenstore-write /local/domain/0/snf-image-helper/$domid)
-        add_cleanup close_fd ${RESULT_FD}
-        exec {MONITOR_FD}> >(socat STDIN INTERFACE:eth0)
-        add_cleanup close_fd ${MONITOR_FD}
+        $MOUNT -t xenfs xenfs /proc/xen
+        iptables -P OUTPUT DROP
+        ip link set eth0 arp off
+        ip link set eth0 up
+        export DOMID=$(xenstore-read domid)
+        HYPERVISOR=xen
         ;;
     *)
         echo "ERROR: Unknown hypervisor: \`$hypervisor'" >&2
@@ -95,29 +105,31 @@ prepare_helper() {
         ;;
     esac
 
-    export RESULT_FD MONITOR_FD
+    export HYPERVISOR
 }
 
 report_error() {
+    msg=""
     if [ ${#ERRORS[*]} -eq 0 ]; then
         # No error message. Print stderr
         local lines
         lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
-        echo -n "STDERR:${lines}:" >&${MONITOR_FD}
-        tail --lines=$lines  "$STDERR_FILE" >&${MONITOR_FD}
+        msg="STDERR:${lines}"
+        msg+=$(tail --lines=$lines  "$STDERR_FILE")
     else
         for line in "${ERRORS[@]}"; do
-            echo "ERROR:$line" >&${MONITOR_FD}
+            msg+="ERROR:$line"$'\n'
         done
     fi
+
+    send_monitor_message_${HYPERVISOR} "$msg"
 }
 
 log_error() {
     ERRORS+=("$*")
-    echo "ERROR: $@" >&2
-    echo "ERROR: $@" >&${MONITOR_FD}
 
-    echo "ERROR" >&${RUSULT_FD}
+    send_monitor_message_${HYPERVISOR} "ERROR: $@"
+    send_result_${HYPERVISOR} "ERROR: $@"
 
     # Use return instead of exit. The set -x options will terminate the script
     # but will also trigger ERR traps if defined.
@@ -126,15 +138,15 @@ log_error() {
 
 warn() {
     echo "Warning: $@" >&2
-	echo "WARNING: $@" >&${MONITOR_FD}
+    send_monitor_message_${HYPERVISOR} "WARNING: $@"
 }
 
 report_task_start() {
-    echo "$MSG_TYPE_TASK_START:${PROGNAME:2}" >&${MONITOR_FD}
+    send_monitor_message_${HYPERVISOR} "$MSG_TYPE_TASK_START:${PROGNAME:2}"
 }
 
 report_task_end() {
-    echo "$MSG_TYPE_TASK_END:${PROGNAME:2}" >&${MONITOR_FD}
+    send_monitor_message_${HYPERVISOR} "$MSG_TYPE_TASK_END:${PROGNAME:2}"
 }
 
 system_poweroff() {
@@ -487,7 +499,7 @@ check_if_excluded() {
 
 
 return_success() {
-    echo SUCCESS >&${RESULT_FD}
+    send_result_${HYPERVISOR} "SUCCESS"
 }
 
 trap cleanup EXIT

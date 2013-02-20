@@ -23,20 +23,19 @@ import time
 import json
 import re
 
-# add HELPER_MONITOR_
-LINESIZE = 512+16
-BUFSIZE = 512+16
+LINESIZE = 512
+BUFSIZE = 512
 PROGNAME = os.path.basename(sys.argv[0])
 STDERR_MAXLINES = 10
 MAXLINES = 100
 MSG_TYPE = 'image-helper'
 
 PROTOCOL = {
-    'HELPER_MONITOR_TASK_START': ('task-start', 'task'),
-    'HELPER_MONITOR_TASK_END': ('task-end', 'task'),
-    'HELPER_MONITOR_WARNING': ('warning', 'messages'),
-    'HELPER_MONITOR_STDERR': ('error', 'stderr'),
-    'HELPER_MONITOR_ERROR': ('error', 'messages')}
+    'TASK_START': ('task-start', 'task'),
+    'TASK_END': ('task-end', 'task'),
+    'WARNING': ('warning', 'messages'),
+    'STDERR': ('error', 'stderr'),
+    'ERROR': ('error', 'messages')}
 
 
 def error(msg):
@@ -105,7 +104,7 @@ if __name__ == "__main__":
                 stderr += "%s\n" % line
                 lines_left -= 1
                 if lines_left == 0:
-                    send(fd, "HELPER_MONITROR_STDERR", stderr)
+                    send(fd, "STDERR", stderr)
                     stderr = ""
                 line = ""
                 continue
@@ -114,8 +113,8 @@ if __name__ == "__main__":
             if len(line) == 0:
                 continue
 
-            if line.startswith("HELPER_MONITOR_STDERR:"):
-                m = re.match("HELPER_MONITOR_STDERR:(\d+):(.*)", line)
+            if line.startswith("STDERR:"):
+                m = re.match("STDERR:(\d+):(.*)", line)
                 if not m:
                     error("Invalid syntax for STDERR line")
                 try:
@@ -133,16 +132,15 @@ if __name__ == "__main__":
                     lines_left -= 1
 
                 if lines_left == 0:
-                    send(fd, "HELPER_MONITOR_STDERR", stderr)
+                    send(fd, "STDERR", stderr)
                     stderr = ""
-            elif line.startswith("HELPER_MONITOR_TASK_START:") \
-                or line.startswith("HELPER_MONITOR_TASK_END:") \
-                or line.startswith("HELPER_MONITOR_WARNING:") \
-                or line.startswith("HELPER_MONITOR_ERROR:"):
+            elif line.startswith("TASK_START:") \
+                or line.startswith("TASK_END:") \
+                or line.startswith("WARNING:") \
+                or line.startswith("ERROR:"):
                 (msg_type, _, value) = line.partition(':')
 
-                if line.startswith("HELPER_MONITOR_WARNING:") \
-                  or line.startswith("HELPER_MONITOR_ERROR:"):
+                if line.startswith("WARNING:") or line.startswith("ERROR:"):
                     value = [value]
                 send(fd, msg_type, value)
             else:

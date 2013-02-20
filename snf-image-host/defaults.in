@@ -46,6 +46,9 @@
 # files will be injected to the helper image before multistrap is called.
 # MULTISTRAP_APTPREFDIR="@MULTISTRAP_APTPREFDIR@"
 
+# XEN_SCRIPTS_DIR: Directory where the Xen scripts are stored
+# XEN_SCRIPTS_DIR=="@sysconfdir@/xen/scripts"
+
 # PITHOS_DB: Pithos database in SQLAlchemy format
 # PITHOS_DB="sqlite:////@localstatedir@/lib/pithos/backend.db"
 
