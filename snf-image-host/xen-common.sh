@@ -25,6 +25,7 @@ launch_helper() {
 	  ipv6.disable=1 rules_dev=/dev/xvdc ro boot=local init=/usr/bin/snf-image-helper" \
       disk="file:$HELPER_DIR/image,xvda,r" disk="phy:$blockdev,xvdb,w" \
       disk="file:$floppy,xvdc,r" vif="script=${XEN_SCRIPTS_DIR}/vif-snf-image"
+    add_cleanup suppress_errors xm destroy "$name"
 
     if ! xenstore-exists snf-image-helper; then
         xenstore-write snf-image-helper ""
@@ -36,7 +37,8 @@ launch_helper() {
     add_cleanup xenstore-rm snf-image-helper/${helperid}
     xenstore-chmod snf-image-helper/${helperid} r0 w${helperid}
 
-    socat EXEC:"./helper-monitor.py ${MONITOR_FD}" INTERFACE:vif${helperid}.0 &
+    socat INTERFACE:vif${helperid}.0 EXEC:"./helper-monitor.py ${MONITOR_FD}" &
+    monitor_pid=$!
 
     set +e
 

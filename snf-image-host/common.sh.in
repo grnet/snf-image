@@ -318,9 +318,13 @@ EOF
    rm -rf "$target/etc/apt/preferences.d"
 }
 
-report_and_cleanup(){
+report_and_cleanup() {
     send_errors
     cleanup
+}
+
+suppress_errors() {
+    "$@" &> /dev/null || true
 }
 
 cleanup() {
