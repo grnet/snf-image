@@ -22,7 +22,7 @@ launch_helper() {
     snapshot=$(mktemp --tmpdir="$jail" helperXXXXXX.img)
     add_cleanup rm "$snapshot"
 
-    "$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
+    "$QEMU_IMG" create -f qcow2 -b "$HELPER_DIR/image" "$snapshot"
 
     report_info "Starting customization VM..."
     echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM START" >&2
