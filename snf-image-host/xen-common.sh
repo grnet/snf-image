@@ -49,36 +49,14 @@ launch_helper() {
     set -e
 
     echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM STOP" >&2
-    if [ $rc -ne 0 ]; then
-        if [ $rc -eq 124 ];  then
-            log_error "Customization VM was terminated. Did not finish on time."
-            report_error "Image customization failed. Did not finish on time."
-        elif [ $rc -eq 137 ]; then # (128 + SIGKILL)
-            log_error "Customization VM was killed. Did not finish on time."
-            report_error "Image customization failed. Did not finish on time."
-        elif [ $rc -eq 141 ]; then # (128 + SIGPIPE)
-            log_error "Customization VM was terminated by a SIGPIPE."
-            log_error "Maybe progress monitor has died unexpectedly."
-        elif [ $rc -eq 125 ]; then
-            log_error "Internal Error. Image customization could not start."
-            log_error "timeout did not manage to run."
-        else
-            log_error "Customization VM died unexpectedly (return code $rc)."
-        fi
-        exit 1
-    else
-        report_info "Customization VM exited normally."
-    fi
+
+    check_helper_rc "$rc"
 
     report_info "Checking customization status..."
     result=$(xenstore-read snf-image-helper/$helperid)
     report_info "Customization status is: $result"
 
-    if [ "x$result" != "xSUCCESS" ]; then
-        log_error "Image customization failed."
-        report_error "Image customization failed."
-        exit 1
-    fi
+    check_helper_result "$result"
 }
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
