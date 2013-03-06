@@ -44,6 +44,11 @@ MSG_TYPE_TASK_END="TASK_END"
 
 STDERR_LINE_SIZE=10
 
+IP="10.0.0.1"
+NETWORK="$IP/24"
+BROADCAST="${IP%.*}.255"
+PORT="48000"
+
 add_cleanup() {
     local cmd=""
     for arg; do cmd+=$(printf "%q " "$arg"); done
@@ -69,7 +74,8 @@ send_result_xen() {
 }
 
 send_monitor_message_xen() {
-    echo "$@" | socat STDIN INTERFACE:eth0
+    #Broadcast the message
+    echo "$@" | socat STDIO UDP-DATAGRAM:${BROADCAST}:${PORT},broadcast
 }
 
 prepare_helper() {
@@ -93,9 +99,9 @@ prepare_helper() {
         ;;
     xen-hvm|xen-pvm)
         $MOUNT -t xenfs xenfs /proc/xen
-        iptables -P OUTPUT DROP
-        ip link set eth0 arp off
+        ip addr add "$NETWORK" dev eth0
         ip link set eth0 up
+        ip route add default dev eth0
         export DOMID=$(xenstore-read domid)
         HYPERVISOR=xen
         ;;
