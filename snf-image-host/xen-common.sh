@@ -57,7 +57,7 @@ launch_helper() {
     monitor_rc=$?
     set -e
 
-    if [ $rc -ne 0 ];
+    if [ $monitor_rc -ne 0 ];
        log_error "Helper VM monitoring failed"
        report_error "Helper VM monitoring failed"
        exit 1
