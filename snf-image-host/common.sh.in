@@ -126,11 +126,13 @@ get_api10_arguments() {
     if [ "$SCRIPT_NAME" = "export" ]; then
         if [ -z "$EXPORT_DEVICE" ]; then
             log_error "Missing OS API Variable EXPORT_DEVICE"
+            exit 1
         fi
         blockdev=$EXPORT_DEVICE
     elif [ "$SCRIPT_NAME" = "import" ]; then
         if [ -z "$IMPORT_DEVICE" ]; then
-        log_error "Missing OS API Variable IMPORT_DEVICE"
+            log_error "Missing OS API Variable IMPORT_DEVICE"
+            exit 1
         fi
         blockdev=$IMPORT_DEVICE
     else
@@ -138,6 +140,7 @@ get_api10_arguments() {
     fi
     if [ "$SCRIPT_NAME" = "rename" -a -z "$OLD_INSTANCE_NAME" ]; then
         log_error "Missing OS API Variable OLD_INSTANCE_NAME"
+        exit 1
     fi
     old_name=$OLD_INSTANCE_NAME
 }
@@ -224,6 +227,7 @@ create_floppy() {
             cat "$UNATTEND" > "$target/unattend.xml"
         else
             log_error "Unattend file: \`"$UNATTEND"' does not exist"
+            exit 1
         fi
     fi
     umount "$target"
