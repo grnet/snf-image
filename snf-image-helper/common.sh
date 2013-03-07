@@ -44,11 +44,6 @@ MSG_TYPE_TASK_END="TASK_END"
 
 STDERR_LINE_SIZE=10
 
-IP="10.0.0.1"
-NETWORK="$IP/24"
-BROADCAST="${IP%.*}.255"
-PORT="48000"
-
 add_cleanup() {
     local cmd=""
     for arg; do cmd+=$(printf "%q " "$arg"); done
@@ -75,7 +70,7 @@ send_result_xen() {
 
 send_monitor_message_xen() {
     #Broadcast the message
-    echo "$@" | socat STDIO UDP-DATAGRAM:${BROADCAST}:${PORT},broadcast
+    echo "$@" | socat "STDIO" "UDP-DATAGRAM:${BROADCAST}:${MONITOR_PORT},broadcast"
 }
 
 prepare_helper() {
@@ -83,14 +78,22 @@ prepare_helper() {
 
 	read -a cmdline	 < /proc/cmdline
 	for item in "${cmdline[@]}"; do
-        key=$(cut -d= -f1 <<< "$item")
-        val=$(cut -d= -f2 <<< "$item")
-        if [ "$key" = "hypervisor" ]; then
-            hypervisor="$val"
-        fi
-        if [ "$key" = "rules_dev" ]; then
-            export RULES_DEV="$val"
-        fi
+            key=$(cut -d= -f1 <<< "$item")
+            val=$(cut -d= -f2 <<< "$item")
+            if [ "$key" = "hypervisor" ]; then
+                hypervisor="$val"
+            fi
+            if [ "$key" = "rules_dev" ]; then
+                export RULES_DEV="$val"
+            fi
+            if [ "$key" = "helper_ip" ]; then
+                export IP="$val"
+                export NETWORK="$IP/24"
+                export BROADCAST="${IP%.*}.255"
+            fi
+            if [ "$key" = "monitor_port" ]; then
+                export MONITOR_PORT="$val"
+            fi
 	done
 
     case "$hypervisor" in
@@ -98,6 +101,14 @@ prepare_helper() {
         HYPERVISOR=kvm
         ;;
     xen-hvm|xen-pvm)
+        if [ -z "$IP" ]; then
+            echo "ERROR: \`helper_ip' not defined or empty" >&2
+            exit 1
+        fi
+        if [ -z "$MONITOR_PORT" ]; then
+            echo "ERROR: \`monitor_port' not defined or empty" >&2
+            exit 1
+        fi
         $MOUNT -t xenfs xenfs /proc/xen
         ip addr add "$NETWORK" dev eth0
         ip link set eth0 up

@@ -22,7 +22,8 @@ launch_helper() {
       kernel="$HELPER_DIR/kernel-xen" ramdisk="$HELPER_DIR/initrd-xen" \
 	  root="/dev/xvda1" memory="256" boot="c" vcpus=1 name="$name" \
       extra="console=hvc0 hypervisor=$HYPERVISOR snf_image_activate_helper \
-	  ipv6.disable=1 rules_dev=/dev/xvdc ro boot=local init=/usr/bin/snf-image-helper" \
+	  ipv6.disable=1 rules_dev=/dev/xvdc ro boot=local helper_ip=10.0.0.1 \
+          monitor_port=48888 init=/usr/bin/snf-image-helper" \
       disk="file:$HELPER_DIR/image,xvda,r" disk="phy:$blockdev,xvdb,w" \
       disk="file:$floppy,xvdc,r" vif="script=${XEN_SCRIPTS_DIR}/vif-snf-image"
     add_cleanup suppress_errors xm destroy "$name"
@@ -37,7 +38,7 @@ launch_helper() {
     add_cleanup xenstore-rm snf-image-helper/${helperid}
     xenstore-chmod snf-image-helper/${helperid} r0 w${helperid}
 
-    filter='udp and dst port 48000 and dst host 10.0.0.255 and src host 10.0.0.1'
+    filter='udp and dst port 48888 and dst host 10.0.0.255 and src host 10.0.0.1'
     $TIMEOUT -k $HELPER_HARD_TIMEOUT $HELPER_SOFT_TIMEOUT \
       ./helper-monitor.py -i "vif${helperid}.0" -f "$filter" ${MONITOR_FD} &
     monitor_pid=$!
@@ -57,7 +58,7 @@ launch_helper() {
     monitor_rc=$?
     set -e
 
-    if [ $monitor_rc -ne 0 ];
+    if [ $monitor_rc -ne 0 ]; then
        log_error "Helper VM monitoring failed"
        report_error "Helper VM monitoring failed"
        exit 1
