@@ -189,7 +189,10 @@ if __name__ == "__main__":
             else:
                 raise
     else:
-        for data in os.read(sys.stdin.fileno(), BUFSIZE):
+        while True:
+            data = os.read(sys.stdin.fileno(), BUFSIZE)
             monitor.process(data)
+            if not data:
+                break
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
