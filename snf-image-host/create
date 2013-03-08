@@ -47,9 +47,9 @@ fi
 exec {MONITOR_FD}>${monitor_pipe}
 add_cleanup  close_fd ${MONITOR_FD}
 
-# Ignore sigpipe signals. If progress monitor is dead and snf-image-host tries
-# to output something to the opened pipe, then a sigpipe will be raised. If we
-# do not catch this, the program will terminate.
+# Ignore sigpipe signals. If progress monitor is dead and snf-image tries to
+# output something to the opened pipe, then a sigpipe will be raised. If we do
+# not catch this, the program will terminate.
 trap "" SIGPIPE
 
 trap report_and_cleanup EXIT

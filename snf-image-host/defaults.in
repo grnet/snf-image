@@ -12,9 +12,9 @@
 # IMAGE_DEBUG: turn on debugging output for the scripts
 # IMAGE_DEBUG=no
 
-# VERSION_CHECK: Check if host and helper have the
-# same version. This is usefull if snf-image-host is
-# installed as debian package and not from source.
+# VERSION_CHECK: Check if snf-image and snf-image-helper have the same version.
+# This is usefull if snf-image is installed as debian package and not from
+# source.
 # VERSION_CHECK="@VERSION_CHECK@"
 
 # HELPER_DIR: Directory hosting the helper files
