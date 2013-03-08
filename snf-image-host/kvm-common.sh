@@ -1,28 +1,15 @@
-
 get_img_dev() {
-	echo /dev/vda
+	echo /dev/vdb
 }
 
 launch_helper() {
-	local jail result_file result snapshot rc floppy blockdev
+	local result_file result snapshot rc floppy blockdev
 
     blockdev="$1"
     floppy="$2"
 
-    # Invoke the helper vm to do the dirty job...
-    jail=$(mktemp -d --tmpdir tmpfsXXXXXXX)
-    add_cleanup rmdir "$jail"
-
-    mount tmpfs -t tmpfs "$jail" -o size=1G
-    add_cleanup umount -l "$jail"
-
-    result_file=$(mktemp --tmpdir="$jail" result.XXXXXX)
+    result_file=$(mktemp result.XXXXXX)
     add_cleanup rm "$result_file"
-
-    snapshot=$(mktemp --tmpdir="$jail" helperXXXXXX.img)
-    add_cleanup rm "$snapshot"
-
-    "$QEMU_IMG" create -f qcow2 -b "$HELPER_DIR/image" "$snapshot"
 
     report_info "Starting customization VM..."
     echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM START" >&2
@@ -30,15 +17,15 @@ launch_helper() {
     set +e
 
     $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
-      kvm -runas "$HELPER_USER" -drive file="$snapshot" \
+      kvm -runas "$HELPER_USER" -drive file="$HELPER_DIR/image",format=raw,if=virtio,readonly \
       -drive file="$blockdev",format=raw,if=virtio,cache=none \
       -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
       -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
       -fda "$floppy" -vga none -nographic -parallel none -monitor null \
       -kernel "$HELPER_DIR/kernel" -initrd "$HELPER_DIR/initrd" \
-      -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 \
+      -append "quiet ro root=/dev/vda1 console=ttyS0,9600n8 \
              hypervisor=$HYPERVISOR snf_image_activate_helper \
-			 rules_dev=/dev/fd0 init=/usr/bin/snf-image-helper" \
+	     rules_dev=/dev/fd0 init=/usr/bin/snf-image-helper" \
       2>&1 | sed -u 's|^|HELPER: |g'
 
     rc=$?
