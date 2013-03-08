@@ -2,25 +2,20 @@ get_img_dev() {
 	echo /dev/xvdb
 }
 
-#create_mac() {
-#    # MAC address inside the range 00:16:3e:xx:xx:xx are reserved for Xen
-#    echo  "aa:$(cat /proc/interrupts | md5sum | sed -r 's/^(.{10}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;')"
-#}
-
 launch_helper() {
-    local name helperid rc blockdev floppy host_mac helper_mac
+    local name helperid rc blockdev floppy
 
     blockdev="$1"
     floppy="$2"
 
-	name=$(uuid)
+    name="snf-image-helper-$instance-$RANDOM"
 
     report_info "Starting customization VM..."
     echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM START" >&2
 
     xm create /dev/null \
       kernel="$HELPER_DIR/kernel-xen" ramdisk="$HELPER_DIR/initrd-xen" \
-	  root="/dev/xvda1" memory="256" boot="c" vcpus=1 name="$name" \
+      root="/dev/xvda1" memory="256" boot="c" vcpus=1 name="$name" \
       extra="console=hvc0 hypervisor=$HYPERVISOR snf_image_activate_helper \
 	  ipv6.disable=1 rules_dev=/dev/xvdc ro boot=local helper_ip=10.0.0.1 \
           monitor_port=48888 init=/usr/bin/snf-image-helper" \
