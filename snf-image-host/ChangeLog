@@ -1,3 +1,28 @@
+2013-03-09, v0.8
+	* Add support for xen
+	* Increase the default HELPER_SIZE and TIMEOUT values
+	* Cleanup the code and remove settings no longer used
+	* Rename snf-image-host to snf-image
+
+2013-01-21, v0.7.6
+	* Make the size of the helper VM image configurable
+
+2013-01-17, v0.7.5
+	* Cleanup defaults file and remove redundant variables
+	* Make defaults file inherit the configuration options
+	  passed with ./configure
+
+2013-01-08, v0.7.4
+
+2013-01-04, v0.7.3
+	* Fix multistrap.conf to work with apt2.dev.grnet.gr
+
+2013-01-04, v0.7.2
+	* Change snf-image-helper repository to apt2.dev.grnet.gr
+
+2012-12-07, v0.7.1
+	* Make pithcat work with pithosmap URLs
+
 2012-12-03, v0.7
 	* Abandon debootstrap in favor of multistrap. This way we can define
           more than 1 repositories to retrieve packages from.

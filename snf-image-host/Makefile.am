@@ -1,7 +1,9 @@
-osname=$(PACKAGE)
+osname=snf-image
 osdir=$(OS_DIR)/$(osname)
 defaultdir=$(DEFAULT_DIR)
+exampledir = $(datarootdir)/doc/$(PACKAGE)
 variantsdir=${sysconfdir}/ganeti/snf-image/variants
+xenscriptsdir=${sysconfdir}/xen/scripts
 
 dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 	${srcdir}/rename ${srcdir}/verify ${srcdir}/pithcat \
@@ -9,11 +11,16 @@ dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 	${srcdir}/host-monitor.py ${srcdir}/decode-config.py
 
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
-               ${srcdir}/variants.list
+               ${srcdir}/variants.list ${srcdir}/xen-common.sh \
+               ${srcdir}/kvm-common.sh
+
+dist_xenscripts_SCRIPTS = ${srcdir}/vif-snf-image
 
 dist_bin_SCRIPTS = snf-image-update-helper
 
-os_DATA = common.sh
+os_DATA = ${srcdir}/common.sh
+
+example_DATA = defaults multistrap.conf version_pinning.pref repo_pinning.pref
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
@@ -23,10 +30,6 @@ edit = sed \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
 	   -e 's|@VERSION_CHECK[@]|$(VERSION_CHECK)|g' \
 	   -e 's|@HELPER_DIR[@]|$(HELPER_DIR)|g' \
-	   -e 's|@HELPER_IMG[@]|$(HELPER_IMG)|g' \
-	   -e 's|@HELPER_KERNEL[@]|$(HELPER_KERNEL)|g' \
-	   -e 's|@HELPER_INITRD[@]|$(HELPER_INITRD)|g' \
-	   -e 's|@HELPER_PKG[@]|$(HELPER_PKG)|g' \
 	   -e 's|@AWK[@]|$(AWK)|g' \
 	   -e 's|@MKDIR_P[@]|$(MKDIR_P)|g' \
 	   -e 's|@LOSETUP[@]|$(LOSETUP)|g' \
@@ -52,4 +55,4 @@ install-exec-local:
 	touch "$(DESTDIR)$(variantsdir)/default.conf"
 	
 
-CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS)
+CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS) defaults

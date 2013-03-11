@@ -1,4 +1,35 @@
-2012-12-03, v0.6.5
+2013-01-09, v0.8
+	* Add support for xen
+	* Cleanup the helper code
+
+2013-01-21, v0.7.6
+	* Mount /proc and /dev before chrooting
+	* Fix a bug in DeleteSSHKeys task where the code for checking for
+	  non-default keys was never called.
+
+2013-01-17, v0.7.5
+
+2013-01-08, v0.7.4
+	* Fix a bug in the code that determines which partition to resize
+	* On linux images, mount all local partition during deployment. Not
+	  just /.
+
+2013-01-04, v0.7.3
+
+2013-01-04, v0.7.2
+	* In windows images make sure the file C:\Window\panther\Unattend.xml
+          gets removed after sysprep runs
+	* Support extended partitions with id 0x0f
+	* Fix a bug in the error monitoring system
+	* Fix a bug in AssignHostname for archlinux images
+	* In AssignHostname check for the presence of /etc/hostname before
+          trying to determine the disto of a Linux image.
+
+2012-12-07, v0.7.1
+	* Fix a race condition where in some cases could lead to a kernel
+	  panic for the helper VM.
+
+2012-12-03, v0.7
         * Make snf-image-helper the init process of the system
         * Shutdown the helper image fast using the apropriate SysRq key
         * Use eatmydata to omit the syncs performed by resize2fs when

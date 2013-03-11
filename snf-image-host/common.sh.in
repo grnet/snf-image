@@ -17,8 +17,8 @@
 # 02110-1301, USA.
 
 AWK="awk"
-KPARTX="kpartx"
 LOSETUP="losetup"
+KPARTX="kpartx"
 SFDISK="sfdisk"
 QEMU_IMG="qemu-img"
 INSTALL_MBR="install-mbr"
@@ -35,6 +35,7 @@ MSG_TYPE_INFO="image-info"
 
 CLEANUP=( )
 ERROR_MSGS=( )
+
 
 add_cleanup() {
     local cmd=""
@@ -117,6 +118,13 @@ get_api10_arguments() {
         log_error "(INSTANCE_NAME HYPERVISOR or DISK_COUNT)"
         exit 1
     fi
+
+    case $HYPERVISOR in
+        xen-hvm|xen-pvm) . xen-common.sh ;;
+        kvm) . kvm-common.sh ;;
+        *) log_error "Unsupported hypervisor: \`$HYPERVISTOR'"; exit 1;;
+    esac
+
     instance=$INSTANCE_NAME
     if [ $DISK_COUNT -lt 1 -o -z "$DISK_0_PATH" ]; then
         log_error "At least one disk is needed"
@@ -125,11 +133,13 @@ get_api10_arguments() {
     if [ "$SCRIPT_NAME" = "export" ]; then
         if [ -z "$EXPORT_DEVICE" ]; then
             log_error "Missing OS API Variable EXPORT_DEVICE"
+            exit 1
         fi
         blockdev=$EXPORT_DEVICE
     elif [ "$SCRIPT_NAME" = "import" ]; then
         if [ -z "$IMPORT_DEVICE" ]; then
-        log_error "Missing OS API Variable IMPORT_DEVICE"
+            log_error "Missing OS API Variable IMPORT_DEVICE"
+            exit 1
         fi
         blockdev=$IMPORT_DEVICE
     else
@@ -137,6 +147,7 @@ get_api10_arguments() {
     fi
     if [ "$SCRIPT_NAME" = "rename" -a -z "$OLD_INSTANCE_NAME" ]; then
         log_error "Missing OS API Variable OLD_INSTANCE_NAME"
+        exit 1
     fi
     old_name=$OLD_INSTANCE_NAME
 }
@@ -223,6 +234,7 @@ create_floppy() {
             cat "$UNATTEND" > "$target/unattend.xml"
         else
             log_error "Unattend file: \`"$UNATTEND"' does not exist"
+            exit 1
         fi
     fi
     umount "$target"
@@ -233,13 +245,10 @@ get_backend_type() {
 
     if [[ "$id" =~ ^pithos: ]]; then
         echo "pithos"
+    elif [[ "$id" =~ ^pithosmap: ]]; then
+        echo "pithos"
     elif [[ "$id" =~ ^(http|ftp)s?: ]]; then
-        if [ "$network_backend_support" = "yes" ]; then
-            echo "network";
-        else
-            log_error "Retrieving images from the network is not supported."
-            exit 1
-        fi
+        echo "network"
     elif [ "$id" = "null" ]; then
         echo "null"
     else
@@ -292,7 +301,6 @@ ganeti_os_main() {
             exit 1
         fi
     fi
-
 }
 
 do_multistrap() {
@@ -320,9 +328,48 @@ EOF
    rm -rf "$target/etc/apt/preferences.d"
 }
 
-report_and_cleanup(){
+report_and_cleanup() {
     send_errors
     cleanup
+}
+
+suppress_errors() {
+    "$@" &> /dev/null || true
+}
+
+check_helper_rc() {
+    local rc=$1
+
+    if [ $rc -ne 0 ]; then
+        if [ $rc -eq 124 ];  then
+            log_error "Customization VM was terminated. Did not finish on time."
+            report_error "Image customization failed. Did not finish on time."
+        elif [ $rc -eq 137 ]; then # (128 + SIGKILL)
+            log_error "Customization VM was killed. Did not finish on time."
+            report_error "Image customization failed. Did not finish on time."
+        elif [ $rc -eq 141 ]; then # (128 + SIGPIPE)
+            log_error "Customization VM was terminated by a SIGPIPE."
+            log_error "Maybe progress monitor has died unexpectedly."
+        elif [ $rc -eq 125 ]; then
+            log_error "Internal Error. Image customization could not start."
+            log_error "timeout did not manage to run."
+        else
+            log_error "Customization VM died unexpectedly (return code $rc)."
+        fi
+        exit 1
+    else
+        report_info "Customization VM exited normally."
+    fi
+}
+
+check_helper_result() {
+   local result=$1
+
+    if [ "x$result" != "xSUCCESS" ]; then
+        log_error "Image customization failed."
+        report_error "Image customization failed."
+        exit 1
+    fi
 }
 
 cleanup() {
@@ -370,18 +417,15 @@ fi
 : ${IMAGE_DEBUG:="no"}
 : ${VERSION_CHECK:="@VERSION_CHECK@"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
-: ${HELPER_IMG:="@HELPER_IMG@"}
-: ${HELPER_KERNEL:="@HELPER_KERNEL@"}
-: ${HELPER_INITRD:="@HELPER_INITRD@"}
-: ${HELPER_SOFT_TIMEOUT:=20}
+: ${HELPER_SIZE:="600"}
+: ${HELPER_SOFT_TIMEOUT:=120}
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
-: ${HELPER_EXTRA_PKGS:="linux-image-amd64,e2fsprogs,ntfs-3g,ntfsprogs,xmlstarlet,python,parted,reglookup,chntpw,util-linux"}
-: ${HELPER_MIRROR:=""}
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
 : ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
 : ${UNATTEND:="@UNATTEND@"}
+: ${XEN_SCRIPTS_DIR="@sysconfdir@/xen/scripts"}
 : ${MULTISTRAP_CONFIG:="@MULTISTRAP_CONFIG@"}
 : ${MULTISTRAP_APTPREFDIR:="@MULTISTRAP_APTPREFDIR@"}
 

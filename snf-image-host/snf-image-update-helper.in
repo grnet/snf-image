@@ -91,7 +91,10 @@ cat >&1 <<EOF
 This program will overwrite the following files if present:
   \`$HELPER_DIR/initrd'
   \`$HELPER_DIR/kernel'
+  \`$HELPER_DIR/initrd-xen'
+  \`$HELPER_DIR/kernel-xen'
   \`$HELPER_DIR/image'
+  \`$HELPER_DIR/packages'
 EOF
 
 while [[ 1 ]]; do
@@ -114,7 +117,7 @@ rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
 echo -n "Allocating space for helper disk image..."
 helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
 add_cleanup rm -f "$helper_img"
-dd if=/dev/zero of="$helper_img" bs=1k count=400000 &> /dev/null
+dd if=/dev/zero of="$helper_img" bs=1M count="$HELPER_SIZE" &> /dev/null
 echo "done"
 
 echo "Creating partitions..."
@@ -132,6 +135,8 @@ echo Creating and configuring filesystem...
 mkfs.ext3 "$root_dev" 2>&1 | sed -e 's/^/MKFS.EXT3: /g'
 # The helper vm should never do filesystem checks...
 tune2fs -i 0 -c 0 "$root_dev" 2>&1 | sed -e 's/^/TUNE2FS: /g'
+
+root_uuid=$(blkid -s UUID -o value "$root_dev")
 
 target=$(mktemp -d)
 add_cleanup rmdir "$target"
@@ -151,9 +156,13 @@ cat > "$target/etc/fstab" <<EOF
 # /etc/fstab: static file system information.
 #
 # <file system>   <mount point>   <type>  <options>       <dump>  <pass>
-/dev/sda1         /               ext3    defaults        0       1
+UUID=$root_uuid         /               ext3    defaults        0       1
 proc              /proc           proc    defaults        0       0
 EOF
+
+# We need this since we mount the helper VM ro
+ln -sf /proc/mounts "$target/etc/mtab"
+
 echo "done"
 
 echo -n "Extracting kernel..."
@@ -165,18 +174,28 @@ if [ ! -L "$target/vmlinuz" -o ! -L "$target/vmlinuz" ]; then
 fi
 echo "done"
 
-kernel="$target/$(chroot "$target" readlink -en /vmlinuz)"
-initrd="$target/$(chroot "$target" readlink -en /initrd.img)"
+# Make sure extended globbing is enabled
+shopt -s extglob
+
+kernel=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9])-amd64)
+initrd=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9])-amd64)
+
+kernel_xen=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9])-xen-amd64)
+initrd_xen=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9])-xen-amd64)
 
 echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
 cp "$kernel" "$initrd" "$HELPER_DIR"
 
+echo "Moving $(basename "$kernel_xen") and $(basename "$initrd_xen") to \`$HELPER_DIR'"
+cp "$kernel_xen" "$initrd_xen" "$HELPER_DIR"
+
 kernel=$(basename "$kernel")
 initrd=$(basename "$initrd")
 
+kernel_xen=$(basename "$kernel_xen")
+initrd_xen=$(basename "$initrd_xen")
 (cd "$HELPER_DIR"; ln -fs "$kernel" kernel; ln -fs "$initrd" initrd)
-
-rm "$target/vmlinuz" "$target/initrd.img"
+(cd "$HELPER_DIR"; ln -fs "$kernel_xen" kernel-xen; ln -fs "$initrd_xen" initrd-xen)
 
 
 pkg_installed=$(grep snf-image-helper "$HELPER_DIR/packages" > /dev/null && echo yes)
@@ -201,9 +220,9 @@ fi
 
 if [ "$VERSION_CHECK" == yes -a -z "$HELPER_PKG" ]; then
     helper_version="$(grep ^snf-image-helper[[:space:]] "$HELPER_DIR/packages" | cut -f2)"
-    host_version="$(dpkg-query -W -f "\${Version}\n" snf-image-host)"
+    host_version="$(dpkg-query -W -f "\${Version}\n" snf-image)"
     if [ "$host_version" != "$helper_version" ]; then
-        log_error "snf-image-host version (=$host_version) and " \
+        log_error "snf-image version (=$host_version) and " \
             "snf-image-helper version (=$helper_version) don't match."
         exit 1
     fi

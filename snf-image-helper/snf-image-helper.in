@@ -20,18 +20,26 @@
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
 if [ $$ -eq 1 ]; then
-    mount / -o remount
+    #mount / -o remount
+    mount -t tmpfs -o size=20m tmpfs /tmp
     /etc/init.d/udev start
-    hwclock -u -s
+    #hwclock -u -s
 
     (exec $0) &
     wait
     exit 0 # Hopefully this is never called...
 fi
 
+export PATH
+
 . @commondir@/common.sh
 
 set -e
+
+# Enable errtrace to make functions inherit the ERR trap
+set -o errtrace
+
+trap report_error ERR
 
 if grep snf_image_activate_helper /proc/cmdline > /dev/null; then
     # terminate helper vm when the script exits
@@ -41,24 +49,26 @@ else
               "\`snf_image_activate_helper' is missing"
 fi
 
-if [ ! -b "$FLOPPY_DEV" ]; then
-    log_error "Floppy device is not present!"
+prepare_helper
+
+if [ ! -b "$RULES_DEV" ]; then
+    log_error "Device file hosting the rules file: \`$RULES_DEV' does not exist"
 fi
 
-floppy=$(mktemp -d --tmpdir floppy.XXXXXX)
-add_cleanup rmdir "$floppy"
+rules=$(mktemp -d --tmpdir rules.XXXXXX)
+add_cleanup rmdir "$rules"
 
-mount $FLOPPY_DEV $floppy
-add_cleanup umount "$floppy"
+$MOUNT $RULES_DEV $rules
+add_cleanup umount "$rules"
 
-if [ -f "$floppy/rules" ]; then
-    source "$floppy/rules"
+if [ -f "$rules/rules" ]; then
+    source "$rules/rules"
 else
-    log_error "Floppy does not contain \`rules\' file"
+    log_error "$RULES_DEV does not contain \`rules\' file"
 fi
 
-if [ -f "$floppy/unattend.xml" ]; then
-    export SNF_IMAGE_UNATTEND="$floppy/unattend.xml"
+if [ -f "$rules/unattend.xml" ]; then
+    export SNF_IMAGE_UNATTEND="$rules/unattend.xml"
 fi
 
 if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
@@ -88,9 +98,6 @@ if [ -z "$RUN_PARTS" ]; then
     log_error "run-parts program is missing from the system"
 fi
 
-# If something goes wrong with the tasks, try to umount the target filesystem
-# in case it is left mounted...
-trap '{ umount "$target"; }' ERR
 
 if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
 
@@ -108,19 +115,24 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
         log_error "Supported values for OSFAMILY property are: linux|windows"
     fi
 
+    # If something goes wrong with the tasks, try to umount the disk file
+    # systems that are still mounted.
+    trap '{ umount_all "$target"; }' ERR
+
     # Redirect standard error to standard output,
     # prepend a timestamp before each line of output.
     echo "Execute all snf-image tasks...."
     $RUN_PARTS -v --exit-on-error "@tasksdir@" 2>&1|
-        while IFS= read -r line; do
+        while read -r line; do
             echo $($DATE +%Y:%m:%d-%H:%M:%S.%N) "$line"
         done
+
+    # Reset the handler to its original value
+    trap report_error ERR
 fi
 
-# Disable the trap. If code reaches here, the filesystem is unmounted.
-trap - ERR
 
-echo "SUCCESS" > "$RESULT"
+return_success
 
 cleanup
 trap - EXIT

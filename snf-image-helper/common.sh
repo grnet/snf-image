@@ -1,4 +1,4 @@
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2012, 2013 GRNET S.A.
 # Copyright (C) 2007, 2008, 2009 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -16,10 +16,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-RESULT=/dev/ttyS1
-MONITOR=/dev/ttyS2
-
-FLOPPY_DEV=/dev/fd0
 PROGNAME=$(basename $0)
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
@@ -37,6 +33,7 @@ REGLOOKUP=reglookup
 CHNTPW=chntpw
 DATE="date -u" # Time in UTC
 EATMYDATA=eatmydata
+MOUNT="mount -n"
 
 CLEANUP=( )
 ERRORS=( )
@@ -53,43 +50,128 @@ add_cleanup() {
     CLEANUP+=("$cmd")
 }
 
+close_fd() {
+    local fd=$1
+
+    exec {fd}>&-
+}
+
+send_result_kvm() {
+    echo "$@" > /dev/ttyS1
+}
+
+send_monitor_message_kvm() {
+    echo "$@" > /dev/ttyS2
+}
+
+send_result_xen() {
+    xenstore-write /local/domain/0/snf-image-helper/$DOMID "$*"
+}
+
+send_monitor_message_xen() {
+    #Broadcast the message
+    echo "$@" | socat "STDIO" "UDP-DATAGRAM:${BROADCAST}:${MONITOR_PORT},broadcast"
+}
+
+prepare_helper() {
+	local cmdline item key val hypervisor domid
+
+	read -a cmdline	 < /proc/cmdline
+	for item in "${cmdline[@]}"; do
+            key=$(cut -d= -f1 <<< "$item")
+            val=$(cut -d= -f2 <<< "$item")
+            if [ "$key" = "hypervisor" ]; then
+                hypervisor="$val"
+            fi
+            if [ "$key" = "rules_dev" ]; then
+                export RULES_DEV="$val"
+            fi
+            if [ "$key" = "helper_ip" ]; then
+                export IP="$val"
+                export NETWORK="$IP/24"
+                export BROADCAST="${IP%.*}.255"
+            fi
+            if [ "$key" = "monitor_port" ]; then
+                export MONITOR_PORT="$val"
+            fi
+	done
+
+    case "$hypervisor" in
+    kvm)
+        HYPERVISOR=kvm
+        ;;
+    xen-hvm|xen-pvm)
+        if [ -z "$IP" ]; then
+            echo "ERROR: \`helper_ip' not defined or empty" >&2
+            exit 1
+        fi
+        if [ -z "$MONITOR_PORT" ]; then
+            echo "ERROR: \`monitor_port' not defined or empty" >&2
+            exit 1
+        fi
+        $MOUNT -t xenfs xenfs /proc/xen
+        ip addr add "$NETWORK" dev eth0
+        ip link set eth0 up
+        ip route add default dev eth0
+        export DOMID=$(xenstore-read domid)
+        HYPERVISOR=xen
+        ;;
+    *)
+        echo "ERROR: Unknown hypervisor: \`$hypervisor'" >&2
+        exit 1
+        ;;
+    esac
+
+    export HYPERVISOR
+}
+
 report_error() {
+    msg=""
     if [ ${#ERRORS[*]} -eq 0 ]; then
         # No error message. Print stderr
         local lines
         lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
-        echo -n "STDERR:${lines}:" > "$MONITOR"
-        tail --lines=$lines  "$STDERR_FILE" > "$MONITOR"
+        msg="STDERR:${lines}"
+        msg+=$(tail --lines=$lines  "$STDERR_FILE")
     else
         for line in "${ERRORS[@]}"; do
-            echo "ERROR:$line" > "$MONITOR"
+            msg+="ERROR:$line"$'\n'
         done
     fi
+
+    send_monitor_message_${HYPERVISOR} "$msg"
 }
 
 log_error() {
     ERRORS+=("$*")
-    echo "ERROR: $@" | tee $RESULT >&2
-    report_error
-    exit 1
+
+    send_monitor_message_${HYPERVISOR} "ERROR: $@"
+    send_result_${HYPERVISOR} "ERROR: $@"
+
+    # Use return instead of exit. The set -x options will terminate the script
+    # but will also trigger ERR traps if defined.
+    return 1
 }
 
 warn() {
     echo "Warning: $@" >&2
-    echo "WARNING:$@" > "$MONITOR"
+    send_monitor_message_${HYPERVISOR} "WARNING: $@"
 }
 
 report_task_start() {
-    echo "$MSG_TYPE_TASK_START:${PROGNAME:2}" > "$MONITOR"
+    send_monitor_message_${HYPERVISOR} "$MSG_TYPE_TASK_START:${PROGNAME:2}"
 }
 
 report_task_end() {
-    echo "$MSG_TYPE_TASK_END:${PROGNAME:2}" > "$MONITOR"
+    send_monitor_message_${HYPERVISOR} "$MSG_TYPE_TASK_END:${PROGNAME:2}"
 }
 
 system_poweroff() {
-    # Credits to psomas@grnet.gr for this ...
-    echo o > /proc/sysrq-trigger
+    while [ 1 ]; do
+        # Credits to psomas@grnet.gr for this ...
+        echo o > /proc/sysrq-trigger
+        sleep 1
+    done
 }
 
 get_base_distro() {
@@ -192,7 +274,7 @@ is_extended_partition() {
     local part_num="$2"
 
     id=$($SFDISK --print-id "$dev" "$part_num")
-    if [ "$id" = "5" ]; then
+    if [ "$id" = "5" -o "$id" = "f" ]; then
         echo "yes"
     else
         echo "no"
@@ -261,7 +343,7 @@ get_partition_to_resize() {
         extended=$(get_extended_partition "$table")
         last_primary=$(get_last_primary_partition "$table")
         ext_num=$(cut -d: -f1 <<< "$extended")
-        prim_num=$(cut -d: -f1 <<< "$last_primary")
+        last_prim_num=$(cut -d: -f1 <<< "$last_primary")
 
         if [ "$ext_num" != "$last_prim_num" ]; then
             echo "$last_prim_num"
@@ -364,6 +446,18 @@ get_unattend() {
     echo "$exists"
 }
 
+umount_all() {
+    local target mpoints
+    target="$1"
+
+    # Unmount file systems mounted under directory `target'
+    mpoints="$({ awk "{ if (match(\$2, \"^$target\")) { print \$2 } }" < /proc/mounts; } | sort -rbd | uniq)"
+
+    for mpoint in $mpoints; do
+        umount $mpoint
+    done
+}
+
 cleanup() {
     # if something fails here, it shouldn't call cleanup again...
     trap - EXIT
@@ -401,6 +495,8 @@ task_cleanup() {
 
     if [ $rc -eq 0 ]; then
        report_task_end
+    else
+       report_error
     fi
 
     cleanup
@@ -416,6 +512,11 @@ check_if_excluded() {
     fi
 
     return 0
+}
+
+
+return_success() {
+    send_result_${HYPERVISOR} "SUCCESS"
 }
 
 trap cleanup EXIT

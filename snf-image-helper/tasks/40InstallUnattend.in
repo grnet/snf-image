@@ -63,7 +63,10 @@ else
     fi
 fi
 
-echo "del /Q /F C:\Unattend.xml" > \
+echo "del /Q /F C:\unattend.xml" > \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+echo "del /Q /F C:\windows\panther\unattend.xml" >> \
         "$target/Windows/Setup/Scripts/SetupComplete.cmd"
 
 mkdir -p "$target/Windows/SnfScripts"
