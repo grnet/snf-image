@@ -8,8 +8,7 @@ xenscriptsdir=${sysconfdir}/xen/scripts
 dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 	${srcdir}/rename ${srcdir}/verify ${srcdir}/pithcat \
 	${srcdir}/copy-monitor.py ${srcdir}/helper-monitor.py \
-	${srcdir}/host-monitor.py ${srcdir}/decode-config.py \
-	${srcdir}/xen-common.sh ${srcdir}/kvm-common.sh
+	${srcdir}/host-monitor.py ${srcdir}/decode-config.py
 
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list
@@ -18,7 +17,7 @@ dist_xenscripts_SCRIPTS = ${srcdir}/vif-snf-image
 
 dist_bin_SCRIPTS = snf-image-update-helper
 
-os_DATA = common.sh
+os_DATA = ${srcdir}/common.sh ${srcdir}/xen-common.sh ${srcdir}/kvm-common.sh
 
 example_DATA = defaults multistrap.conf version_pinning.pref repo_pinning.pref
 
