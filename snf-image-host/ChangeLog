@@ -1,3 +1,9 @@
+2013-03-09, v0.8
+	* Add support for xen
+	* Increase the default HELPER_SIZE and TIMEOUT values
+	* Cleanup the code and remove settings no longer used
+	* Rename snf-image-host to snf-image
+
 2013-01-21, v0.7.6
 	* Make the size of the helper VM image configurable
 

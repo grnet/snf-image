@@ -1,3 +1,7 @@
+2013-01-09, v0.8
+	* Add support for xen
+	* Cleanup the helper code
+
 2013-01-21, v0.7.6
 	* Mount /proc and /dev before chrooting
 	* Fix a bug in DeleteSSHKeys task where the code for checking for
