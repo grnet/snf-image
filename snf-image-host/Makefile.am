@@ -55,4 +55,4 @@ install-exec-local:
 	touch "$(DESTDIR)$(variantsdir)/default.conf"
 	
 
-CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS)
+CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS) defaults
