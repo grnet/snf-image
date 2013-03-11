@@ -426,6 +426,7 @@ fi
 case $HYPERVISOR in
     xen-hvm|xen-pvm) . xen-common.sh ;;
     kvm) . kvm-common.sh ;;
+    *) log_error "Unsupported hypervisor: \`$HYPERVISTOR'"; exit 1;;
 esac
 
 SCRIPT_NAME=$(basename $0)
