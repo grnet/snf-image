@@ -1,4 +1,4 @@
-Source: snf-image-host
+Source: snf-image
 Section: admin
 Priority: extra
 Maintainer: Nikos Skalkotos <skalkoto@grnet.gr>
@@ -9,13 +9,14 @@ Homepage: https://code.grnet.gr/projects/snf-image
 Vcs-Git: git://code.grnet.gr/git/snf-image
 Vcs-Browser: https://code.grnet.gr/git/snf-image
 
-Package: snf-image-host
+Package: snf-image
 Architecture: all
 Depends: ${misc:Depends}, kpartx, multistrap, curl,
- qemu-kvm (>= 0.11), qemu-utils, mbr, python, python-prctl
-Breaks: ganeti (<< 1.2.7)
-Replaces: snf-ganeti-instance-image
-Enhances: ganeti
+ ganeti2, mbr, python, python-prctl, python-scapy
+Breaks: snf-image-host (<< 0.8)
+Replaces: snf-image-host
+Conflicts: snf-image-host
+Enhances: ganeti2
 Description: Image Based Ganeti OS Provider
  Ganeti is a cluster virtual server management software tool built on 
  top of existing virtualization technologies such as Xen or KVM and

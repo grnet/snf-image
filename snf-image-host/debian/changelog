@@ -1,3 +1,9 @@
+snf-image (0.8-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 11 Mar 2013 15:22:36 +0200
+
 snf-image-host (0.7.6-1) stable; urgency=low
 
   * New upstream version

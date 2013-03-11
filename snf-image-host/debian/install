@@ -1,2 +1,3 @@
-*.pref etc/snf-image/apt.pref.d
+repo_pinning.pref etc/snf-image/apt.pref.d
+debian/version_pinning.pref etc/snf-image/apt.pref.d
 multistrap.conf etc/snf-image
