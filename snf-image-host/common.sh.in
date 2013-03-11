@@ -118,6 +118,13 @@ get_api10_arguments() {
         log_error "(INSTANCE_NAME HYPERVISOR or DISK_COUNT)"
         exit 1
     fi
+
+    case $HYPERVISOR in
+        xen-hvm|xen-pvm) . xen-common.sh ;;
+        kvm) . kvm-common.sh ;;
+        *) log_error "Unsupported hypervisor: \`$HYPERVISTOR'"; exit 1;;
+    esac
+
     instance=$INSTANCE_NAME
     if [ $DISK_COUNT -lt 1 -o -z "$DISK_0_PATH" ]; then
         log_error "At least one disk is needed"
@@ -294,7 +301,6 @@ ganeti_os_main() {
             exit 1
         fi
     fi
-
 }
 
 do_multistrap() {
@@ -422,12 +428,6 @@ fi
 : ${XEN_SCRIPTS_DIR="@sysconfdir@/xen/scripts"}
 : ${MULTISTRAP_CONFIG:="@MULTISTRAP_CONFIG@"}
 : ${MULTISTRAP_APTPREFDIR:="@MULTISTRAP_APTPREFDIR@"}
-
-case $HYPERVISOR in
-    xen-hvm|xen-pvm) . xen-common.sh ;;
-    kvm) . kvm-common.sh ;;
-    *) log_error "Unsupported hypervisor: \`$HYPERVISTOR'"; exit 1;;
-esac
 
 SCRIPT_NAME=$(basename $0)
 
