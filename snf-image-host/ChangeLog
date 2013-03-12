@@ -1,3 +1,9 @@
+2013-03-12, v0.8.1
+	* Fix a bug in helper-monitor.py
+	* Make snf-image-update-helper install a patched version of ntfs-3g.
+	  The debian squeeze version does not recognize the "--no-mtab" option
+	* Update contact email address
+
 2013-03-09, v0.8
 	* Add support for xen
 	* Increase the default HELPER_SIZE and TIMEOUT values
