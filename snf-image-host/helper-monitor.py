@@ -103,10 +103,10 @@ class HelperMonitor(object):
                       MAXLINES)
 
             if self.lines_left > 0:
-                self.stderr += "%s\n" % line
+                self.stderr += "%s\n" % self.line
                 self.lines_left -= 1
                 if self.lines_left == 0:
-                    self.send("STDERR", stderr)
+                    self.send("STDERR", self.stderr)
                     self.stderr = ""
                 self.line = ""
                 continue
@@ -116,7 +116,7 @@ class HelperMonitor(object):
                 continue
 
             if self.line.startswith("STDERR:"):
-                m = re.match("STDERR:(\d+):(.*)", line)
+                m = re.match("STDERR:(\d+):(.*)", self.line)
                 if not m:
                     error("Invalid syntax for STDERR line")
                 try:
@@ -127,14 +127,14 @@ class HelperMonitor(object):
                 if self.lines_left > STDERR_MAXLINES:
                     error("Too many lines in the STDERR output")
                 elif self.lines_left < 0:
-                    error("Second field of STDERR: %d is invalid" % lines_left)
+                    error("Second field of STDERR: %d is invalid" % self.lines_left)
 
                 if self.lines_left > 0:
                     self.stderr = m.group(2) + "\n"
                     self.lines_left -= 1
 
                 if self.lines_left == 0:
-                    self.send("STDERR", stderr)
+                    self.send("STDERR", self.stderr)
                     self.stderr = ""
             elif self.line.startswith("TASK_START:") \
                 or self.line.startswith("TASK_END:") \

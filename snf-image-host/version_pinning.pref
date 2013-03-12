@@ -1,3 +1,7 @@
 Package: snf-image-helper
-Pin: version 0.8*
+Pin: version 0.8.1*
+Pin-Priority: 1001
+
+Package: ntfs-3g
+Pin: version 1:2010.3.6+no-mtab-fix-1
 Pin-Priority: 1001
