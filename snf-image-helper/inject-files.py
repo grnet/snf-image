@@ -43,12 +43,12 @@ def parse_arguments(input_args):
     usage = "Usage: %prog [options] <target>"
     parser = OptionParser(usage=usage)
     parser.add_option("-i", "--input",
-                        action="store", type='string', dest="input_file",
-                        help="get input from FILE instead of stdin",
-                        metavar="FILE")
-    parser.add_option("-d", "--decode",
-                        action="store_true", dest="decode", default=False,
-                        help="decode files under target and create manifest")
+                      action="store", type='string', dest="input_file",
+                      help="get input from FILE instead of stdin",
+                      metavar="FILE")
+    parser.add_option("-d", "--decode", action="store_true", dest="decode",
+                      default=False,
+                      help="decode files under target and create manifest")
 
     opts, args = parser.parse_args(input_args)
 

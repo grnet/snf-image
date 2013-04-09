@@ -49,7 +49,8 @@ def parse_options(input_args):
                       default=None, metavar="IFNAME",
                       help="listen on interface IFNAME for monitoring data")
 
-    parser.add_option("-f", "--filter", type="string", dest="filter",
+    parser.add_option(
+        "-f", "--filter", type="string", dest="filter",
         help="add FILTER to incomint traffice when working on an interface",
         default=None, metavar="FILTER")
 
@@ -61,7 +62,7 @@ def parse_options(input_args):
     options.fd = args[0]
 
     if options.filter is not None and options.ifname is None:
-        parser.error('You need to define an interface since filters are' \
+        parser.error('You need to define an interface since filters are'
                      'defined')
 
     return options
@@ -127,7 +128,8 @@ class HelperMonitor(object):
                 if self.lines_left > STDERR_MAXLINES:
                     error("Too many lines in the STDERR output")
                 elif self.lines_left < 0:
-                    error("Second field of STDERR: %d is invalid" % self.lines_left)
+                    error("Second field of STDERR: %d is invalid" %
+                          self.lines_left)
 
                 if self.lines_left > 0:
                     self.stderr = m.group(2) + "\n"
@@ -137,13 +139,13 @@ class HelperMonitor(object):
                     self.send("STDERR", self.stderr)
                     self.stderr = ""
             elif self.line.startswith("TASK_START:") \
-                or self.line.startswith("TASK_END:") \
-                or self.line.startswith("WARNING:") \
-                or self.line.startswith("ERROR:"):
+                    or self.line.startswith("TASK_END:") \
+                    or self.line.startswith("WARNING:") \
+                    or self.line.startswith("ERROR:"):
                 (msg_type, _, value) = self.line.partition(':')
 
                 if self.line.startswith("WARNING:") or \
-                    self.line.startswith("ERROR:"):
+                        self.line.startswith("ERROR:"):
                     value = [value]
                 self.send(msg_type, value)
             else:
@@ -181,7 +183,7 @@ if __name__ == "__main__":
     if options.ifname is not None:
         try:
             sniff(filter=options.filter, iface=options.ifname,
-                prn=lambda x: monitor.process(x.payload.getfieldval("load")))
+                  prn=lambda x: monitor.process(x.payload.getfieldval("load")))
         except socket.error as e:
             # Network is down
             if e.errno == 100:

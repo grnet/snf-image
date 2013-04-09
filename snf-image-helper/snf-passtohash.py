@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ To do this, it generates a random salt internally.
 """
 
 import sys
-import crypt 
+import crypt
 
 from string import ascii_letters, digits
 from random import choice
@@ -45,6 +45,7 @@ HASH_ID_FROM_METHOD = {
     'sha512': '6'
 }
 
+
 def random_salt(length=8):
     pool = ascii_letters + digits + "/" + "."
     return ''.join(choice(pool) for i in range(length))
@@ -53,27 +54,25 @@ def random_salt(length=8):
 def parse_arguments(input_args):
     usage = "usage: %prog [-h] [-m encrypt-method] <password>"
     parser = OptionParser(usage=usage)
-    parser.add_option("-m", "--encrypt-method",
-			dest="encrypt_method",
-			type='choice',
-			default="sha512",
-			choices=HASH_ID_FROM_METHOD.keys(),
-			help="encrypt password with ENCRYPT_METHOD [%default] \
-			(supported: " + ", ".join(HASH_ID_FROM_METHOD.keys()) +")",
+    parser.add_option(
+        "-m", "--encrypt-method", dest="encrypt_method", type='choice',
+        default="sha512", choices=HASH_ID_FROM_METHOD.keys(),
+        help="encrypt password with ENCRYPT_METHOD [%default] (supported: " +
+        ", ".join(HASH_ID_FROM_METHOD.keys()) + ")"
     )
 
     (opts, args) = parser.parse_args(input_args)
 
     if len(args) != 1:
-	parser.error('password is missing')
+        parser.error('password is missing')
 
     return (args[0], opts.encrypt_method)
 
 
 def main():
-    (password, method) = parse_arguments(sys.argv[1:])
+    (passwd, method) = parse_arguments(sys.argv[1:])
     salt = random_salt()
-    hash = crypt.crypt(password, "$"+HASH_ID_FROM_METHOD[method]+"$"+salt)
+    hash = crypt.crypt(passwd, "$" + HASH_ID_FROM_METHOD[method] + "$" + salt)
     sys.stdout.write("%s\n" % (hash))
     return 0
 

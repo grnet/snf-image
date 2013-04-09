@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,24 +32,25 @@ import json
 from StringIO import StringIO
 from optparse import OptionParser
 
+
 def parse_arguments(input_args):
     usage = "Usage: %prog [options] <output_file>"
     parser = OptionParser(usage=usage)
     parser.add_option("-i", "--input",
-                        action="store",type='string', dest="input_file",
-                        help="get input from FILE instead of stdin",
-                        metavar="FILE")
+                      action="store", type='string', dest="input_file",
+                      help="get input from FILE instead of stdin",
+                      metavar="FILE")
 
     opts, args = parser.parse_args(input_args)
 
     if len(args) != 1:
         parser.error('output file is missing')
     output_file = args[0]
-   
+
     if opts.input_file is not None:
         if not os.path.isfile(opts.input_file):
             parser.error('input file does not exist')
- 
+
     return (opts.input_file, output_file)
 
 
@@ -64,7 +65,7 @@ def main():
         os.environ['SNF_IMAGE_PROPERTY_' + str(key).upper()] = value
 
     p = subprocess.Popen(['bash', '-c', 'set'], stdout=subprocess.PIPE)
-    output = StringIO(p.communicate()[0]);
+    output = StringIO(p.communicate()[0])
     for line in iter(output):
         if line.startswith('SNF_IMAGE_PROPERTY_'):
             outfh.write('export ' + line)

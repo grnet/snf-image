@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     msg_type = sys.argv[1]
 
-    if msg_type  not in PROTOCOL.keys():
+    if msg_type not in PROTOCOL.keys():
         sys.stderr.write("Unknown message type: %s\n" % msg_type)
         sys.exit(1)
 

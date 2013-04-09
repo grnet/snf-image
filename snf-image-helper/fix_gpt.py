@@ -42,7 +42,9 @@ class MBR(object):
             ) = struct.unpack(self.format, raw_part)
 
         def pack(self):
-            return struct.pack(self.format,
+            return struct.pack
+            (
+                self.format,
                 self.status,
                 self.start,
                 self.type,
@@ -96,11 +98,11 @@ class MBR(object):
     def __init__(self, block):
         raw_part = {}
         self.code_area, \
-        raw_part[0], \
-        raw_part[1], \
-        raw_part[2], \
-        raw_part[3], \
-        self.signature = struct.unpack(self.format, block)
+            raw_part[0], \
+            raw_part[1], \
+            raw_part[2], \
+            raw_part[3], \
+            self.signature = struct.unpack(self.format, block)
 
         self.part = {}
         for i in range(4):
@@ -113,7 +115,8 @@ class MBR(object):
 
     def pack(self):
         """Packs an MBR to a binary string."""
-        return struct.pack(self.format,
+        return struct.pack(
+            self.format,
             self.code_area,
             self.part[0].pack(),
             self.part[1].pack(),
@@ -150,23 +153,6 @@ class GPTPartitionTable(object):
 
         def __init__(self, block):
             self.signature, \
-            self.revision, \
-            self.hdr_size, \
-            self.header_crc32, \
-            self.current_lba, \
-            self.backup_lba, \
-            self.first_usable_lba, \
-            self.last_usable_lba, \
-            self.uuid, \
-            self.part_entry_start, \
-            self.part_count, \
-            self.part_entry_size, \
-            self.part_crc32 = struct.unpack(self.format, block)
-
-        def pack(self):
-            """Packs a GPT Header to a binary string."""
-            return struct.pack(self.format,
-                self.signature, \
                 self.revision, \
                 self.hdr_size, \
                 self.header_crc32, \
@@ -178,6 +164,24 @@ class GPTPartitionTable(object):
                 self.part_entry_start, \
                 self.part_count, \
                 self.part_entry_size, \
+                self.part_crc32 = struct.unpack(self.format, block)
+
+        def pack(self):
+            """Packs a GPT Header to a binary string."""
+            return struct.pack(
+                self.format,
+                self.signature,
+                self.revision,
+                self.hdr_size,
+                self.header_crc32,
+                self.current_lba,
+                self.backup_lba,
+                self.first_usable_lba,
+                self.last_usable_lba,
+                self.uuid,
+                self.part_entry_start,
+                self.part_count,
+                self.part_entry_size,
                 self.part_crc32
             )
 
@@ -200,7 +204,7 @@ class GPTPartitionTable(object):
             # Partition entries (LBA 2...34)
             d.seek(self.primary.part_entry_start * BLOCKSIZE)
             entries_size = self.primary.part_count * \
-                                                self.primary.part_entry_size
+                self.primary.part_entry_size
             self.part_entries = d.read(entries_size)
 
             # Secondary GPT Header (LBA -1)
@@ -228,7 +232,7 @@ class GPTPartitionTable(object):
         self.primary.backup_lba = lba_count - 1  # LBA-1
         self.primary.last_usable_lba = lba_count - 34  # LBA-34
         self.primary.header_crc32 = \
-                            binascii.crc32(self.primary.pack()) & 0xffffffff
+            binascii.crc32(self.primary.pack()) & 0xffffffff
 
         # Fix Secondary header
         self.secondary.header_crc32 = 0
@@ -236,7 +240,7 @@ class GPTPartitionTable(object):
         self.secondary.last_usable_lba = lba_count - 34  # LBA-34
         self.secondary.part_entry_start = lba_count - 33  # LBA-33
         self.secondary.header_crc32 = \
-                            binascii.crc32(self.secondary.pack()) & 0xffffffff
+            binascii.crc32(self.secondary.pack()) & 0xffffffff
 
         # Copy the new partition table back to the device
         with open(self.disk, "wb") as d:
