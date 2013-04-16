@@ -371,10 +371,17 @@ create_partition() {
     local name="${fields[5]}"
     local flags="${fields[6]//,/ }"
 
-    $PARTED -s -m -- $device mkpart "$ptype" $fs "$start" "$end"
-    for flag in $flags; do
-        $PARTED -s -m $device set "$id" "$flag" on
-    done
+    if [ "$ptype" = "primary" -o "$ptype" = "logical" -o "$ptype" = "extended" ]; then
+        $PARTED -s -m -- $device mkpart "$ptype" $fs "$start" "$end"
+        for flag in $flags; do
+            $PARTED -s -m $device set "$id" "$flag" on
+        done
+    else
+        # For gpt
+        start=${start:0:${#start}-1} # remove the s at the end
+        end=${end:0:${#end}-1} # remove the s at the end
+        $SGDISK -n "$id":"$start":"$end" -t "$id":"$ptype" "$device"
+    fi
 }
 
 enlarge_partition() {

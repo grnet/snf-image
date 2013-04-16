@@ -89,11 +89,8 @@ fi
 extended=""
 
 if [ "$table_type" != "msdos" ]; then
-    # Primary, extended and logical partitions is a concept for msdos partition
-    # tables. Parted's mkpart will use part-type as partition name if applied
-    # on a gpt table and leaving this empty is fragile: For a strange reason
-    # for swap partitions the command fails (???)
-    last_part_type="primary"
+    # For gpt partitions, get the partition GUID code as partition type
+    last_part_type="$($SGDISK -i "$last_part_id" "$SNF_IMAGE_DEV" | grep "^Partition GUID code:" | cut -d"(" -f1 | cut -d: -f2 | xargs echo)"
 elif [ $last_part_id -gt 4 ]; then
     last_part_type="logical"
     extended=$(get_extended_partition "$table")
