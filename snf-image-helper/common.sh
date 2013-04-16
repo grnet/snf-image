@@ -31,6 +31,7 @@ BLKID=blkid
 BLOCKDEV=blockdev
 REGLOOKUP=reglookup
 CHNTPW=chntpw
+SGDISK=sgdisk
 DATE="date -u" # Time in UTC
 EATMYDATA=eatmydata
 MOUNT="mount -n"

@@ -44,7 +44,7 @@ fi
 table_type=$(get_partition_table_type "$table")
 
 if [ "$table_type" == "gpt" ]; then
-    "@scriptsdir@/fix_gpt.py" "$SNF_IMAGE_DEV" $($BLOCKDEV --getsz "$SNF_IMAGE_DEV")
+    "$SGDISK" --move-second-header "$SNF_IMAGE_DEV"
 elif [ "$table_type" != "msdos" ]; then
     log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition "
     "table type: \`$table_type'. Only msdos & gpt partitions are supported."
