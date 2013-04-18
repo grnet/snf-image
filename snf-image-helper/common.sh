@@ -32,6 +32,7 @@ BLOCKDEV=blockdev
 REGLOOKUP=reglookup
 CHNTPW=chntpw
 SGDISK=sgdisk
+GROWFS_UFS=growfs.ufs
 DATE="date -u" # Time in UTC
 EATMYDATA=eatmydata
 MOUNT="mount -n"
@@ -190,6 +191,8 @@ get_base_distro() {
         echo "gentoo"
     elif [ -e "$root_dir/etc/arch-release" ]; then
         echo "arch"
+    elif [ -e "$root_dir/etc/freebsd-update.conf" ]; then
+        echo "freebsd"
     else
         warn "Unknown base distro."
     fi
@@ -222,6 +225,8 @@ get_distro() {
         echo "gentoo"
     elif [ -e "$root_dir/etc/arch-release" ]; then
         echo "arch"
+    elif [ -e "$root_dir/etc/freebsd-update.conf" ]; then
+        echo "freebsd"
     else
         warn "Unknown distro."
     fi

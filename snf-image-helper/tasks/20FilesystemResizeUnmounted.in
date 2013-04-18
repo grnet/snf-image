@@ -50,9 +50,9 @@ partition=$(get_partition_by_num "$table" "$SNF_IMAGE_RESIZE_PART")
 id=$(cut -d: -f1 <<< "$partition")
 ptype=$(cut -d: -f5 <<< "$partition")
 
-if [[ "$ptype" == ext[234] ]]; then
-    device="${SNF_IMAGE_DEV}${id}"
+device="${SNF_IMAGE_DEV}${id}"
 
+if [[ "$ptype" == ext[234] ]]; then
     state=$($TUNE2FS -l "$device" | grep ^Filesystem\ state: | cut -d: -f2);
     state=$(echo $state) #trim the value
 
@@ -66,7 +66,8 @@ if [[ "$ptype" == ext[234] ]]; then
         log_error "The file system state of partition: \`$device' " \
             " is not clean (state = $state)"
     fi
-
+elif [[ "$ptype" == "freebsd-ufs" ]]; then
+    $GROWFS_UFS -y "$device"
 else
     warn "Don't know how to resize partition \`$id' with file system \`$ptype'."
 fi

@@ -45,7 +45,11 @@ if [ ! -b "$rootdev" ]; then
         "(=$SNF_IMAGE_PROPERTY_ROOT_PARTITION) is valid."
 fi
 
-$MOUNT "$rootdev" "$SNF_IMAGE_TARGET" -o rw
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "freebsd" ]; then
+    $MOUNT -t ufs -o ufstype=ufs2,rw "$rootdev" "$SNF_IMAGE_TARGET"
+else
+    $MOUNT -o rw "$rootdev" "$SNF_IMAGE_TARGET"
+fi
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "linux" ]; then
     exit 0
