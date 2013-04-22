@@ -131,10 +131,10 @@ report_error() {
     msg=""
     if [ ${#ERRORS[*]} -eq 0 ]; then
         # No error message. Print stderr
-        local lines
-        lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
-        msg="STDERR:${lines}:"
-        msg+=$(tail --lines=$lines  "$STDERR_FILE")
+        local lines stderr
+        stderr="$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE")"
+        lines=$(wc -l <<< "$stderr")
+        msg="STDERR:${lines}:$stderr"
     else
         for line in "${ERRORS[@]}"; do
             msg+="ERROR:$line"$'\n'
