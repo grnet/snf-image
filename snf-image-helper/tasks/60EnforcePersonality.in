@@ -34,6 +34,9 @@ report_task_start
 # Check if the task should be prevented from running.
 check_if_excluded
 
+# Default mode for directories
+DIRMODE="750"
+
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
@@ -47,29 +50,63 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     echo "$SNF_IMAGE_PERSONALITY" |
         @scriptsdir@/inject-files.py "$SNF_IMAGE_TARGET"
     exit 0
-elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
-    mount -o bind /proc "$SNF_IMAGE_TARGET/proc"
-    add_cleanup umount "$SNF_IMAGE_TARGET/proc"
-    mount -o bind /dev "$SNF_IMAGE_TARGET/dev"
-    add_cleanup umount "$SNF_IMAGE_TARGET/dev"
+elif [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|freebsd)$ ]]; then
 
-    tmpdir=$(chroot "$SNF_IMAGE_TARGET" mktemp -d)
-    add_cleanup rm -rf "$SNF_IMAGE_TARGET/$tmpdir"
+    tmpdir="$(env TMPDIR="$SNF_IMAGE_TARGET/tmp" mktemp -d)"
+    add_cleanup rm -rf "$tmpdir"
     echo "$SNF_IMAGE_PERSONALITY" |
-        @scriptsdir@/inject-files.py -d "$SNF_IMAGE_TARGET/$tmpdir"
-    chroot "$SNF_IMAGE_TARGET" chmod 777 "$tmpdir"
-    {
-        while read -d $'\0' src; do
-            read -d $'\0' owner;
-            read -d $'\0' group;
-            read -d $'\0' mode;
-            read -d $'\0' dest;
-            chroot "$SNF_IMAGE_TARGET" chown "$owner:$group" "$tmpdir/$src"
-            chroot "$SNF_IMAGE_TARGET" su -l "$owner" -c \
-                "install -D -m $mode $(printf "%q" "$tmpdir")/$src \
-                $(printf "%q" "$dest")"
+        @scriptsdir@/inject-files.py -d "$tmpdir"
+
+    { while read -d $'\0' src; do
+        read -d $'\0' owner
+        read -d $'\0' group
+        read -d $'\0' mode
+        read -d $'\0' dest
+
+        err_msg="Unable to inject file: \`$dest' to the VM. "
+
+        # Default owner (Probably root)
+        if [ -z "$owner" ]; then
+            uid=0
+        else
+            uid="$({ grep "^$owner:" "$SNF_IMAGE_TARGET/etc/passwd" || true; } | cut -d: -f3)"
+            if [ -z "$uid" ]; then
+                log_error "$err_msg" "File owner: \`$owner' does not exist!"
+            fi
+        fi
+
+        # Default group (Probably root in Linux and wheel in *BSD)
+        if [ -z "$group" ]; then
+            gid=0
+        else
+            gid="$({ grep "^$group:" "$SNF_IMAGE_TARGET/etc/group" || true; } | cut -d: -f3)"
+            if [ -z "$gid" ]; then
+                log_error "$err_msg" "Group: \`$group' does not exist!"
+            fi
+        fi
+
+        path=( "$(dirname "$dest")" )
+        while true; do
+            parent="$(dirname "${path[0]}")"
+            if [ "$parent" = "${path[0]}" ]; then
+                break
+            fi
+            path=( "$parent" "${path[@]}" )
         done
-    } < "$SNF_IMAGE_TARGET/$tmpdir/manifest"
+
+        for dir in "${path[@]}"; do
+            if [ -d "$SNF_IMAGE_TARGET/$dir" ]; then
+                continue
+            elif [ -e "$SNF_IMAGE_TARGET/$dir" ]; then
+                log_error "$err_msg" "File: \`$dir' exists and is not a directory."
+            fi
+
+            mkdir -m "$DIRMODE" "$SNF_IMAGE_TARGET/$dir"
+            chown "$uid:$gid" "$SNF_IMAGE_TARGET/$dir"
+        done
+
+        install -o "$uid" -g "$gid" -m "$mode" "$tmpdir/$src" "$SNF_IMAGE_TARGET/$dest"
+    done } < "$tmpdir/manifest"
 fi
 
 exit 0

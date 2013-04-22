@@ -81,8 +81,8 @@ def main():
     count = 0
     for f in files:
         count += 1
-        owner = f['owner'] if 'owner' in f else "root"
-        group = f['group'] if 'group' in f else "root"
+        owner = f['owner'] if 'owner' in f else ""
+        group = f['group'] if 'group' in f else ""
         mode = f['mode'] if 'mode' in f else 0440
 
         filepath = f['path'] if not decode else str(count)
@@ -103,8 +103,6 @@ def main():
         if decode:
             manifest.write("%s\x00%s\x00%s\x00%o\x00%s\x00" %
                            (count, owner, group, mode, f['path']))
-
-    sys.stderr.write('Files were injected successfully\n')
 
     if decode:
         manifest.close()
