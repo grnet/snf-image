@@ -279,7 +279,7 @@ is_extended_partition() {
     local dev="$1"
     local part_num="$2"
 
-    id=$($SFDISK --print-id "$dev" "$part_num")
+    id=$($SFDISK --force --print-id "$dev" "$part_num")
     if [ "$id" = "5" -o "$id" = "f" ]; then
         echo "yes"
     else
