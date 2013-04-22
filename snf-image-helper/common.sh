@@ -133,7 +133,7 @@ report_error() {
         # No error message. Print stderr
         local lines
         lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
-        msg="STDERR:${lines}"
+        msg="STDERR:${lines}:"
         msg+=$(tail --lines=$lines  "$STDERR_FILE")
     else
         for line in "${ERRORS[@]}"; do
