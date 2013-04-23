@@ -43,11 +43,16 @@ fi
 
 table_type=$(get_partition_table_type "$table")
 
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "freebsd" -a "$table_type" != "gpt" ]; then
+    log_error "The image contains a(n) $table_type partition table. " \
+        "For FreeBSD images only GUID Partition Tables are supported."
+fi
+
 if [ "$table_type" == "gpt" ]; then
     "$SGDISK" --move-second-header "$SNF_IMAGE_DEV"
 elif [ "$table_type" != "msdos" ]; then
-    log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition "
-    "table type: \`$table_type'. Only msdos & gpt partitions are supported."
+    log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition " \
+        "table type: \`$table_type'. Only msdos & gpt partitions are supported."
 fi
 
 last_part=$(get_last_partition "$table")

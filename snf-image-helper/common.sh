@@ -33,6 +33,7 @@ REGLOOKUP=reglookup
 CHNTPW=chntpw
 SGDISK=sgdisk
 GROWFS_UFS=growfs.ufs
+DUMPFS_UFS=dumpfs.ufs
 DATE="date -u" # Time in UTC
 EATMYDATA=eatmydata
 MOUNT="mount -n"
