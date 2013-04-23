@@ -148,7 +148,6 @@ report_error() {
 log_error() {
     ERRORS+=("$*")
 
-    send_monitor_message_${HYPERVISOR} "ERROR: $@"
     send_result_${HYPERVISOR} "ERROR: $@"
 
     # Use return instead of exit. The set -x options will terminate the script
