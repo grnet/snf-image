@@ -67,7 +67,7 @@ linux_hostname() {
         distro=$(get_base_distro "$target")
         case "$distro" in
             redhat)
-                sed -ie "s/HOSTNAME=.*$/HOSTNAME=$hostname/g" "$target/etc/sysconfig/network";;
+                sed -i -e "s/HOSTNAME=.*$/HOSTNAME=$hostname/g" "$target/etc/sysconfig/network";;
             slackware|suse)
                 #local domain=$(sed -e 's/^[^\.]*//g' < /etc/HOSTNAME)
 
@@ -75,17 +75,17 @@ linux_hostname() {
                 # I will not retain the domain name.
                 echo "$hostname" > "${target}/etc/HOSTNAME";;
             gentoo)
-                sed -ie "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;
+                sed -i -e "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;
             arch)
                 if [ -f "$target/etc/rc.conf" ]; then
-                    sed -ie "s/^HOSTNAME=.*$/HOSTNAME=\"$hostname\"/" "$target/etc/rc.conf"
+                    sed -i -e "s/^HOSTNAME=.*$/HOSTNAME=\"$hostname\"/" "$target/etc/rc.conf"
                 else
                     # In new versions of arch, /etc/rc.conf is missing
                     echo "$hostname" > "$target/etc/hostname"
                 fi
 
                 if grep "^127\.0\.0\.1[ \t]*" "$target/etc/hosts" > /dev/null; then
-                   sed -ie "s/127\.0\.0\.1[ \t]*.*$/127.0.0.1\t$hostname/" "$target/etc/hosts"
+                   sed -i -e "s/127\.0\.0\.1[ \t]*.*$/127.0.0.1\t$hostname/" "$target/etc/hosts"
                 else
                    echo -e "127.0.0.1\t$hostname" >> "$target/etc/hosts"
                 fi;;
@@ -95,11 +95,23 @@ linux_hostname() {
 
     # Some Linux distributions assign the hostname to 127.0.1.1 in order to be
     # resolvable to an IP address. Lets replace this if found in /etc/hosts
-    sed -ie "s/^[[:blank:]]*127\.0\.1\.1[[:blank:]].\+$/127.0.1.1\t$hostname/" "$target/etc/hosts"
+    sed -i -e "s/^[[:blank:]]*127\.0\.1\.1[[:blank:]].\+$/127.0.1.1\t$hostname/" "$target/etc/hosts"
+}
+
+freebsd_hostname() {
+    local target hostname
+    target="$1"
+    hostname="$2"
+
+    if grep ^hostname= "$target/etc/rc.conf"; then
+        sed -i -e "s/^hostname=.*$/hostname=\"$(printf "%q" "$hostname")\"/" "$target/etc/rc.conf"
+    else
+        echo "hostname=\"$(printf "%q" "$hostname")\"" >> "$target/etc/rc.conf"
+    fi
 }
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
 
 if [ -z "$SNF_IMAGE_HOSTNAME" ]; then
@@ -110,6 +122,8 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     windows_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
 elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
     linux_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
+elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "freebsd" ]; then
+    freebsd_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
 fi
 
 exit 0

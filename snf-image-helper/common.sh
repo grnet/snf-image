@@ -31,6 +31,9 @@ BLKID=blkid
 BLOCKDEV=blockdev
 REGLOOKUP=reglookup
 CHNTPW=chntpw
+SGDISK=sgdisk
+GROWFS_UFS=growfs.ufs
+DUMPFS_UFS=dumpfs.ufs
 DATE="date -u" # Time in UTC
 EATMYDATA=eatmydata
 MOUNT="mount -n"
@@ -129,10 +132,10 @@ report_error() {
     msg=""
     if [ ${#ERRORS[*]} -eq 0 ]; then
         # No error message. Print stderr
-        local lines
-        lines=$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE" | wc -l)
-        msg="STDERR:${lines}"
-        msg+=$(tail --lines=$lines  "$STDERR_FILE")
+        local lines stderr
+        stderr="$(tail --lines=${STDERR_LINE_SIZE} "$STDERR_FILE")"
+        lines=$(wc -l <<< "$stderr")
+        msg="STDERR:${lines}:$stderr"
     else
         for line in "${ERRORS[@]}"; do
             msg+="ERROR:$line"$'\n'
@@ -145,7 +148,6 @@ report_error() {
 log_error() {
     ERRORS+=("$*")
 
-    send_monitor_message_${HYPERVISOR} "ERROR: $@"
     send_result_${HYPERVISOR} "ERROR: $@"
 
     # Use return instead of exit. The set -x options will terminate the script
@@ -189,6 +191,8 @@ get_base_distro() {
         echo "gentoo"
     elif [ -e "$root_dir/etc/arch-release" ]; then
         echo "arch"
+    elif [ -e "$root_dir/etc/freebsd-update.conf" ]; then
+        echo "freebsd"
     else
         warn "Unknown base distro."
     fi
@@ -221,6 +225,8 @@ get_distro() {
         echo "gentoo"
     elif [ -e "$root_dir/etc/arch-release" ]; then
         echo "arch"
+    elif [ -e "$root_dir/etc/freebsd-update.conf" ]; then
+        echo "freebsd"
     else
         warn "Unknown distro."
     fi
@@ -273,7 +279,7 @@ is_extended_partition() {
     local dev="$1"
     local part_num="$2"
 
-    id=$($SFDISK --print-id "$dev" "$part_num")
+    id=$($SFDISK --force --print-id "$dev" "$part_num")
     if [ "$id" = "5" -o "$id" = "f" ]; then
         echo "yes"
     else
@@ -370,10 +376,17 @@ create_partition() {
     local name="${fields[5]}"
     local flags="${fields[6]//,/ }"
 
-    $PARTED -s -m -- $device mkpart "$ptype" $fs "$start" "$end"
-    for flag in $flags; do
-        $PARTED -s -m $device set "$id" "$flag" on
-    done
+    if [ "$ptype" = "primary" -o "$ptype" = "logical" -o "$ptype" = "extended" ]; then
+        $PARTED -s -m -- $device mkpart "$ptype" $fs "$start" "$end"
+        for flag in $flags; do
+            $PARTED -s -m $device set "$id" "$flag" on
+        done
+    else
+        # For gpt
+        start=${start:0:${#start}-1} # remove the s at the end
+        end=${end:0:${#end}-1} # remove the s at the end
+        $SGDISK -n "$id":"$start":"$end" -t "$id":"$ptype" "$device"
+    fi
 }
 
 enlarge_partition() {

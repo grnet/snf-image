@@ -32,7 +32,8 @@ import prctl
 import signal
 import socket
 
-MSG_TYPE="image-copy-progress"
+MSG_TYPE = "image-copy-progress"
+
 
 def parse_arguments(args):
     from optparse import OptionParser
@@ -50,12 +51,12 @@ def parse_arguments(args):
     parser.add_option("-r", "--read-bytes",
                       action="store", type="int", dest="read_bytes",
                       metavar="BYTES_TO_READ",
-                      help="The expected number of bytes to be read, " \
+                      help="The expected number of bytes to be read, "
                            "used to compute input progress",
                       default=None)
-    parser.add_option("-o", "--output_fd", dest="output", default=None,
-                    metavar="FILE", type="int",
-                    help="Write output notifications to this file descriptor")
+    parser.add_option(
+        "-o", "--output_fd", dest="output", default=None, metavar="FILE",
+        type="int", help="Write output notifications to this file descriptor")
 
     (opts, args) = parser.parse_args(args)
 
@@ -88,7 +89,7 @@ def report_wait_status(pid, status):
         sys.stderr.write("Child PID = %d stopped by signal, signal = %d\n" %
                          (pid, os.WSTOPSIG(status)))
     else:
-        sys.stderr.write("Internal error: Unhandled case, " \
+        sys.stderr.write("Internal error: Unhandled case, "
                          "PID = %d, status = %d\n" % (pid, status))
         sys.exit(1)
     sys.stderr.flush()
@@ -132,8 +133,7 @@ def main():
         if wpid == pid:
             report_wait_status(pid, status)
             if (os.WIFEXITED(status) or os.WIFSIGNALED(status)):
-                if not (os.WIFEXITED(status) and
-                                            os.WEXITSTATUS(status) == 0):
+                if not (os.WIFEXITED(status) and os.WEXITSTATUS(status) == 0):
                     return 1
                 else:
                     message['position'] = message['total']

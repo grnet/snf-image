@@ -111,8 +111,8 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
 
     export SNF_IMAGE_RESIZE_PART="$(get_partition_to_resize "$SNF_IMAGE_DEV")"
 
-    if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows)$ ]]; then
-        log_error "Supported values for OSFAMILY property are: linux|windows"
+    if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows|freebsd)$ ]]; then
+        log_error "Supported values for OSFAMILY property are: linux|windows|freebsd"
     fi
 
     # If something goes wrong with the tasks, try to umount the disk file

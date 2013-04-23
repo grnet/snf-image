@@ -1,7 +1,11 @@
-2013-01-12, v0.8.1
+2013-04-12, v0.9
+	* Add Support for FreeBSD images
+	* Fix a few bugs in the helper monitoring system
+
+2013-03-12, v0.8.1
 	* Update contact email address
 
-2013-01-09, v0.8
+2013-03-09, v0.8
 	* Add support for xen
 	* Cleanup the helper code
 
