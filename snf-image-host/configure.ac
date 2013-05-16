@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(snf-image, 0.9, synnefo@googlegroups.com)
+AC_INIT(snf-image, 0.9.1, synnefo@googlegroups.com)
 
 AC_CONFIG_AUX_DIR(autotools)
 AC_CONFIG_SRCDIR(configure)

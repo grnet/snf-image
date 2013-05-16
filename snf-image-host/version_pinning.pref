@@ -1,5 +1,5 @@
 Package: snf-image-helper
-Pin: version 0.9*
+Pin: version 0.9.1*
 Pin-Priority: 1001
 
 Package: ntfs-3g
