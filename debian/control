@@ -26,3 +26,18 @@ Description: Image Based Ganeti OS Provider
  This package provides an OS Provider for Ganeti, that allows the
  installation of predefined or custom Images. It is the main provider
  of the Synnefo Cloud Management Software.
+
+Package: snf-image-helper
+Architecture: all
+Depends: ${python:Depends}, ${misc:Depends}, xmlstarlet,
+ e2fsprogs (>= 1.41.12), ntfs-3g, ntfsprogs, parted, reglookup, chntpw,
+ eatmydata, socat, iproute, xenstore-utils, gdisk, ufsutils
+Description: Requisite for the snf-image Ganeti OS Provider
+ This package needs to be installed in the Helper VM that is
+ used by the snf-image-host Ganeti OS Provider. It implements the
+ communication between the OS Provider and the VM that customizes
+ the newly created Image.
+ .
+ The snf-image-host package should be installed on the host machine.
+ The snf-image-helper package should be installed inside the VM,
+ which is used by the snf-image-host package to customize the Image.

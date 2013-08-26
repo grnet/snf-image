@@ -1,0 +1,3 @@
+snf-image-host/repo_pinning.pref etc/snf-image/apt.pref.d
+debian/version_pinning.pref etc/snf-image/apt.pref.d
+snf-image-host/multistrap.conf etc/snf-image

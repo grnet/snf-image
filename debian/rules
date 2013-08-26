@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_clean:
+	dh_auto_clean -Dsnf-image-host
+	cd snf-image-host; rm -rf autotools; \
+	rm -f Makefile.in aclocal.m4 configure config.status config.log
+	dh_auto_clean -Dsnf-image-helper
+	cd snf-image-helper ; rm -rf autotools; \
+	rm -f Makefile.in aclocal.m4 configure config.status config.log tasks/Makefile.in
+
+override_dh_auto_build:
+	dh_auto_build -Dsnf-image-host
+	dh_auto_build -Dsnf-image-helper
+
+override_dh_auto_configure:
+	cd snf-image-host; ./autogen.sh
+	dh_auto_configure -Dsnf-image-host --enable-version-consistency-check
+	cd snf-image-helper; ./autogen.sh
+	dh_auto_configure -Dsnf-image-helper
+
+override_dh_auto_install:
+	dh_auto_install -Dsnf-image-host --destdir=debian/snf-image
+	dh_auto_install -Dsnf-image-helper --destdir=debian/snf-image-helper
+
+override_dh_install:
+	dh_install
+	install -D -m 0600 snf-image-host/defaults $(CURDIR)/debian/snf-image/etc/default/snf-image
+	rm $(CURDIR)/debian/snf-image-helper/usr/share/doc/snf-image-helper/COPYING
+
+override_dh_fixperms:
+	dh_fixperms --exclude debian/snf-image/etc/default/snf-image
+
