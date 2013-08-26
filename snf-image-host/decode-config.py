@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2011 GRNET S.A.
+# Copyright (C) 2012 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,49 +29,28 @@ import sys
 import os
 import subprocess
 import json
+import random
+import string
 from StringIO import StringIO
-from optparse import OptionParser
-
-
-def parse_arguments(input_args):
-    usage = "Usage: %prog [options] <output_file>"
-    parser = OptionParser(usage=usage)
-    parser.add_option("-i", "--input",
-                      action="store", type='string', dest="input_file",
-                      help="get input from FILE instead of stdin",
-                      metavar="FILE")
-
-    opts, args = parser.parse_args(input_args)
-
-    if len(args) != 1:
-        parser.error('output file is missing')
-    output_file = args[0]
-
-    if opts.input_file is not None:
-        if not os.path.isfile(opts.input_file):
-            parser.error('input file does not exist')
-
-    return (opts.input_file, output_file)
 
 
 def main():
-    (input_file, output_file) = parse_arguments(sys.argv[1:])
+    options = sys.argv[1:]
 
-    infh = sys.stdin if input_file is None else open(input_file, 'r')
-    outfh = open(output_file, 'w')
+    prefix = ''.join(random.choice(string.ascii_uppercase) for x in range(8))
 
-    properties = json.load(infh)
-    for key, value in properties.items():
-        os.environ['SNF_IMAGE_PROPERTY_' + str(key).upper()] = value
+    config = json.load(sys.stdin)
+
+    for key, value in config.items():
+        if str(key).upper() in options:
+            os.environ[prefix + str(key).upper()] = value
 
     p = subprocess.Popen(['bash', '-c', 'set'], stdout=subprocess.PIPE)
     output = StringIO(p.communicate()[0])
     for line in iter(output):
-        if line.startswith('SNF_IMAGE_PROPERTY_'):
-            outfh.write('export ' + line)
+        if line.startswith(prefix):
+            print line[len(prefix):]
 
-    infh.close()
-    outfh.close()
     return 0
 
 

@@ -17,44 +17,69 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+
+if [ $$ -eq 1 ]; then
+    #mount / -o remount
+    mount -t tmpfs -o size=20m tmpfs /tmp
+    /etc/init.d/udev start
+    #hwclock -u -s
+
+    (exec $0) &
+    wait
+    exit 0 # Hopefully this is never called...
+fi
+
+export PATH
+
 . @commondir@/common.sh
 
 set -e
 
-if [ "x$1" != "x--force" ]; then
-    echo "WARNING: Exiting, this command would cause the system to halt." >&2
-    echo "Use --force if you know what you're doing." >&2
-    exit 1
-fi
+# Enable errtrace to make functions inherit the ERR trap
+set -o errtrace
 
-# terminate helper vm when the script exits
-add_cleanup telinit 0
+trap report_error ERR
 
-if [ ! -b "$FLOPPY_DEV" ]; then
-    log_error "Floppy device is not present!"
-fi
-
-floppy=$(mktemp -d --tmpdir floppy.XXXXXX)
-add_cleanup rmdir "$floppy"
-
-mount $FLOPPY_DEV $floppy
-add_cleanup umount "$floppy"
-
-if [ -f "$floppy/rules" ]; then
-    source "$floppy/rules"
+if grep snf_image_activate_helper /proc/cmdline > /dev/null; then
+    # terminate helper vm when the script exits
+    add_cleanup system_poweroff
 else
-    log_error "Floppy does not contain \`rules\' file"
+    log_error "Kernel command line activation flag: " \
+              "\`snf_image_activate_helper' is missing"
 fi
 
-if [ -f "$floppy/unattend.xml" ]; then
-    export SNF_IMAGE_UNATTEND="$floppy/unattend.xml"
+prepare_helper
+
+if [ ! -b "$RULES_DEV" ]; then
+    log_error "Device file hosting the rules file: \`$RULES_DEV' does not exist"
+fi
+
+rules=$(mktemp -d --tmpdir rules.XXXXXX)
+add_cleanup rmdir "$rules"
+
+$MOUNT $RULES_DEV $rules
+add_cleanup umount "$rules"
+
+if [ -f "$rules/rules" ]; then
+    source "$rules/rules"
+else
+    log_error "$RULES_DEV does not contain \`rules\' file"
+fi
+
+if [ -f "$rules/unattend.xml" ]; then
+    export SNF_IMAGE_UNATTEND="$rules/unattend.xml"
 fi
 
 if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
     properties=$(mktemp --tmpdir properties.XXXXXX)
     add_cleanup rm "$properties"
-    echo "$SNF_IMAGE_PROPERTIES" |
-        "@scriptsdir@/decode-properties.py" "$properties"
+    if ! echo "$SNF_IMAGE_PROPERTIES" | \
+        "@scriptsdir@/decode-properties.py" "$properties"; then
+
+        log_error "Unable to decode image properties. " \
+             "Please check if the variable is in valid json format."
+    fi
     source "$properties"
 fi
 
@@ -73,31 +98,41 @@ if [ -z "$RUN_PARTS" ]; then
     log_error "run-parts program is missing from the system"
 fi
 
-# If something goes wrong with the tasks, try to umount the target filesystem
-# in case it is left mounted...
-trap '{ umount "$target"; }' ERR
 
 if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
 
+    if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "" ]; then
+        log_error "Required image property \`OSFAMILY' is missing or empty."
+    fi
+
+    if [ "$SNF_IMAGE_PROPERTY_ROOT_PARTITION" = "" ]; then
+        log_error "Required image property \`ROOT_PARTITION' is missing or empty."
+    fi
+
     export SNF_IMAGE_RESIZE_PART="$(get_partition_to_resize "$SNF_IMAGE_DEV")"
 
-    if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows)$ ]]; then
-        log_error "Supported values for OSFAMILY property are: linux|windows"
+    if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows|freebsd)$ ]]; then
+        log_error "Supported values for OSFAMILY property are: linux|windows|freebsd"
     fi
+
+    # If something goes wrong with the tasks, try to umount the disk file
+    # systems that are still mounted.
+    trap '{ umount_all "$target"; }' ERR
 
     # Redirect standard error to standard output,
     # prepend a timestamp before each line of output.
     echo "Execute all snf-image tasks...."
     $RUN_PARTS -v --exit-on-error "@tasksdir@" 2>&1|
-        while IFS= read -r line; do
-            echo $(date +%Y:%m:%d-%H:%M:%S.%N) "$line"
+        while read -r line; do
+            echo $($DATE +%Y:%m:%d-%H:%M:%S.%N) "$line"
         done
+
+    # Reset the handler to its original value
+    trap report_error ERR
 fi
 
-# Disable the trap. If code reaches here, the filesystem is unmounted.
-trap - ERR
 
-echo "SUCCESS" > "$RESULT"
+return_success
 
 cleanup
 trap - EXIT

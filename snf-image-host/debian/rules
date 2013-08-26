@@ -1,90 +1,20 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
+%:
+	dh $@
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf autotools
+	rm -f Makefile.in aclocal.m4 configure config.status config.log
 
-
-config.status: configure
-
-configure:
-	dh_testdir
+override_dh_auto_configure:
 	./autogen.sh
-	./configure $(CROSS) --prefix=/usr --localstatedir=/var --sysconfdir=/etc --enable-network-backend
+	dh_auto_configure -- --enable-version-consistency-check
 
-
-build: build-arch build-indep
-
-build-arch: build-stamp
-
-build-indep: build-stamp
-
-build-stamp:  config.status 
-	dh_testdir
-
-	# Add here commands to compile the package.
-	$(MAKE)
-	#docbook-to-man debian/ganeti-instance-image.sgml > ganeti-instance-image.1
-
-	touch $@
-
-clean: 
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp 
-
-	# Add here commands to clean up after the build process.
-	[ ! -f Makefile ] || $(MAKE) distclean
-	rm -f config.sub config.guess
-	rm -rf aclocal.m4 autotools configure Makefile.in
-
-	dh_clean 
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
-
-	# Add here commands to install the package into debian/ganeti-instance-image.
-	install -D -m 0600 defaults $(CURDIR)/debian/snf-image-host/etc/default/snf-image
-	$(MAKE) DESTDIR=$(CURDIR)/debian/snf-image-host install
-
-
-# Build architecture-independent files here.
-binary-indep: build install
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs ChangeLog
-	dh_installdocs
-	dh_installexamples
+override_dh_install:
 	dh_install
-#	dh_installmenu
-#	dh_installdebconf	
-#	dh_installlogrotate
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installmime
-#	dh_python
-#	dh_installinit
-#	dh_installcron
-#	dh_installinfo
-	dh_installman
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms --exclude debian/snf-image-host/etc/default/snf-image
-#	dh_perl
-#	dh_makeshlibs
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
+	install -D -m 0600 defaults $(CURDIR)/debian/snf-image/etc/default/snf-image
 
-# Build architecture-dependent files here.
-binary-arch: build install
-# We have nothing to do by default.
+override_dh_fixperms:
+	dh_fixperms --exclude debian/snf-image/etc/default/snf-image
 
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install 

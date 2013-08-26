@@ -26,6 +26,8 @@
 set -e
 . "@commondir@/common.sh"
 
+trap task_cleanup EXIT
+report_task_start
 # Check if the task should be prevented from running.
 check_if_excluded
 
@@ -41,11 +43,16 @@ fi
 
 table_type=$(get_partition_table_type "$table")
 
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "freebsd" -a "$table_type" != "gpt" ]; then
+    log_error "The image contains a(n) $table_type partition table. " \
+        "For FreeBSD images only GUID Partition Tables are supported."
+fi
+
 if [ "$table_type" == "gpt" ]; then
-    "@scriptsdir@/fix_gpt.py" "$SNF_IMAGE_DEV" $($BLOCKDEV --getsz "$SNF_IMAGE_DEV")
+    "$SGDISK" --move-second-header "$SNF_IMAGE_DEV"
 elif [ "$table_type" != "msdos" ]; then
-    log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition "
-    "table type: \`$table_type'. Only msdos & gpt partitions are supported."
+    log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition " \
+        "table type: \`$table_type'. Only msdos & gpt partitions are supported."
 fi
 
 last_part=$(get_last_partition "$table")
@@ -87,11 +94,8 @@ fi
 extended=""
 
 if [ "$table_type" != "msdos" ]; then
-    # Primary, extended and logical partitions is a concept for msdos partition
-    # tables. Parted's mkpart will use part-type as partition name if applied
-    # on a gpt table and leaving this empty is fragile: For a strange reason
-    # for swap partitions the command fails (???)
-    last_part_type="primary"
+    # For gpt partitions, get the partition GUID code as partition type
+    last_part_type="$($SGDISK -i "$last_part_id" "$SNF_IMAGE_DEV" | grep "^Partition GUID code:" | cut -d"(" -f1 | cut -d: -f2 | xargs echo)"
 elif [ $last_part_id -gt 4 ]; then
     last_part_type="logical"
     extended=$(get_extended_partition "$table")
@@ -108,6 +112,10 @@ elif [ $last_part_id -gt 4 ]; then
     else
         # Enlarge the extended partition
         if [ $swap_num -ge 5 ]; then
+            # This is needed because logical partitions need to have at least
+            # 1 sector gap between them. We make the gap 2048 sectors to
+            # properly align them.
+            new_end=$((new_end - 2048))
             enlarge_partition "$SNF_IMAGE_DEV" "$extended" "extended" "${swap_end}s"
         else
             enlarge_partition "$SNF_IMAGE_DEV" "$extended" "extended" "${new_end}s"

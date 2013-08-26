@@ -19,13 +19,16 @@
 
 ### BEGIN TASK INFO
 # Provides:		FilesystemResizeMounted
-# RunBefore:            UmountImage
+# RunBefore:            EnforcePersonality
 # RunAfter:		InstallUnattend
 # Short-Description:	Resize filesystem to use all the available space
 ### END TASK INFO
 
 set -e
 . "@commondir@/common.sh"
+
+trap task_cleanup EXIT
+report_task_start
 
 # Check if the task should be prevented from running.
 check_if_excluded

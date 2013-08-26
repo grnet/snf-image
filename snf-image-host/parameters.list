@@ -3,3 +3,4 @@ img_format The format of the image to be installed
 img_passwd The root password which will be injected into the image
 img_properties The image properties that are used to customize the image (json.dumps format)
 img_personality The files to be injected into the image (base64 encoded in a json.dumps format)
+config_url The url to download configuration data from

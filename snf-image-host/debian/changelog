@@ -1,3 +1,135 @@
+snf-image (0.9.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Thu, 16 May 2013 15:11:12 +0300
+
+snf-image (0.9-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 23 Apr 2013 14:36:30 +0300
+
+snf-image (0.8.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 12 Mar 2013 18:42:20 +0200
+
+snf-image (0.8-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 11 Mar 2013 15:22:36 +0200
+
+snf-image-host (0.7.6-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 21 Jan 2013 18:51:46 +0200
+
+snf-image-host (0.7.5-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Thu, 17 Jan 2013 14:53:11 +0200
+
+snf-image-host (0.7.4-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 08 Jan 2013 16:35:55 +0200
+
+snf-image-host (0.7.3-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 04 Jan 2013 18:20:37 +0200
+
+snf-image-host (0.7.2-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 04 Jan 2013 16:51:58 +0200
+
+snf-image-host (0.7.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 07 Dec 2012 18:29:01 +0200
+
+snf-image-host (0.7-2) stable; urgency=low
+
+  * Fix directory files
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 03 Dec 2012 17:27:57 +0200
+
+snf-image-host (0.7-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 03 Dec 2012 17:27:57 +0200
+
+snf-image-host (0.6.5-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 20 Nov 2012 12:19:37 +0200
+
+snf-image-host (0.6.4-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Thu, 15 Nov 2012 16:33:21 +0200
+
+snf-image-host (0.6.3-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 13 Nov 2012 12:41:14 +0200
+
+snf-image-host (0.6.2-2) stable; urgency=low
+
+  * Fix package content
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 12 Oct 2012 13:50:40 +0300
+
+snf-image-host (0.6.2-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 12 Oct 2012 13:50:40 +0300
+
+snf-image-host (0.6.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 05 Oct 2012 16:02:14 +0300
+
+snf-image-host (0.6-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 14 Sep 2012 16:48:06 +0300
+
+snf-image-host (0.5-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 31 Aug 2012 12:22:55 +0300
+
+snf-image-host (0.4.2-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 29 Jun 2012 13:47:34 +0300
+
+snf-image-host (0.4.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 29 May 2012 11:46:34 +0300
+
 snf-image-host (0.4-1) stable; urgency=low
 
   * New upstream version

@@ -1,0 +1,9 @@
+snf-image
+=========
+
+snf-image needs a helper image to perform its work. To generate or
+update it, simply run:
+
+# snf-image-update-helper
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>, Fri, 30 Nov 2012 18:58:21 +0200

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,33 +24,66 @@ set -o pipefail
 
 ganeti_os_main
 
+if [ "$IMAGE_DEBUG" = "yes" ]; then
+    PS4='$(date "+%s.%N ($LINENO) + ")'
+    set -x
+elif [ "$IMAGE_DEBUG" != "no" ]; then
+    echo "Warning: Unsupported IMAGE_DEBUG value: \`$IMAGE_DEBUG'"
+fi
+
+monitor_pipe=$(mktemp -u)
+mkfifo -m 600 "$monitor_pipe"
+add_cleanup rm -f "$monitor_pipe"
+
+if [ -n "$PROGRESS_MONITOR" ]; then
+    { sleep 1; $PROGRESS_MONITOR "$instance" < "$monitor_pipe" ; } &
+    monitor_pid="$!"
+else
+    sed -u 's|^|[MONITOR] |g' < "$monitor_pipe" &
+    monitor_pid="$!"
+fi
+
+# Create file descriptor to monitor_pipe
+exec {MONITOR_FD}>${monitor_pipe}
+add_cleanup  close_fd ${MONITOR_FD}
+
+# Ignore sigpipe signals. If progress monitor is dead and snf-image tries to
+# output something to the opened pipe, then a sigpipe will be raised. If we do
+# not catch this, the program will terminate.
+trap "" SIGPIPE
+
+trap report_and_cleanup EXIT
+
 case $BACKEND_TYPE in
     local)
         image_file="$IMAGE_DIR/$(echo "$IMAGE_NAME" | sed 's/^file://').$IMAGE_TYPE"
         if [ ! -e "$image_file" ]; then
             log_error "Image file \`$image_file' does not exit."
+            report_error "Unable to retrieve image file."
             exit 1
         fi
         image_size="$(stat -L -c %s "$image_file")"
+        ;;
+    null)
+        image_file=/dev/null
+        image_size=0
+        # Treat it as local file from now on...
+        BACKEND_TYPE="local"
         ;;
     network)
         image_cmd="$CURL $(printf "%q" "$IMAGE_NAME") 2> /dev/null"
         image_size=$($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
         ;;
     pithos)
-        cmd_args="--db $(printf "%q" "${PITHOS_DB}") \
-                  --data $(printf "%q" "${PITHOS_DATA}") \
-                  $(printf "%q" "${IMAGE_NAME}")"
+        # For security reasons pass the database url to pithcat as an
+        # environmental variable.
+        export PITHCAT_INPUT_DB="$PITHOS_DB"
+        export PITHCAT_INPUT_DATA="$PITHOS_DATA"
+        cmd_args="$(printf "%q" "${IMAGE_NAME}")"
         image_cmd="./pithcat $cmd_args"
         image_size=$(./pithcat -s  $cmd_args)
         ;;
 esac
-
-monitor="" # Empty if no progress monitor program is not defined.
-if [ -n "$PROGRESS_MONITOR" ]; then
-    monitor="$PROGRESS_MONITOR \
-        -i $(printf "%q" "$INSTANCE_NAME") -r $image_size"
-fi
 
 # If the target device is not a real block device we'll first losetup it.
 # This is needed for file disks.
@@ -82,10 +115,13 @@ case "$IMAGE_TYPE" in
         ;;
     *)
         log_error "Unknown Image format: \`$IMAGE_TYPE'"
+        report_error "Unknown Image Format"
         exit 1
         ;;
 esac
 
+report_info "Starting image copy..."
+monitor="./copy-monitor.py -o $MONITOR_FD -r $image_size"
 if [ "$BACKEND_TYPE" = "local" ]; then
     # dd the dump to its new home :-)
     # Deploying an image file on a target block device is a streaming copy
@@ -95,12 +131,12 @@ if [ "$BACKEND_TYPE" = "local" ]; then
 else
     $image_cmd | $monitor dd bs=4M of="$target" oflag=direct
 fi
+report_info "Image copy finished."
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
 add_cleanup rm "$floppy"
 
-snf_export_DEV=/dev/vda
 snf_export_TYPE="$IMG_FORMAT"
 snf_export_PASSWORD="$IMG_PASSWD"
 snf_export_HOSTNAME="$instance"
@@ -111,49 +147,13 @@ if [ -n "$IMG_PERSONALITY" ]; then
     snf_export_PERSONALITY="$IMG_PERSONALITY"
 fi
 
+snf_export_DEV=$(get_img_dev)
+
 create_floppy "$floppy"
 
-# Invoke the helper vm to do the dirty job...
-jail=$(mktemp -d --tmpdir tmpfsXXXXXXX)
-add_cleanup rmdir "$jail"
+launch_helper "$blockdev" "$floppy"
 
-mount tmpfs -t tmpfs "$jail" -o size=50M
-add_cleanup umount "$jail"
-
-result_file=$(mktemp --tmpdir="$jail" result.XXXXXX)
-add_cleanup rm "$result_file"
-
-snapshot=$(mktemp --tmpdir="$jail" helperXXXXXX.img)
-add_cleanup rm "$snapshot"
-
-"$QEMU_IMG" create -f qcow2 -b "$HELPER_IMG" "$snapshot"
-
-echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Starting helper VM..."
-$TIMELIMIT -t "$HELPER_SOFT_TIMEOUT" -T "$HELPER_HARD_TIMEOUT" \
-    kvm -runas "$HELPER_USER" -drive file="$snapshot" \
-    -drive file="$blockdev",format=raw,if=virtio,cache=none \
-    -boot c -serial stdio -serial file:"$result_file" \
-    -fda "$floppy" -vga none -nographic -parallel none -monitor null \
-    -kernel "$HELPER_KERNEL" -initrd "$HELPER_INITRD" \
-    -append "quiet ro root=/dev/sda1 console=ttyS0,9600n8 snf_image_activate_helper" \
-    2>&1 | sed 's|^|HELPER: |g'
-echo "$(date +%Y:%m:%d-%H:%M:%S.%N) Helper VM finished."
-
-if [ $? -ne 0 ]; then
-    if [ $? -gt 128 ];  then
-        log_error "Helper was terminated. Did not finish on time."
-    fi
-    exit 1
-fi
-
-# Read the first line. This will remove \r and \n chars
-result=$(sed 's|\r||g' "$result_file" | head -1)
-
-if [ "x$result" != "xSUCCESS" ]; then
-    log_error "Helper VM returned error:"
-    log_error "$result"
-    exit 1
-fi
+report_info "Image customization finished successfully."
 
 # Execute cleanups
 cleanup

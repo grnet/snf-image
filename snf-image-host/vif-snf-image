@@ -1,0 +1,14 @@
+#!/bin/bash
+
+dir=$(dirname "$0")
+. "$dir"/vif-common.sh
+
+echo 0 > /proc/sys/net/ipv6/conf/$vif/autoconf
+echo 1 > /proc/sys/net/ipv6/conf/$vif/disable_ipv6
+echo 0 > /proc/sys/net/ipv4/conf/$vif/forwarding
+echo 0 > /proc/sys/net/ipv4/conf/$vif/proxy_arp
+
+ip link set $vif up
+
+success
+

@@ -1,3 +1,129 @@
+snf-image-helper (0.9.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Thu, 16 May 2013 15:11:52 +0300
+
+snf-image-helper (0.9-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 23 Apr 2013 14:38:09 +0300
+
+snf-image-helper (0.8.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 12 Mar 2013 18:43:03 +0200
+
+snf-image-helper (0.8-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 11 Mar 2013 16:00:12 +0200
+
+snf-image-helper (0.7.6-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 21 Jan 2013 18:52:32 +0200
+
+snf-image-helper (0.7.5-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Thu, 17 Jan 2013 14:53:54 +0200
+
+snf-image-helper (0.7.4-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 08 Jan 2013 16:35:14 +0200
+
+snf-image-helper (0.7.3-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 04 Jan 2013 18:21:23 +0200
+
+snf-image-helper (0.7.2-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 04 Jan 2013 16:53:31 +0200
+
+snf-image-helper (0.7.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 07 Dec 2012 18:30:10 +0200
+
+snf-image-helper (0.7-2) stable; urgency=low
+
+  * Update the debian version to comply with snf-image-host
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 03 Dec 2012 17:28:39 +0200
+
+snf-image-helper (0.7-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 03 Dec 2012 17:28:39 +0200
+
+snf-image-helper (0.6.5-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 20 Nov 2012 12:20:20 +0200
+
+snf-image-helper (0.6.4-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Thu, 15 Nov 2012 16:34:01 +0200
+
+snf-image-helper (0.6.3-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 13 Nov 2012 12:43:35 +0200
+
+snf-image-helper (0.6.2-2) stable; urgency=low
+
+  * Fix package content
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 12 Oct 2012 13:51:43 +0300
+
+snf-image-helper (0.6.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 05 Oct 2012 16:03:12 +0300
+
+snf-image-helper (0.6-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 14 Sep 2012 16:48:57 +0300
+
+snf-image-helper (0.5-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 31 Aug 2012 12:26:47 +0300
+
+snf-image-helper (0.4.2-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 29 Jun 2012 13:46:37 +0300
+
+snf-image-helper (0.4.1-1) stable; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 29 May 2012 11:47:51 +0300
+
 snf-image-helper (0.4-1) stable; urgency=low
 
   * New upstream version

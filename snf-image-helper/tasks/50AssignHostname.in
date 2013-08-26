@@ -19,7 +19,7 @@
 
 ### BEGIN TASK INFO
 # Provides:		AssignHostname
-# RunBefore:            UmountImage
+# RunBefore:            EnforcePersonality
 # RunAfter:		InstallUnattend
 # Short-Description:	Assign Hostname/Computer Name to the instance
 ### END TASK INFO
@@ -27,55 +27,91 @@
 set -e
 . "@commondir@/common.sh"
 
+trap task_cleanup EXIT
+report_task_start
+
 # Check if the task should be prevented from running.
 check_if_excluded
 
 windows_hostname() {
-    local target="$1"
-    local password="$2"
+    local target password unattend tmp_unattend namespace
+    target="$1"
+    password="$2"
 
-    local tmp_unattend=`mktemp` || exit 1
+    tmp_unattend=$(mktemp)
     add_cleanup rm "$tmp_unattend"
 
     echo -n "Assigning new computer name..."
 
-    local namespace="urn:schemas-microsoft-com:unattend"
-    
-    "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$password" "$target/Unattend.xml" > "$tmp_unattend"
+    namespace="urn:schemas-microsoft-com:unattend"
 
-    cat "$tmp_unattend" > "$target/Unattend.xml"
+    unattend=$(get_unattend "$target")
+    if [ -z "$unattend" ]; then
+        log_error "Unattend.xml is missing."
+    fi
+    
+    "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$password" "$unattend" > "$tmp_unattend"
+
+    cat "$tmp_unattend" > "$unattend"
     echo done
 }
 
 linux_hostname() {
-    local target="$1"
-    local hostname="$2"
+    local target hostname distro
+    target="$1"
+    hostname="$2"
 
-    local distro=$(get_base_distro "$target")
+    if [ -f "$target/etc/hostname" ]; then
+        echo "$hostname" > "$target/etc/hostname"
+    else
+        distro=$(get_base_distro "$target")
+        case "$distro" in
+            redhat)
+                sed -i -e "s/HOSTNAME=.*$/HOSTNAME=$hostname/g" "$target/etc/sysconfig/network";;
+            slackware|suse)
+                #local domain=$(sed -e 's/^[^\.]*//g' < /etc/HOSTNAME)
 
-    case "$distro" in
-        debian)
-            echo "$hostname" > "$target/etc/hostname";;
-        redhat)
-            sed -ie "s/HOSTNAME=.*$/HOSTNAME=$hostname/g" "$target/etc/sysconfig/network";;
-        slackware|suse)
-            #local domain=$(sed -e 's/^[^\.]*//g' < /etc/HOSTNAME)
+                # In slackware hostname and domain name are joined together. For now
+                # I will not retain the domain name.
+                echo "$hostname" > "${target}/etc/HOSTNAME";;
+            gentoo)
+                sed -i -e "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;
+            arch)
+                if [ -f "$target/etc/rc.conf" ]; then
+                    sed -i -e "s/^HOSTNAME=.*$/HOSTNAME=\"$hostname\"/" "$target/etc/rc.conf"
+                else
+                    # In new versions of arch, /etc/rc.conf is missing
+                    echo "$hostname" > "$target/etc/hostname"
+                fi
 
-            # In slackware hostname and domain name are joined together. For now
-            # I will not retain the domain name.
-            echo "$hostname" > "${target}/etc/HOSTNAME";;
-        gentoo)
-            sed -ie "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;
-        *) log_error "Don't know how to assign hostname. Unknown linux distribution.";;
-    esac
+                if grep "^127\.0\.0\.1[ \t]*" "$target/etc/hosts" > /dev/null; then
+                   sed -i -e "s/127\.0\.0\.1[ \t]*.*$/127.0.0.1\t$hostname/" "$target/etc/hosts"
+                else
+                   echo -e "127.0.0.1\t$hostname" >> "$target/etc/hosts"
+                fi;;
+            *) log_error "Don't know how to assign hostname. Unknown linux distribution.";;
+        esac
+    fi
 
     # Some Linux distributions assign the hostname to 127.0.1.1 in order to be
     # resolvable to an IP address. Lets replace this if found in /etc/hosts
-    sed -ie "s/^[[:blank:]]*127\.0\.1\.1[[:blank:]].\+$/127.0.1.1\t$hostname/" "$target/etc/hosts"
+    sed -i -e "s/^[[:blank:]]*127\.0\.1\.1[[:blank:]].\+$/127.0.1.1\t$hostname/" "$target/etc/hosts"
+}
+
+freebsd_hostname() {
+    local target hostname
+    target="$1"
+    hostname="$2"
+
+    if grep ^hostname= "$target/etc/rc.conf"; then
+        sed -i -e "s/^hostname=.*$/hostname=\"$(printf "%q" "$hostname")\"/" "$target/etc/rc.conf"
+    else
+        echo "hostname=\"$(printf "%q" "$hostname")\"" >> "$target/etc/rc.conf"
+    fi
 }
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
 
 if [ -z "$SNF_IMAGE_HOSTNAME" ]; then
@@ -86,6 +122,8 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     windows_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
 elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
     linux_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
+elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "freebsd" ]; then
+    freebsd_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
 fi
 
 exit 0

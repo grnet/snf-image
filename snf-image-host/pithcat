@@ -27,6 +27,9 @@ the URL as the user when connecting to the backend.
 
 from optparse import OptionParser
 from sys import exit, stdout, stderr
+from os import environ
+from binascii import hexlify, unhexlify
+from collections import namedtuple
 
 try:
     from pithos.backends.modular import ModularBackend
@@ -43,30 +46,52 @@ parser.add_option('--data', dest='data', metavar='DIR',
 parser.add_option('-s', action='store_true', dest='size', default=False,
         help='print file size and exit')
 
+LocationURL = namedtuple('LocationURL', ['account', 'container', 'object'])
+HashmapURL = namedtuple('HashmapURL', ['hash', 'size'])
 
-def urlsplit(url):
-    """Returns (accout, container, object) from a location string"""
-    
-    assert url.startswith('pithos://'), "Invalid URL"
-    t = url.split('/', 4)
-    assert len(t) == 5, "Invalid URL"
-    return t[2:5]
+
+def parse_url(url):
+    if url.startswith('pithos://'):
+        t = url.split('/', 4)
+        assert len(t) == 5, "Invalid URL"
+        return LocationURL(*t[2:5])
+    elif url.startswith('pithosmap://'):
+        t = url.split('/', 3)
+        assert len(t) == 4, "Invalid URL"
+        return HashmapURL(*t[2:4])
+    else:
+        raise Exception("Invalid URL")
 
 
 def print_size(backend, url):
     """Writes object's size to stdout."""
-    
-    account, container, object = urlsplit(url)
-    meta = backend.get_object_meta(account, account, container, object, None)
-    print meta['bytes']
+    url = parse_url(url)
+    if type(url) is LocationURL:
+        account, container, object = url
+        meta = backend.get_object_meta(account, account, container, object,
+                                       None)
+        print meta['bytes']
+    elif type(url) is HashmapURL:
+        print url.size
+    else:
+        raise Exception("Invalid URL")
 
 
 def print_data(backend, url):
     """Writes object's size to stdout."""
-    
-    account, container, object = urlsplit(url)
-    size, hashmap = backend.get_object_hashmap(account, account, container,
-            object)
+
+    url = parse_url(url)
+    if type(url) is LocationURL:
+        account, container, object = url
+        size, hashmap = backend.get_object_hashmap(account, account, container,
+                object)
+    elif type(url) is HashmapURL:
+        hashmap = [hexlify(x) \
+                   for x in backend.store.map_get(unhexlify(url.hash))]
+        size = int(url.size)
+    else:
+        raise Exception("Invalid URL")
+
     for hash in hashmap:
         block = backend.get_block(hash)
         if len(block) > size:
@@ -77,13 +102,27 @@ def print_data(backend, url):
 
 def main():
     options, args = parser.parse_args()
-    if len(args) != 1 or not options.db or not options.data:
+    if len(args) != 1:
         parser.print_help()
         exit(1)
 
     url = args[0]
-    backend = ModularBackend(None, options.db, None, options.data)
-    
+
+    if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
+        stderr.write("Pithos data directory path is missing.\n")
+        exit(1)
+
+    data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
+            options.data
+
+    if not options.db and 'PITHCAT_INPUT_DB' not in environ:
+        stderr.write("Pithos database uri is missing.\n")
+        exit(1)
+
+    db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
+
+    backend = ModularBackend(None, db_uri, None, data_path)
+
     if options.size:
         print_size(backend, url)
     else:

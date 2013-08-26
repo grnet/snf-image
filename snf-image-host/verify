@@ -1,3 +1,64 @@
 #!/bin/bash
 
+# Copyright (C) 2012 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+set -e
+
+. common.sh
+
+
+check_required() {
+    local required_params="IMG_ID IMG_FORMAT IMG_PASSWD"
+    local osparams="$required_params IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+
+    # Store OSP_VAR in VAR
+    for param in $osparams; do
+        eval $param=\"\$OSP_$param\"
+    done
+
+    for var in $required_params; do
+        if [ -z "${!var}" ]; then
+             log_error "Missing OS API Parameter: ${var}"
+             exit 1
+        fi
+    done
+
+    case $IMG_FORMAT in
+        extdump|ntfsdump)
+        ;;
+	diskdump)
+        if [ -z "$IMG_PROPERTIES" ]; then
+            log_error "\`img_properties' parameter must be present when"
+            log_error "using \`diskdump' format."
+            exit 1
+        fi
+        ;;
+    *)
+        log_error "Unknown Image format: \`$IMAGE_TYPE'"
+        exit 1
+        ;;
+esac
+}
+
+if [ -z "$OSP_CONFIG_URL" ]; then
+    check_required
+fi
+
 exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
