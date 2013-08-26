@@ -1,0 +1,1 @@
+m4_define([devflow_version], [%(DEVFLOW_VERSION)s])
