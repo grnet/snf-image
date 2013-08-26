@@ -18,7 +18,7 @@ override_dh_auto_build:
 
 override_dh_auto_configure:
 	cd snf-image-host; ./autogen.sh
-	dh_auto_configure -Dsnf-image-host --enable-version-consistency-check
+	dh_auto_configure -Dsnf-image-host -- --enable-version-consistency-check
 	cd snf-image-helper; ./autogen.sh
 	dh_auto_configure -Dsnf-image-helper
 
