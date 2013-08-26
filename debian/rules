@@ -13,6 +13,8 @@ override_dh_auto_clean:
 override_dh_auto_build:
 	dh_auto_build -Dsnf-image-host
 	dh_auto_build -Dsnf-image-helper
+	sed -e 's|@DEBIAN_VERSION[@]|$(DEB_DEVFLOW_DEBIAN_VERSION)|g' \
+		debian/version_pinning.pref.in > debian/version_pinning.pref
 
 override_dh_auto_configure:
 	cd snf-image-host; ./autogen.sh
