@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2011 GRNET S.A.
+# Copyright (C) 2011-2013 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,11 +40,12 @@ except ImportError:
 
 parser = OptionParser(usage='%prog [options] <URL>')
 parser.add_option('--db', dest='db', metavar='URI',
-        help='SQLAlchemy URI of the database [REQUIRED]')
+                  help='SQLAlchemy URI of the database [REQUIRED]')
 parser.add_option('--data', dest='data', metavar='DIR',
-        help='path to the directory where data are stored [REQUIRED]')
+                  help='path to the directory where data are'
+                       ' stored [REQUIRED]')
 parser.add_option('-s', action='store_true', dest='size', default=False,
-        help='print file size and exit')
+                  help='print file size and exit')
 
 LocationURL = namedtuple('LocationURL', ['account', 'container', 'object'])
 HashmapURL = namedtuple('HashmapURL', ['hash', 'size'])
@@ -84,9 +85,9 @@ def print_data(backend, url):
     if type(url) is LocationURL:
         account, container, object = url
         size, hashmap = backend.get_object_hashmap(account, account, container,
-                object)
+                                                   object)
     elif type(url) is HashmapURL:
-        hashmap = [hexlify(x) \
+        hashmap = [hexlify(x)
                    for x in backend.store.map_get(unhexlify(url.hash))]
         size = int(url.size)
     else:
@@ -113,7 +114,7 @@ def main():
         exit(1)
 
     data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
-            options.data
+        options.data
 
     if not options.db and 'PITHCAT_INPUT_DB' not in environ:
         stderr.write("Pithos database uri is missing.\n")
@@ -121,7 +122,10 @@ def main():
 
     db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
 
-    backend = ModularBackend(None, db_uri, None, data_path)
+    backend = ModularBackend(None,
+                             db_uri if type(url) in LocationURL else None,
+                             None,
+                             data_path)
 
     if options.size:
         print_size(backend, url)
