@@ -9,6 +9,7 @@ override_dh_auto_clean:
 	dh_auto_clean -Dsnf-image-helper
 	cd snf-image-helper ; rm -rf autotools; \
 	rm -f Makefile.in aclocal.m4 configure config.status config.log tasks/Makefile.in
+	rm -f debian/version_pinning.pref
 
 override_dh_auto_build:
 	dh_auto_build -Dsnf-image-host

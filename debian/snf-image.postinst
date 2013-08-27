@@ -4,11 +4,14 @@ set -e
 
 case "$1" in
     configure|reconfigure)
+	echo "NOTE: To complete snf-image installation either create an snf-image-helper"
+	echo "NOTE: image by running:"
 	echo "NOTE:"
-        echo "NOTE: Please make sure to create or update the helper image by running:"
-        echo "NOTE:"
-        echo "NOTE: $ snf-image-update-helper"
-        echo "NOTE:"
+	echo "NOTE: $ snf-image-update-helper"
+	echo "NOTE:"
+	echo "NOTE: or download and install a fixed one from here:"
+	echo "NOTE: https://code.grnet.gr/projects/snf-image/wiki#Fixed-snf-image-helper-image"
+	echo "NOTE:"
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
@@ -23,9 +26,3 @@ esac
 #DEBHELPER#
 
 exit 0
-
-
-
-
-
-
