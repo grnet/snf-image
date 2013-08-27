@@ -30,7 +30,8 @@ override_dh_auto_install:
 override_dh_install:
 	dh_install
 	install -D -m 0600 snf-image-host/defaults $(CURDIR)/debian/snf-image/etc/default/snf-image
-	rm $(CURDIR)/debian/snf-image-helper/usr/share/doc/snf-image-helper/COPYING
+	rm -f $(CURDIR)/debian/snf-image-helper/usr/share/doc/snf-image-helper/COPYING
+	rm -rf $(CURDIR)/debian/snf-image/usr/bin
 
 override_dh_fixperms:
 	dh_fixperms --exclude debian/snf-image/etc/default/snf-image
