@@ -218,9 +218,10 @@ else
     echo "snf-image-helper pkg was installed from the apt repository."
 fi
 
+helper_version="$(grep ^snf-image-helper[[:space:]] "$HELPER_DIR/packages" | cut -f2)"
+host_version="$(dpkg-query -W -f "\${Version}\n" snf-image)"
+
 if [ "$VERSION_CHECK" == yes -a -z "$HELPER_PKG" ]; then
-    helper_version="$(grep ^snf-image-helper[[:space:]] "$HELPER_DIR/packages" | cut -f2)"
-    host_version="$(dpkg-query -W -f "\${Version}\n" snf-image)"
     if [ "$host_version" != "$helper_version" ]; then
         log_error "snf-image version (=$host_version) and " \
             "snf-image-helper version (=$helper_version) don't match."
@@ -230,7 +231,18 @@ fi
 
 mv "$helper_img" "$HELPER_DIR/image"
 
-echo "Files in \`$HELPER_DIR' were updated successfully"
+echo "Files in \`$HELPER_DIR' were updated successfully" >&2
+
+TMPDIR=$(mktemp -d)
+
+echo "Creating fixed appliance in \`$TMPDIR':" >&2
+echo >&2
+(cd "$HELPER_DIR"; $TAR -cvf "$TMPDIR/snf_image_helper_image-${helper_version}.tar" "$kernel_xen" "$initrd_xen" "$kernel" "$initrd" kernel initrd kernel-xen initrd-xen image packages)
+echo >&2
+echo -n "Compressing fixed appliance ..." >&2
+(cd "$HELPER_DIR"; $XZ -9 "$TMPDIR/snf_image_helper_image-${helper_version}.tar")
+echo "done" >&2
+
 exit 0
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

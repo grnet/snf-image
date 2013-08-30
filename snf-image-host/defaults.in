@@ -78,3 +78,5 @@
 # INSTALL_MBR="install-mbr"
 # TIMEOUT="timeout"
 # CURL="curl"
+# TAR="tar"
+# XZ="xz"
