@@ -123,7 +123,7 @@ def main():
     db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
 
     backend = ModularBackend(None,
-                             db_uri if type(url) in LocationURL else None,
+                             db_uri if type(url) is LocationURL else None,
                              None,
                              data_path)
 
