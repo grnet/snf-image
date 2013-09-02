@@ -2,19 +2,17 @@
 
 set -e
 
-case "$1" in
-    configure|reconfigure)
-	/usr/bin/snf-image-update-helper -y
-    ;;
+. /usr/share/debconf/confmodule
 
-    abort-upgrade|abort-remove|abort-deconfigure)
-    ;;
+db_get snf-image/dlurl
+URL="$RET"
 
-    *)
-        echo "postinst called with unknown argument \`$1'" >&2
-        exit 1
-    ;;
-esac
+if [ -n "$URL" ]; then
+    snf-image-update-helper -y -u "$URL"
+else
+    snf-image-update-helper -y
+fi
+
 
 #DEBHELPER#
 
