@@ -35,6 +35,9 @@ install it under $IMAGE_DIR.
 OPTIONS:
     -h Print this message
 
+    -u URL
+       Download URL to use for the helper image instead of $HELPER_URL
+
     -y Assume Yes to all queries and do not prompt
 
 EOF
@@ -42,9 +45,11 @@ EOF
     exit "$rc"
 }
 
-while getopts "hy" opt; do
+while getopts "hu:y" opt; do
     case $opt in
         h) usage 0
+            ;;
+        u) HELPER_URL="$OPTARG"
             ;;
         y) NO_PROMPT="yes"
             ;;
