@@ -1,3 +1,7 @@
+2013-09-02, v0.9.3
+	* Add code to download and install a fixed snf-image-helper image. This is the default
+	  behaviour for snf-image-update-helper.
+
 2013-08-27, v0.9.2
 	* Use devflow building system
 	* In pithcat if the provided URL is a pithosmap, initialize the backend

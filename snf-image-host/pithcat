@@ -66,7 +66,6 @@ def parse_url(url):
 
 def print_size(backend, url):
     """Writes object's size to stdout."""
-    url = parse_url(url)
     if type(url) is LocationURL:
         account, container, object = url
         meta = backend.get_object_meta(account, account, container, object,
@@ -81,7 +80,6 @@ def print_size(backend, url):
 def print_data(backend, url):
     """Writes object's size to stdout."""
 
-    url = parse_url(url)
     if type(url) is LocationURL:
         account, container, object = url
         size, hashmap = backend.get_object_hashmap(account, account, container,
@@ -107,7 +105,7 @@ def main():
         parser.print_help()
         exit(1)
 
-    url = args[0]
+    url = parse_url(args[0])
 
     if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
         stderr.write("Pithos data directory path is missing.\n")
@@ -123,7 +121,8 @@ def main():
     db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
 
     backend = ModularBackend(None,
-                             db_uri if type(url) in LocationURL else None,
+                             db_uri if type(url) is LocationURL
+                                    else None,
                              None,
                              data_path)
 
