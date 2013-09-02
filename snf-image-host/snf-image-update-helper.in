@@ -22,6 +22,62 @@ set -o errtrace
 
 . @osdir@/common.sh
 
+usage() {
+    local rc="$1"
+
+    cat <<EOF
+
+Usage: $0 [options]
+
+This script will download a suitable fixed snf-image-helper image and will
+install it under $IMAGE_DIR.
+
+OPTIONS:
+    -h Print this message
+
+    -y Assume Yes to all queries and do not prompt
+
+EOF
+
+    exit "$rc"
+}
+
+while getopts "hy" opt; do
+    case $opt in
+        h) usage 0
+            ;;
+        y) NO_PROMPT="yes"
+            ;;
+        ?) log_error "User \`-h' for help"; exit 1
+            ;;
+    esac
+done
+
+cat >&1 <<EOF
+This program will overwrite the following files if present:
+  \`$HELPER_DIR/initrd'
+  \`$HELPER_DIR/kernel'
+  \`$HELPER_DIR/initrd-xen'
+  \`$HELPER_DIR/kernel-xen'
+  \`$HELPER_DIR/image'
+  \`$HELPER_DIR/packages'
+EOF
+
+while [[ 1 ]]; do
+    echo -n "Do you want to continue [y/N]? "
+    if [ "x$NO_PROMPT" = "xyes" ]; then
+        echo "y";
+        break;
+    fi
+
+    read answer
+    [ "$(echo -n "$answer" | tr [A-Z] [a-z])" = "y" ] && break
+    if [ -z "$answer" -o "$(echo -n "$answer" | tr [A-Z] [a-z])" = "n" ]; then
+        log_error "Abort."
+        exit 1
+    fi
+done
+
 IMAGE_DIR=$(mktemp -d)
 add_cleanup rmdir "$IMAGE_DIR"
 
