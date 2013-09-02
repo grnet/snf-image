@@ -4,16 +4,7 @@ set -e
 
 case "$1" in
     configure|reconfigure)
-	echo "NOTE: To complete the installation of snf-image, download a fixed"
-	echo "NOTE: snf-image-helper image from here:"
-	echo "NOTE:"
-	echo "NOTE: https://code.grnet.gr/projects/snf-image/wiki#Fixed-snf-image-helper-image"
-	echo "NOTE:"
-	echo "NOTE: and extract it's content under /var/lib/snf-image/helper:"
-	echo "NOTE:"
-	echo "NOTE: $ cd /var/lib/snf-image/helper"
-	echo "NOTE: $ tar -xvf /place/where/you/stored/snf_image_helper_image-<version>.tar.xz"
-	echo "NOTE:"
+	/usr/bin/snf-image-update-helper -y
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
