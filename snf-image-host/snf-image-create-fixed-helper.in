@@ -44,8 +44,6 @@ OPTIONS:
     -p PACKAGE
         Install this deb package in the helper image, instead of the default
 
-    -r  Don't use any existing cache
-
     -y  Assume Yes to all queries and do not prompt
 
 EOF
@@ -53,15 +51,13 @@ EOF
     exit "$rc"
 }
 
-while getopts "d:hp:ry" opt; do
+while getopts "d:hp:y" opt; do
     case $opt in
         d) HELPER_DIR="$OPTARG"
             ;;
         h) usage 0
             ;;
         p) HELPER_PKG="$OPTARG"
-            ;;
-        r) NO_CACHE="yes"
             ;;
         y) NO_PROMPT="yes"
             ;;
