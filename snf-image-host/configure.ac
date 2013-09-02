@@ -1,6 +1,7 @@
 AC_PREREQ(2.59)
 m4_include([../version.m4])
 AC_INIT(snf-image, devflow_version, synnefo@googlegroups.com)
+AC_DEFINE_UNQUOTED(VERSION, "$devflow_version")
 
 AC_CONFIG_AUX_DIR(autotools)
 AC_CONFIG_SRCDIR(configure)
@@ -17,6 +18,16 @@ AC_ARG_ENABLE([version_consistency_check],
 if test ${version_check} = yes; then
     AC_SUBST(VERSION_CHECK, yes)
 fi
+
+# --with-helper-url
+AC_ARG_WITH([helper-url],
+  [AS_HELP_STRING([--with-helper-url=URL],
+      [url to download the helper image from [http://cdn.synnefo.org/snf_image_helper_image-PROG_VERSION.tar.xz]])],
+  [helper_url="$withval"],
+  [helper_url="http://cdn.synnefo.org/snf_image_helper_image-$VERSION.tar.xz"]
+)
+
+AC_SUBST(HELPER_URL, $helper_url)
 
 # --with-progress-monitor
 AC_ARG_WITH([progress-monitor],

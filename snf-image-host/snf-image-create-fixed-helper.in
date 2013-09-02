@@ -1,0 +1,244 @@
+#!/bin/bash
+
+# Copyright (C) 2011 GRNET S.A. 
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+set -e
+set -o pipefail
+set -o errtrace
+
+. @osdir@/common.sh
+
+usage() {
+    local rc="$1"
+
+    cat <<EOF
+
+Usage: $0 [options]
+
+This script runs multistrap and creates a small Debian image populated with
+the snf-image-helper package. This image is needed for ganeti's \`snf-image'
+guest OS type to work.
+
+OPTIONS:
+    -d DIRECTORY
+        Use this directory to host the created files, instead of the default
+        [default: $HELPER_DIR]
+
+    -h  Print this message
+
+    -p PACKAGE
+        Install this deb package in the helper image, instead of the default
+
+    -y  Assume Yes to all queries and do not prompt
+
+EOF
+
+    exit "$rc"
+}
+
+while getopts "d:hp:y" opt; do
+    case $opt in
+        d) HELPER_DIR="$OPTARG"
+            ;;
+        h) usage 0
+            ;;
+        p) HELPER_PKG="$OPTARG"
+            ;;
+        y) NO_PROMPT="yes"
+            ;;
+        ?) log_error "Use \`-h' for help"; exit 1
+            ;;
+    esac
+done
+
+echo
+echo "This is the update helper image script for snf-image."
+echo "If you don't know what to do, use \`-h'."
+echo
+
+if [ ! -d "$HELPER_DIR" -o ! -w "$HELPER_DIR" ]; then
+    log_error "Helper directory \`$HELPER_DIR' does not exist or the script" \
+    "has no write permission on it."
+    exit 1
+fi
+
+if [ ! -e "$MULTISTRAP_CONFIG" ]; then
+    log_error "Multistrap configuration file: \`$MULTISTRAP_CONFIG' does not" \
+    "exist or is not readable by the script."
+    exit 1
+fi
+
+cat >&1 <<EOF
+This program will overwrite the following files if present:
+  \`$HELPER_DIR/initrd'
+  \`$HELPER_DIR/kernel'
+  \`$HELPER_DIR/initrd-xen'
+  \`$HELPER_DIR/kernel-xen'
+  \`$HELPER_DIR/image'
+  \`$HELPER_DIR/packages'
+EOF
+
+while [[ 1 ]]; do
+    echo -n "Do you want to continue [y/N]? "
+    if [ "x$NO_PROMPT" = "xyes" ]; then
+        echo "y";
+        break;
+    fi
+
+    read answer
+    [ "$(echo -n "$answer" | tr [A-Z] [a-z])" = "y" ] && break
+    if [ -z "$answer" -o "$(echo -n "$answer" | tr [A-Z] [a-z])" = "n" ]; then
+        log_error "Abort."
+        exit 1
+    fi
+done
+
+rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
+
+echo -n "Allocating space for helper disk image..."
+helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
+add_cleanup rm -f "$helper_img"
+dd if=/dev/zero of="$helper_img" bs=1M count="$HELPER_SIZE" &> /dev/null
+echo "done"
+
+echo "Creating partitions..."
+blockdev=$("$LOSETUP" -sf $helper_img)
+add_cleanup "$LOSETUP" -d "$blockdev"
+
+sleep 1 # sometimes losetup returns and the device is still busy..
+
+format_disk0 "$blockdev" "extdump"  2>&1 | sed -e 's/^/CFDISK: /g'
+
+root_dev=$(map_disk0 "$blockdev")-1
+add_cleanup unmap_disk0 "$blockdev"
+
+echo Creating and configuring filesystem...
+mkfs.ext3 "$root_dev" 2>&1 | sed -e 's/^/MKFS.EXT3: /g'
+# The helper vm should never do filesystem checks...
+tune2fs -i 0 -c 0 "$root_dev" 2>&1 | sed -e 's/^/TUNE2FS: /g'
+
+root_uuid=$(blkid -s UUID -o value "$root_dev")
+
+target=$(mktemp -d)
+add_cleanup rmdir "$target"
+
+mount "$root_dev" "$target"
+add_cleanup umount "$root_dev"
+
+do_multistrap "$target"
+
+# Save the package list
+chroot "$target" dpkg-query -W  > "$HELPER_DIR/packages"
+
+echo -n "Configuring the helper image..."
+echo snf-image-helper > "$target/etc/hostname"
+
+cat > "$target/etc/fstab" <<EOF
+# /etc/fstab: static file system information.
+#
+# <file system>   <mount point>   <type>  <options>       <dump>  <pass>
+UUID=$root_uuid         /               ext3    defaults        0       1
+proc              /proc           proc    defaults        0       0
+EOF
+
+# We need this since we mount the helper VM ro
+ln -sf /proc/mounts "$target/etc/mtab"
+
+echo "done"
+
+echo -n "Extracting kernel..."
+if [ ! -L "$target/vmlinuz" -o ! -L "$target/vmlinuz" ]; then
+    echo -e "\033[1;31mfailed\033[0m"
+    log_error "vmlinuz or initrd.img link in root is missing."
+    log_error "I don't know how to find a usable kernel/initrd pair."
+    exit 1
+fi
+echo "done"
+
+# Make sure extended globbing is enabled
+shopt -s extglob
+
+kernel=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9])-amd64)
+initrd=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9])-amd64)
+
+kernel_xen=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9])-xen-amd64)
+initrd_xen=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9])-xen-amd64)
+
+echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
+cp "$kernel" "$initrd" "$HELPER_DIR"
+
+echo "Moving $(basename "$kernel_xen") and $(basename "$initrd_xen") to \`$HELPER_DIR'"
+cp "$kernel_xen" "$initrd_xen" "$HELPER_DIR"
+
+kernel=$(basename "$kernel")
+initrd=$(basename "$initrd")
+
+kernel_xen=$(basename "$kernel_xen")
+initrd_xen=$(basename "$initrd_xen")
+(cd "$HELPER_DIR"; ln -fs "$kernel" kernel; ln -fs "$initrd" initrd)
+(cd "$HELPER_DIR"; ln -fs "$kernel_xen" kernel-xen; ln -fs "$initrd_xen" initrd-xen)
+
+
+pkg_installed=$(grep snf-image-helper "$HELPER_DIR/packages" > /dev/null && echo yes)
+
+if [ -z "$HELPER_PKG" -a -z "$pkg_installed" ]; then
+    log_error "No helper package was specified and non was found by the apt."
+    exit 1
+fi
+
+if [ -r "$HELPER_PKG" ]; then
+    echo "Installing snf-image-helper pkg in the new image..."
+    cp "$HELPER_PKG" "$target/tmp/"
+    pkg_name=$(basename "$HELPER_PKG")
+    add_cleanup rm "$target/tmp/$pkg_name"
+    chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
+
+    # Recreate package list
+    chroot "$target" dpkg-query -W  > "$HELPER_DIR/packages"
+else
+    echo "snf-image-helper pkg was installed from the apt repository."
+fi
+
+helper_version="$(grep ^snf-image-helper[[:space:]] "$HELPER_DIR/packages" | cut -f2)"
+host_version="$(dpkg-query -W -f "\${Version}\n" snf-image)"
+
+if [ "$VERSION_CHECK" == yes -a -z "$HELPER_PKG" ]; then
+    if [ "$host_version" != "$helper_version" ]; then
+        log_error "snf-image version (=$host_version) and " \
+            "snf-image-helper version (=$helper_version) don't match."
+        exit 1
+    fi
+fi
+
+mv "$helper_img" "$HELPER_DIR/image"
+
+echo "Files in \`$HELPER_DIR' were updated successfully" >&2
+
+TMPDIR=$(mktemp -d)
+
+echo "Creating fixed appliance in \`$TMPDIR':" >&2
+echo >&2
+(cd "$HELPER_DIR"; $TAR -cvf "$TMPDIR/snf_image_helper_image-${helper_version}.tar" "$kernel_xen" "$initrd_xen" "$kernel" "$initrd" kernel initrd kernel-xen initrd-xen image packages)
+echo >&2
+echo -n "Compressing fixed appliance ..." >&2
+(cd "$HELPER_DIR"; $XZ -9 "$TMPDIR/snf_image_helper_image-${helper_version}.tar")
+echo "done" >&2
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
