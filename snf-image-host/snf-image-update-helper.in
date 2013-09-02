@@ -54,7 +54,9 @@ while getopts "hy" opt; do
 done
 
 cat >&1 <<EOF
-This program will overwrite the following files if present:
+
+$(basename $0) will download a suitable snf-image-helper image and will install
+it under $IMAGE_DIR. The following files will be overwritten if present:
   \`$HELPER_DIR/initrd'
   \`$HELPER_DIR/kernel'
   \`$HELPER_DIR/initrd-xen'
@@ -84,15 +86,19 @@ add_cleanup rmdir "$IMAGE_DIR"
 cd "$IMAGE_DIR"
 
 IMAGE=$(basename "$HELPER_URL")
-echo "Downloading helper image: \`$IMAGE'..." >&2
+echo >&2
+echo "Downloading helper image from $HELPER_URL ..." >&2
 $CURL -O -L -f "$HELPER_URL"
 add_cleanup rm -f "$IMAGE_DIR/$IMAGE"
 
 cd "$HELPER_DIR"
 
-echo "Extracting helper image:"
+echo >&2
+echo "Extracting helper image under \`$HELPER_DIR':" >&2
 tar -xvf "$IMAGE_DIR/$IMAGE"
 
+echo >&2
+echo "Helper image was installed successfully!" >&2
 exit 0
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
