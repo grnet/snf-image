@@ -16,7 +16,7 @@ dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
 
 dist_xenscripts_SCRIPTS = ${srcdir}/vif-snf-image
 
-dist_bin_SCRIPTS = snf-image-update-helper
+dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-fixed-helper
 
 os_DATA = ${srcdir}/common.sh
 
@@ -30,6 +30,7 @@ edit = sed \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
 	   -e 's|@VERSION_CHECK[@]|$(VERSION_CHECK)|g' \
 	   -e 's|@HELPER_DIR[@]|$(HELPER_DIR)|g' \
+	   -e 's|@HELPER_URL[@]|$(HELPER_URL)|g' \
 	   -e 's|@AWK[@]|$(AWK)|g' \
 	   -e 's|@MKDIR_P[@]|$(MKDIR_P)|g' \
 	   -e 's|@LOSETUP[@]|$(LOSETUP)|g' \
