@@ -64,8 +64,6 @@ $(basename $0) will download a suitable snf-image-helper image and will install
 it under $IMAGE_DIR. The following files will be overwritten if present:
   \`$HELPER_DIR/initrd'
   \`$HELPER_DIR/kernel'
-  \`$HELPER_DIR/initrd-xen'
-  \`$HELPER_DIR/kernel-xen'
   \`$HELPER_DIR/image'
   \`$HELPER_DIR/packages'
 EOF
