@@ -16,7 +16,7 @@ dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
 
 dist_xenscripts_SCRIPTS = ${srcdir}/vif-snf-image
 
-dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-fixed-helper
+dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-helper
 
 os_DATA = ${srcdir}/common.sh
 
