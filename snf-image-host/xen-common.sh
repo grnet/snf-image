@@ -31,7 +31,7 @@ launch_helper() {
     echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM START" >&2
 
     xm create /dev/null \
-      kernel="$HELPER_DIR/kernel-xen" ramdisk="$HELPER_DIR/initrd-xen" \
+      kernel="$HELPER_DIR/kernel" ramdisk="$HELPER_DIR/initrd" \
       root="/dev/xvda1" memory="256" boot="c" vcpus=1 name="$name" \
       extra="console=hvc0 hypervisor=$HYPERVISOR snf_image_activate_helper \
 	  ipv6.disable=1 rules_dev=/dev/xvdc ro boot=local helper_ip=10.0.0.1 \
