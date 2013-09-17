@@ -44,6 +44,7 @@ Contents:
    architecture
    installation
    usage
+   advanced
 
 Indices and tables
 ==================

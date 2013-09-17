@@ -9,8 +9,8 @@ following OS Parameters:
 
  * **img_format** (required if *config_url* is missing): the image format type
    (:ref:`details <image-format>`)
- * **img_id** (required if *config_url* is missing): the URI used to identify the
-   image (:ref:`details <image-id>`)
+ * **img_id** (required if *config_url* is missing): the URI used to identify
+   the image (:ref:`details <image-id>`)
  * **img_passwd** (required if *config_url* is missing): the password to be
    injected to the image
  * **img_properties** (optional): additional image properties used to customize
@@ -86,16 +86,16 @@ parameter. The following backends are supported:
 
  * **Local back-end**:
    The local back-end is used to retrieve images that are stored in the ganeti
-   node that the image deployment takes place. The local back-end is used if the
-   value of the *img_id* ganeti OS parameter is either prefixed with *file://* or
-   is not prefixed at all. All local images are expected to be found under a
-   predifined image directory. By default */var/lib/snf-image* is used, but the
-   user can change thi directory by overwriting the value of the *IMAGE_DIR*
-   variable under */etc/default/snf-image*. The name of the image file is created
-   by adding the image type extension in the end of the *img_id*. If the *img_id*
-   for example is *file://slackware* and the image type is *diskdump*, snf-image
-   will expect to find an image file under the following path:
-   ``/usr/lib/snf-image/slackware.diskdump``
+   node that the image deployment takes place. The local back-end is used if
+   the value of the *img_id* ganeti OS parameter is either prefixed with
+   *file://* or is not prefixed at all. All local images are expected to be
+   found under a predifined image directory. By default */var/lib/snf-image* is
+   used, but the user can change thi directory by overwriting the value of the
+   *IMAGE_DIR* variable under */etc/default/snf-image*. The name of the image
+   file is created by adding the image type extension in the end of the
+   *img_id*. If the *img_id* for example is *file://slackware* and the image
+   type is *diskdump*, snf-image will expect to find an image file under the
+   following path: ``/usr/lib/snf-image/slackware.diskdump``
 
  * **Network back-end**:
    The network back-end is used to retrieve images that are accessible from the
@@ -105,18 +105,18 @@ parameter. The following backends are supported:
 
  * **Pithos back-end**:
    If an *img_id* is prefixed with *pithos:* or *pithosmap:*, the image is
-   considered to be pithos back-ended. *snf-image* contains a special command-line
-   tool (*pithcat*) for retrieving this kind of images. For *pithosmap:* images,
-   the user needs to have set a valid value for the PITHOS_DATA variable.
-   For *pithos:* images, in addition to PITHOS_DATA, the PITHOS_DB variable needs
-   to contain a valid value. */etc/default/snf-image* may be used to set both
-   values.
+   considered to be pithos back-ended. *snf-image* contains a special
+   command-line tool (*pithcat*) for retrieving this kind of images. For
+   *pithosmap:* images, the user needs to have set a valid value for the
+   *PITHOS_DATA* variable. For *pithos:* images, in addition to PITHOS_DATA,
+   the PITHOS_DB variable needs to contain a valid value.
+   */etc/default/snf-image* may be used to set both values.
 
  * **Null back-end**:
    The null back-end is used if the *img_id* value is *null*. In this case no
-   image copying is performed. This is handy if the hard disk already contains the
-   image data before *snf-image* is executed (for example if the hard disk is a
-   snapshot of an existing VM's hard disk).
+   image copying is performed. This is handy if the hard disk already contains
+   the image data before *snf-image* is executed (for example if the hard disk
+   is a snapshot of an existing VM's hard disk).
 
 .. _image-properties:
 
@@ -179,7 +179,8 @@ Optional properties
 img_properties OS parameter
 +++++++++++++++++++++++++++++++
 
-Image properties are passed to snf_image through the img_properties OS parameter as a simple json string like the one below:
+Image properties are passed to snf_image through the img_properties OS
+parameter as a simple json string like the one below:
 
 | {
 |     "PROPERTY1": "VALUE1",
@@ -192,7 +193,8 @@ Image properties are passed to snf_image through the img_properties OS parameter
 | }
 
 
-A real life example for creating a new ganeti instance and passing image properties to snf-image would probably look more like this:
+A real life example for creating a new ganeti instance and passing image
+properties to snf-image would probably look more like this:
 
 ``gnt-instance add -O img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"2"\,"USERS":"root guest"}',img_format=diskdump...``
 
@@ -245,3 +247,60 @@ their permissions are ``-rw-r--r--`` [#]_
 | ]
 
 .. [#] The first mode is in octal representation and the second in decimal.
+
+Sample Images
+^^^^^^^^^^^^^
+
+While developing *snf-image*, we created and tested a number of images. The
+following images are basic installations of some popular Linux distributions,
+that have been tested with snf-image and provided here for testing purposes:
+
+
+ * Debian Squeeze Base System
+   [`diskdump <http://cdn.synnefo.org/debian_base-6.0-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/debian_base-6.0-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/debian_base-6.0-x86_64.diskdump.meta>`_]
+ * Debian Wheezy Base System
+   [`diskdump <http://cdn.synnefo.org/debian_base-7.0-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/debian_base-7.0-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/debian_base-7.0-x86_64.diskdump.meta>`_]
+ * Debian Desktop
+   [`diskdump <http://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump.meta>`_]
+ * CentOS 6.0
+   [`diskdump <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump.meta>`_]
+ * Fedora Desktop 18
+   [`diskdump <http://cdn.synnefo.org/fedora-18-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/fedora-18-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/fedora-18-x86_64.diskdump.meta>`_]
+ * Ubuntu Desktop LTS 12.04
+   [`diskdump <http://cdn.synnefo.org/ubuntu_desktop-12.04-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/ubuntu_desktop-12.04-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/ubuntu_desktop-12.04-x86_64.diskdump.meta>`_]
+ * Kubuntu LTS 12.04
+   [`diskdump <http://cdn.synnefo.org/kubuntu_desktop-12.04-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/kubuntu_desktop-12.04-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/kubuntu_desktop-12.04-x86_64.diskdump.meta>`_]
+ * Ubuntu Desktop 13.04
+   [`diskdump <http://cdn.synnefo.org/ubuntu_desktop-13.04-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/ubuntu_desktop-13.04-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/ubuntu_desktop-13.04-x86_64.diskdump.meta>`_]
+ * Kubuntu 13.04
+   [`diskdump <http://cdn.synnefo.org/kubuntu_desktop-13.04-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/kubuntu_desktop-13.04-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/kubuntu_desktop-13.04-x86_64.diskdump.meta>`_]
+ * Ubuntu Server 12.04
+   [`diskdump <http://cdn.synnefo.org/ubuntu_server-12.04-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/ubuntu_server-12.04-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/ubuntu_server-12.04-x86_64.diskdump.meta>`_]
+ * OpenSUSE Desktop 12.3
+   [`diskdump <http://cdn.synnefo.org/opensuse_desktop-12.3-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/opensuse_desktop-12.3-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/opensuse_desktop-12.3-x86_64.diskdump.meta>`_]
+ * FreeBSD 9.1
+   [`diskdump <http://cdn.synnefo.org/freebsd-9.1-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/freebsd-9.1-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/freebsd-9.1-x86_64.diskdump.meta>`_]
