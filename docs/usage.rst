@@ -34,21 +34,21 @@ extdump and ntfsdump image formats
 ++++++++++++++++++++++++++++++++++
 
 Those two formats are dumps (raw copies using dd) of partitions hosting Linux
-systems on ext{2,3,4} and Windows systems on ntfs filesystems respectively.
+systems on ext{2,3,4} and Windows systems on ntfs file systems respectively.
 Partitions hosting a Windows or Linux system that are suitable for dumping
 should have the following properties:
 
- * Be the first partition in the filesystem
+ * Be the first partition in the file system
  * The OS they host should not depend on any other partitions
  * Start at sector 2048
- * Have a bootloader installed in the boot sector of the partition (not MBR)
+ * Have a boot loader installed in the boot sector of the partition (not MBR)
  * Have the root device in */etc/fstab* specified in a persistent way, using
    UUID or LABEL (for extdump only)
 
 Known Issues
 ------------
 
- * For linux systems, having grub installed in the partition is fragile and
+ * For Linux systems, having grub installed in the partition is fragile and
    things can go wrong when resizing the partitions, especially when shrinking.
  * More complicated partition schemes are not supported.
 
@@ -62,7 +62,7 @@ This design decision has the following benefits:
 
  * Swap partitions are supported
  * The system may use multiple partitions:
-    * dedicated partitions for /boot, /home etc in linux
+    * dedicated partitions for /boot, /home etc in Linux
     * system and boot partition in Windows
  * There are no restrictions on starting sectors of partitions
 
@@ -82,7 +82,7 @@ Image IDs & Storage back-ends
 
 *snf-image* can use images that are stored in a variety of different back-ends.
 The back-end to be used is determined by the value passed by the *img_id* OS
-parameter. The following backends are supported:
+parameter. The following back-ends are supported:
 
  * **Local back-end**:
    The local back-end is used to retrieve images that are stored in the ganeti
@@ -205,7 +205,7 @@ Personality OS Parameter
 
 This parameter is an extension of the Server Personality notation proposed by
 the OpenStack Compute API v1.1 and defines a list of files to be injected into
-the image filesystem.
+the image file system.
 
 Format
 ++++++
@@ -247,6 +247,9 @@ their permissions are ``-rw-r--r--`` [#]_
 | ]
 
 .. [#] The first mode is in octal representation and the second in decimal.
+
+
+.. _sample-images:
 
 Sample Images
 ^^^^^^^^^^^^^
@@ -304,3 +307,24 @@ that have been tested with snf-image and provided here for testing purposes:
    [`diskdump <http://cdn.synnefo.org/freebsd-9.1-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/freebsd-9.1-x86_64.diskdump.md5sum>`_]
    [`metadata <http://cdn.synnefo.org/freebsd-9.1-x86_64.diskdump.meta>`_]
+
+Sample Usage
+^^^^^^^^^^^^
+
+Download an Image
++++++++++++++++++
+
+Download a :ref:`Sample Image <sample-images>` and store it under IMAGE_DIR.
+Make sure you also have its corresponding metadata file.
+
+Spawn a diskdump image
+++++++++++++++++++++++
+
+If you want to deploy an image of type diskdump, you need to provide the
+corresponding *img_properties* as described in the
+:ref:`Image Format<image-format>` section. If using a diskdump found in the
+:ref:`sample-images` list, use the *img_properties* described in the image's
+metadata file. For example:
+
+``gnt-instance add -o snf-image+default --os-parameters img_passwd=SamplePassw0rd,img_format=diskdump,img_id=debian_base-6.0-7-x86_64,img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"1"}' -t plain --disk=0:size=10G --no-name-check --no-ip-check --no-nics test1``
+

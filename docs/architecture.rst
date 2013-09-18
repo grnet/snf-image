@@ -59,6 +59,8 @@ The architecture is presented below:
 
 .. image:: /images/arch.png
 
+.. _image-configuration-tasks:
+
 Image Configuration Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
