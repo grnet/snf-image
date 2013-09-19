@@ -2,8 +2,8 @@ Architecture
 ============
 
 snf-image is split in two components: The main program running on the Ganeti
-host, with full root privilege (*snf-image* previously *snf-image-host*), and a
-part running inside an unprivileged, helper VM (*snf-image-helper*).
+host with full root privilege (*snf-image* previously *snf-image-host*) and a
+part running inside an unprivileged helper VM (*snf-image-helper*).
 
 snf-image
 ^^^^^^^^^

@@ -23,21 +23,21 @@ For Debian Wheezy add the following lines:
 
 ``deb-src http://apt.dev.grnet.gr squeeze/``
 
-and import the repo's GPG key:
+After you update ``/etc/apt/sources.list`` import the repo's GPG key:
 
 .. code-block:: console
 
   $ curl https://dev.grnet.gr/files/apt-grnetdev.pub | apt-key add -
 
-Install the package using the following commands:
+To install the package use the following commands:
 
 .. code-block:: console
 
   $ apt-get update
   $ apt-get install snf-image
 
-The last command will also download and install the fixed *snf-image-helper*
-appliance in the post install phase of the package installation.
+The last command will also download and install the *snf-image-helper* image in
+the post install phase of the package installation.
 
 Installing snf-image from source
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -65,7 +65,7 @@ Install snf-image:
   $ make install
   $ install -Dm600 defaults /etc/default/snf-image
 
-Install the helper image by executing:
+Finally, install the helper image by executing:
 
 .. code-block:: console
 

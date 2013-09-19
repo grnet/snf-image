@@ -80,9 +80,9 @@ still some rules to follow:
 Image IDs & Storage back-ends
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*snf-image* can use images that are stored in a variety of different back-ends.
-The back-end to be used is determined by the value passed by the *img_id* OS
-parameter. The following back-ends are supported:
+*snf-image* capable of deploying images that are stored in a variety of
+different back-ends. The back-end to be used is determined by the value of the
+*img_id* OS parameter. The following back-ends are supported:
 
  * **Local back-end**:
    The local back-end is used to retrieve images that are stored in the ganeti
@@ -90,10 +90,10 @@ parameter. The following back-ends are supported:
    the value of the *img_id* ganeti OS parameter is either prefixed with
    *file://* or is not prefixed at all. All local images are expected to be
    found under a predifined image directory. By default */var/lib/snf-image* is
-   used, but the user can change thi directory by overwriting the value of the
-   *IMAGE_DIR* variable under */etc/default/snf-image*. The name of the image
+   used, but the user may change this by overwriting the value of the
+   *IMAGE_DIR* variable under ``/etc/default/snf-image``. The name of the image
    file is created by adding the image type extension in the end of the
-   *img_id*. If the *img_id* for example is *file://slackware* and the image
+   *img_id*. For example if the *img_id* is *file://slackware* and the image
    type is *diskdump*, snf-image will expect to find an image file under the
    following path: ``/usr/lib/snf-image/slackware.diskdump``
 
@@ -104,28 +104,28 @@ parameter. The following back-ends are supported:
    image using `cURL <http://curl.haxx.se/>`_.
 
  * **Pithos back-end**:
-   If an *img_id* is prefixed with *pithos:* or *pithosmap:*, the image is
+   If an *img_id* is prefixed with *pithos:* or *pithosmap:* the image is
    considered to be pithos back-ended. *snf-image* contains a special
    command-line tool (*pithcat*) for retrieving this kind of images. For
    *pithosmap:* images, the user needs to have set a valid value for the
    *PITHOS_DATA* variable. For *pithos:* images, in addition to PITHOS_DATA,
-   the PITHOS_DB variable needs to contain a valid value.
-   */etc/default/snf-image* may be used to set both values.
+   the PITHOS_DB variable needs to contain a valid value too.
+   ``/etc/default/snf-image`` may be used to set both values.
 
  * **Null back-end**:
    The null back-end is used if the *img_id* value is *null*. In this case no
-   image copying is performed. This is handy if the hard disk already contains
-   the image data before *snf-image* is executed (for example if the hard disk
-   is a snapshot of an existing VM's hard disk).
+   image copying is performed. This is usefull if the hard disk already
+   contains an OS installation before *snf-image* is executed (for example if
+   the hard disk is a snapshot of an existing VM's hard disk).
 
 .. _image-properties:
 
 Image Properties
 ^^^^^^^^^^^^^^^^
 
-In order for snf-image to be able to properly configure an image, it may make
+In order for *snf-image* to be able to properly configure an image, it may make
 use of a set of image properties. Those image properties are passed to
-snf-image by Ganeti through the img_poroperties OS parameter (see Ganeti OS
+*snf-image* by Ganeti through the *img_poroperties* OS parameter (see Ganeti OS
 Interface). The name of all image properties is case-insensitive. For the
 diskdump format some properties are mandatory. For {ext,ntfs}dump formats all
 image properties are optional.
