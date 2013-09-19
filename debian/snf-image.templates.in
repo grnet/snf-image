@@ -1,7 +1,6 @@
 Template: snf-image/dlurl
 Type: string
-Default:
+Default: http://cdn.synnefo.org/snf_image_helper_image-@VERSION@.tar.xz
 Description: URL to download snf-image-helper from:
  This package already contains a build-in URL to download the helper image from.
- However, if you'd like to use a custom one, please enter the full URL. If not,
- just leave the field blank.
+ However, if you'd like to use a custom one, please enter the full URL.
