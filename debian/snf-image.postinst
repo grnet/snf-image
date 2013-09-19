@@ -10,7 +10,10 @@ URL="$RET"
 if [ -n "$URL" ]; then
     snf-image-update-helper -y -u "$URL"
 else
-    snf-image-update-helper -y
+    echo "You can later download the snf-image-helper image using:"
+    echo
+    echo "    snf-image-update-helper"
+    echo
 fi
 
 
