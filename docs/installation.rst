@@ -19,9 +19,9 @@ add the following lines to ``/etc/apt/sources.list`` file:
 
 For Debian Wheezy add the following lines:
 
-``deb http://apt.dev.grnet.gr squeeze/``
+``deb http://apt.dev.grnet.gr wheezy/``
 
-``deb-src http://apt.dev.grnet.gr squeeze/``
+``deb-src http://apt.dev.grnet.gr wheezy/``
 
 After you update ``/etc/apt/sources.list`` import the repo's GPG key:
 
