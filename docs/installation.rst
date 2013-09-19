@@ -10,8 +10,9 @@ with puppet.
 Installing snf-image using packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For Debian Linux we provide packages in our apt repository. For Debian Squeeze
-add the following lines to ``/etc/apt/sources.list`` file:
+For Debian GNU/Linux and Ubuntu we provide packages in our apt repository.
+
+For Debian Squeeze add the following lines to ``/etc/apt/sources.list`` file:
 
 ``deb http://apt.dev.grnet.gr squeeze/``
 
@@ -22,6 +23,12 @@ For Debian Wheezy add the following lines:
 ``deb http://apt.dev.grnet.gr wheezy/``
 
 ``deb-src http://apt.dev.grnet.gr wheezy/``
+
+For Ubuntu 12.04 LTS add the following lines:
+
+``deb http://apt.dev.grnet.gr precise/``
+
+``deb-src http://apt.dev.grnet.gr precise/``
 
 After you update ``/etc/apt/sources.list`` import the repo's GPG key:
 
