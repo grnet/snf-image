@@ -3,4 +3,6 @@ Type: string
 Default: http://cdn.synnefo.org/snf_image_helper_image-@VERSION@.tar.xz
 Description: URL to download snf-image-helper from:
  This package already contains a build-in URL to download the helper image from.
- However, if you'd like to use a custom one, please enter the full URL.
+ However, if you'd like to use a custom one, please enter the full URL. If you
+ don't want the package to download the helper image at all, leave this field
+ blank.
