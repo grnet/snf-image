@@ -22,6 +22,14 @@ set -o errtrace
 
 . @osdir@/common.sh
 
+DEFAULT_FILE="@sysconfdir@/default/snf-image-update-helper"
+
+if [ -f "$DEFAULT_FILE" ]; then
+    . "$DEFAULT_FILE"
+fi
+
+: ${HELPER_URL:="@HELPER_URL@"}
+
 usage() {
     local rc="$1"
 
