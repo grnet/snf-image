@@ -48,18 +48,22 @@ OPTIONS:
 
     -y Assume Yes to all queries and do not prompt
 
+    -f Force the installation even if the snf-image and helper versions don't match
+
 EOF
 
     exit "$rc"
 }
 
-while getopts "hu:y" opt; do
+while getopts "hu:yf" opt; do
     case $opt in
         h) usage 0
             ;;
         u) HELPER_URL="$OPTARG"
             ;;
         y) NO_PROMPT="yes"
+            ;;
+        f) FORCE="yes"
             ;;
         ?) log_error "User \`-h' for help"; exit 1
             ;;
@@ -74,6 +78,7 @@ it under $IMAGE_DIR. The following files will be overwritten if present:
   \`$HELPER_DIR/kernel'
   \`$HELPER_DIR/image'
   \`$HELPER_DIR/packages'
+  \`$HELPER_DIR/version'
 EOF
 
 while [[ 1 ]]; do
@@ -107,6 +112,22 @@ cd "$HELPER_DIR"
 echo >&2
 echo "Extracting helper image under \`$HELPER_DIR':" >&2
 tar -xvf "$IMAGE_DIR/$IMAGE"
+
+if [ "x$FORCE" != "xyes" ]; then
+    echo >&2
+    echo "Checking helper image version ..." >&2
+    if [ ! -f "$HELPER_DIR/version" ]; then
+        log_error "File: \`$HELPER_DIR/version' is missing!"
+        exit 1
+    fi
+    helper_version="$(cat $HELPER_DIR/version)"
+    if [ "x$SNF_IMAGE_VERSION" != "x$helper_version" ]; then
+        log_error "snf-image version (=$SNF_IMAGE_VERSION) and " \
+            "helper image version (=$helper_version) don't match!"
+        log_error "Use \`-f' to bypass the version check."
+        exit 1
+    fi
+fi
 
 echo >&2
 echo "Helper image was installed successfully!" >&2

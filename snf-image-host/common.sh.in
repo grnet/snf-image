@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+SNF_IMAGE_VERSION="@VERSION@"
+
 AWK="awk"
 LOSETUP="losetup"
 KPARTX="kpartx"
