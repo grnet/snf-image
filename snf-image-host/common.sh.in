@@ -25,7 +25,6 @@ INSTALL_MBR="install-mbr"
 TIMEOUT="timeout"
 CURL="curl"
 TAR="tar"
-XZ="xz"
 DATE="date -u" # Time in UTC
 
 # Temporary use stderr as monitoring file descriptor.

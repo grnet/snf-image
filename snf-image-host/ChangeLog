@@ -1,3 +1,8 @@
+2013-09-19, v0.10
+	* Move the snf-image-helper image from squeeze to wheezy
+	* Add documentations under /docs
+	* Fix a bug in the network back-end
+
 2013-09-02, v0.9.3
 	* Add code to download and install a fixed snf-image-helper image. This is the default
 	  behaviour for snf-image-update-helper.

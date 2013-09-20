@@ -2,18 +2,14 @@ Package: snf-image-helper
 Pin: version 0.9.1*
 Pin-Priority: 1001
 
-Package: ntfs-3g
-Pin: version 1:2010.3.6+no-mtab-fix-1
-Pin-Priority: 1001
-
 Package: ufsutils
-Pin: version 8.2-3+grnet.growfs.fix
+Pin: version 8.2-3+wheezy+grnet.growfs.fix
 Pin-Priority: 1001
 
-Package: linux-image-2.6.32-5-amd64
-Pin: version 2.6.32-48squeeze1+ufs.rw
+Package: linux-image-3.2.0-4-amd64
+Pin: version 3.2.46-1+deb7u1+ufs.rw
 Pin-Priority: 1001
 
-Package: linux-image-2.6.32-5-xen-amd64
-Pin: version 2.6.32-48squeeze1+ufs.rw
+Package: xen-linux-system-3.2.0-4-amd64
+Pin: version 3.2.46-1+deb7u1+ufs.rw
 Pin-Priority: 1001

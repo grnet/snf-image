@@ -71,7 +71,7 @@ case $BACKEND_TYPE in
         BACKEND_TYPE="local"
         ;;
     network)
-        image_cmd="$CURL $(printf "%q" "$IMAGE_NAME") 2> /dev/null"
+        image_cmd="$CURL $(printf "%q" "$IMAGE_NAME")"
         image_size=$($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
         ;;
     pithos)
