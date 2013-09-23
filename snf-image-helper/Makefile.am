@@ -5,7 +5,7 @@ export commondir scriptsdir tasksdir
 
 SUBDIRS = tasks
 
-dist_doc_DATA = COPYING AUTHORS ChangeLog
+dist_doc_DATA = COPYING AUTHORS
 dist_bin_SCRIPTS = snf-image-helper
 dist_scripts_SCRIPTS= snf-passtohash.py inject-files.py decode-properties.py
 dist_common_DATA = common.sh unattend.xml
