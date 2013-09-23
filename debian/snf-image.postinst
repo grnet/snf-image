@@ -1,21 +1,71 @@
-#!/bin/sh
+#!/bin/bash -e
 
-set -e
 
-. /usr/share/debconf/confmodule
+CONFFILE=/etc/default/snf-image-update-helper
 
-db_get snf-image/dlurl
-URL="$RET"
-
-if [ -n "$URL" ]; then
-    snf-image-update-helper -y -u "$URL"
-else
-    echo "You can later download the snf-image-helper image using:"
+update_helper_msg()
+{
+    echo "This package will not work until a working snf-image-helper images is"
+    echo "installed under: \`/var/lib/snf-image/helper'. You can later download and"
+    echo "install the snf-image-helper image using the command:"
     echo
     echo "    snf-image-update-helper"
     echo
-fi
+}
 
+create_conffile()
+{
+    cat > $1 <<EOF
+###DEBCONF###
+# the configuration of this file will be done by debconf as long as the
+# first line of the file says '###DEBCONF###'
+#
+# you should use dpkg-reconfigure snf-image to configure this file and
+# install the snf-image-helper image
+#
+# HELPER_URL: URL to use to download the snf-image-helper image
+$(set | grep ^HELPER_URL=)
+
+EOF
+}
+
+add_debconf_signature()
+{
+    TMPCONF=$(mktmep --tmpdir=/etc/default)
+    mv "$1" "$TMPCONF"
+    cat > "$1" <<EOF
+###DEBCONF###
+EOF
+    cat "$TMPCONF" >> "$1"
+    rm -f "$TMPCONF"
+}
+
+case "$1" in
+   configure)
+	. /usr/share/debconf/confmodule
+	db_get snf-image/dlurl
+	HELPER_URL="$RET"
+        if [ -n "$HELPER_URL" ]; then
+		if [ ! -e "$CONFFILE" ]; then
+		    create_conffile "$CONFFILE"
+        	elif head -1 "$CONFFILE" | grep -q '^###DEBCONF###' > /dev/null; then
+		    create_conffile "$CONFFILE"
+        	else
+		    add_debconf_signature "$CONFFILE"
+		fi
+		snf-image-update-helper -y
+	else
+		update_helper_msg
+	fi
+	;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+	exit 0
+	;;
+    *)
+	echo "postinst called with unknown argument \`$1'" >&2
+	exit 1
+	;;
+esac
 
 #DEBHELPER#
 
