@@ -1,3 +1,8 @@
+2013-09-23, v0.10.1
+	* Merge the ChangeLog files of snf-image and snf-image-helper
+	* Add version check in snf-image-update-helper
+	* Remove HELPER_URL from common.in
+
 2013-09-19, v0.10
 	* Move the snf-image-helper image from squeeze to wheezy
 	* Add documentations under /docs
