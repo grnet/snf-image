@@ -1,3 +1,8 @@
+2013-09-23, v0.10.1
+	* Merge the ChangeLog files of snf-image and snf-image-helper
+	* Add version check in snf-image-update-helper
+	* Remove HELPER_URL from common.in
+
 2013-09-19, v0.10
 	* Move the snf-image-helper image from squeeze to wheezy
 	* Add documentations under /docs
@@ -17,6 +22,7 @@
 
 2013-04-23, v0.9
 	* Add support for FreeBSD images
+	* HELPER: Fix a few bugs in the helper monitoring system
 
 2013-03-12, v0.8.1
 	* Fix a bug in helper-monitor.py
@@ -29,9 +35,14 @@
 	* Increase the default HELPER_SIZE and TIMEOUT values
 	* Cleanup the code and remove settings no longer used
 	* Rename snf-image-host to snf-image
+	* HELPER: Add support for xen
+	* HELPER: Cleanup the helper code
 
 2013-01-21, v0.7.6
 	* Make the size of the helper VM image configurable
+	* HELPER: Mount /proc and /dev before chrooting
+	* HELPER: Fix a bug in DeleteSSHKeys task where the code for checking for
+	  non-default keys was never called.
 
 2013-01-17, v0.7.5
 	* Cleanup defaults file and remove redundant variables
@@ -39,15 +50,27 @@
 	  passed with ./configure
 
 2013-01-08, v0.7.4
+	* HELPER: Fix a bug in the code that determines which partition to resize
+	* HELPER: On linux images, mount all local partition during deployment. Not
+	  just /.
 
 2013-01-04, v0.7.3
 	* Fix multistrap.conf to work with apt2.dev.grnet.gr
 
 2013-01-04, v0.7.2
 	* Change snf-image-helper repository to apt2.dev.grnet.gr
+	* HELPER: In windows images make sure the file C:\Window\panther\Unattend.xml
+	  gets removed after sysprep runs
+	* HELPER: Support extended partitions with id 0x0f
+	* HELPER: Fix a bug in the error monitoring system
+	* HELPER: Fix a bug in AssignHostname for archlinux images
+	* HELPER: In AssignHostname check for the presence of /etc/hostname before
+	  trying to determine the disto of a Linux image.
 
 2012-12-07, v0.7.1
 	* Make pithcat work with pithosmap URLs
+	* HELPER: Fix a race condition where in some cases could lead to a kernel
+	  panic for the helper VM.
 
 2012-12-03, v0.7
 	* Abandon debootstrap in favor of multistrap. This way we can define
@@ -61,8 +84,16 @@
 	  local file system using the -p variable.
 	* Specify snf-image-helper as the init process when running the helper
 	  VM
+	* HELPER: Make snf-image-helper the init process of the system
+	* HELPER: Shutdown the helper image fast using the apropriate SysRq key
+	* HELPER: Use eatmydata to omit the syncs performed by resize2fs when
+	  resizing a file system. You can supress this behaviour by defining
+	  the DO_SYNC image property.
 
 2012-11-20, v0.6.5
+	* HELPER: Fix a bug in AssignHostname configuration task where the script did
+	  not search for the presence of the Unattend.xml file in the VM, in
+	  a case-insensitive way
 
 2012-11-15, v0.6.4
 	* Fix a bug in snf-image-update-helper introduced in v0.6.3
@@ -70,11 +101,18 @@
 2012-11-13, v0.6.3
 	* Fix a bug in snf-image-update-helper where the temporary image file
 	  was not removed if an error occured.
+	* HELPER: Don't overwrite C:\Unattend.xml file in windows images, unless the
+	  image property USE_DEFAULT_UNATTEND is defined.
+	* HELPER: Fix a bug in the error monitoring system
+	* HELPER: Correct some error messages
 
 2012-10-12, v0.6.2
 	* Seperate the error messages that should be logged by the system from
 	  those that should be propagated to the user through the monitoring
 	  mechanism. Don't allow internal configuration options get revieled to
+	* HELPER: Remove the rule of updating the password for user `user' in Fedora
+	  and Ubuntu when the USERS image property is missing.
+	* HELPER: Check if a user exists before updating its password.
 	  the user.
 
 2012-10-05, v0.6.1
@@ -89,6 +127,9 @@
 	* Fix import and export scripts
 	* Add new config_url os parameter. This can be used by snf-image to
 	  download a json file that contains the value for other os parameters
+	* HELPER: Make sure EnforcePersonality is the last task that runs before
+	  UmountImage. Doing this ensures that user-enjected files never
+	  get overwritten by any other configuration task.
 
 2012-08-31, v0.5
 	* Add a new progress monitoring mechanism. With this new mechanism,
@@ -99,10 +140,15 @@
 	* Add support for null image backend type. This backend type can be
 	  used if we want snf-image to configure the VM disk without first
 	  copying an image to it.
+	* HELPER: Add a new progress monitoring mechanish
+	* HELPER: Add support for arch linux
 
 2012-06-29, v0.4.2
+	* HELPER: Make the name of image properties case-insensitive
 
 2012-05-28, v0.4.1
+	* HELPER: Fix a bug in FixPartitionTable where in some cases the script
+	  failed to create the logical swap partition.
 
 2012-05-17, v0.4
 	* Remove progress-monitor-support flag. An external progress monitor
@@ -115,6 +161,10 @@
 	  performed. If a cache file is found, snf-update-helper will use this
 	  list to determine if it is OK to use this cache file or not.
 	* Add mechanism for overwritting the helper's Unattend.xml file
+	* HELPER: Add support for creating SWAP partitions
+	* HELPER: Add support for GPT partition tables
+	* HELPER: Add support for resizing logical partitions
+	* HELPER: Add mechanism for overwritting Unattend.xml
 
 2012-03-29, v0.3.6
 	* Make snf-image-update-helper ask whether to use the found deboostrap
@@ -123,29 +173,43 @@
 	  option is used and it's value does not point to a cache file.
 
 2012-03-26, v0.3.5
+	* HELPER: Force Automatic Update in Windows images
 
 2012-03-05, v0.3.4
+	* HELPER: Fix 2 bugs in Delete SSH Keys task, caused by the use of pipefail
+	  bash option
 
 2012-02-29, v0.3.3
 	* Fix a bug in pithcat where the restored image had incorrect
 	  size. The trailing zeros in the image files where not restored.
+	* HELPER: Check if the images partition table is valid
 
 2012-02-06, v0.3.2
 	* Make pithcat work with pithos v0.8.3
 
 2012-01-26, v0.3.1
+	* HELPER:  Fix a bug in the OS detection code
 
 2011-01-12, v0.3
 	* Put all helpers run-time created files in a tmpfs jail
 	* Remove the ARCH field from the image name
 	* Support remote (network accessable) and pithos hosted images
 	* Remove custom images format (remote images is a supergroup)
+	* HELPER: Warn and in some cases fail if the instance is of an unknown
+	* HELPER: Force a resize when the filesystem is clean, even if resize2fs
+	  complains
+	* HELPER: Make sure OSFAMILY image property is specified
 
 2011-11-18, v0.2
 	* Support diskdump format
 	* Support custom images format. Custom images are diskdump images
 	  that can be accessed from a URL
 	* Add a new OS parameter (img_properties)
+	* HELPER: Add support for Image Properties
+	* HELPER: Add new FixPartitionTable task
+	* HELPER: Add new task that disables RDP connections during windows setup
+	* HELPER: Extend image personalization to support custom ownership and
+	  permissions in the injected files
 
 2011-10-20, v0.1.2
 	* Fix a debootstrap bug in snf-image-update-helper
@@ -156,6 +220,8 @@
 2011-10-17, v0.1.1
 	* Replace $(var) with ${var} in defaults file.
 	* Fix a dangerous-use-of-xargs bug in create.
+	* HELPER: Fix a bug in ChangePassword task
+	* HELPER: Add timestamps in output of the tasks
 
 2011-10-04, v0.1
 	* Initial release
