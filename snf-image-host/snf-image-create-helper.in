@@ -215,6 +215,8 @@ fi
 
 mv "$helper_img" "$HELPER_DIR/image"
 
+echo "$SNF_IMAGE_VERSION" > "$HELPER_DIR/version"
+
 echo "Files in \`$HELPER_DIR' were updated successfully" >&2
 
 exit 0
