@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+SNF_IMAGE_VERSION="@VERSION@"
+
 AWK="awk"
 LOSETUP="losetup"
 KPARTX="kpartx"
@@ -25,7 +27,6 @@ INSTALL_MBR="install-mbr"
 TIMEOUT="timeout"
 CURL="curl"
 TAR="tar"
-XZ="xz"
 DATE="date -u" # Time in UTC
 
 # Temporary use stderr as monitoring file descriptor.
@@ -419,7 +420,6 @@ fi
 : ${IMAGE_DEBUG:="no"}
 : ${VERSION_CHECK:="@VERSION_CHECK@"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
-: ${HELPER_URL:="@HELPER_URL@"}
 : ${HELPER_SIZE:="600"}
 : ${HELPER_SOFT_TIMEOUT:=120}
 : ${HELPER_HARD_TIMEOUT:=5}

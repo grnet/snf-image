@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ while getopts "d:hp:y" opt; do
 done
 
 echo
-echo "This is the update helper image script for snf-image."
+echo "This is the helper image creation script for snf-image."
 echo "If you don't know what to do, use \`-h'."
 echo
 
@@ -87,8 +87,6 @@ cat >&1 <<EOF
 This program will overwrite the following files if present:
   \`$HELPER_DIR/initrd'
   \`$HELPER_DIR/kernel'
-  \`$HELPER_DIR/initrd-xen'
-  \`$HELPER_DIR/kernel-xen'
   \`$HELPER_DIR/image'
   \`$HELPER_DIR/packages'
 EOF
@@ -176,23 +174,13 @@ shopt -s extglob
 kernel=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9])-amd64)
 initrd=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9])-amd64)
 
-kernel_xen=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9])-xen-amd64)
-initrd_xen=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9])-xen-amd64)
-
 echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
 cp "$kernel" "$initrd" "$HELPER_DIR"
-
-echo "Moving $(basename "$kernel_xen") and $(basename "$initrd_xen") to \`$HELPER_DIR'"
-cp "$kernel_xen" "$initrd_xen" "$HELPER_DIR"
 
 kernel=$(basename "$kernel")
 initrd=$(basename "$initrd")
 
-kernel_xen=$(basename "$kernel_xen")
-initrd_xen=$(basename "$initrd_xen")
 (cd "$HELPER_DIR"; ln -fs "$kernel" kernel; ln -fs "$initrd" initrd)
-(cd "$HELPER_DIR"; ln -fs "$kernel_xen" kernel-xen; ln -fs "$initrd_xen" initrd-xen)
-
 
 pkg_installed=$(grep snf-image-helper "$HELPER_DIR/packages" > /dev/null && echo yes)
 
@@ -227,17 +215,9 @@ fi
 
 mv "$helper_img" "$HELPER_DIR/image"
 
+echo "$SNF_IMAGE_VERSION" > "$HELPER_DIR/version"
+
 echo "Files in \`$HELPER_DIR' were updated successfully" >&2
-
-TMPDIR=$(mktemp -d)
-
-echo "Creating fixed appliance in \`$TMPDIR':" >&2
-echo >&2
-(cd "$HELPER_DIR"; $TAR -cvf "$TMPDIR/snf_image_helper_image-${helper_version}.tar" "$kernel_xen" "$initrd_xen" "$kernel" "$initrd" kernel initrd kernel-xen initrd-xen image packages)
-echo >&2
-echo -n "Compressing fixed appliance ..." >&2
-(cd "$HELPER_DIR"; $XZ -9 "$TMPDIR/snf_image_helper_image-${helper_version}.tar")
-echo "done" >&2
 
 exit 0
 

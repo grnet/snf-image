@@ -16,11 +16,11 @@ dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
 
 dist_xenscripts_SCRIPTS = ${srcdir}/vif-snf-image
 
-dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-fixed-helper
+dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-helper
 
 os_DATA = ${srcdir}/common.sh
 
-example_DATA = defaults multistrap.conf version_pinning.pref repo_pinning.pref
+example_DATA = defaults multistrap.conf version_pinning.pref
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
@@ -28,6 +28,7 @@ edit = sed \
 	   -e 's|@osdir[@]|$(osdir)|g' \
 	   -e 's|@osname[@]|$(osname)|g' \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
+	   -e 's|@VERSION[@]|$(VERSION)|g' \
 	   -e 's|@VERSION_CHECK[@]|$(VERSION_CHECK)|g' \
 	   -e 's|@HELPER_DIR[@]|$(HELPER_DIR)|g' \
 	   -e 's|@HELPER_URL[@]|$(HELPER_URL)|g' \
