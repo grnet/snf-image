@@ -16,7 +16,7 @@ update_helper_msg()
 create_conffile()
 {
     cat > $1 <<EOF
-###DEBCONF###                                                                   
+###DEBCONF###
 # the configuration of this file will be done by debconf as long as the
 # first line of the file says '###DEBCONF###'
 #
@@ -55,7 +55,7 @@ case "$1" in
 		fi
 		snf-image-update-helper -y
 	else
-		update_helper_msg		
+		update_helper_msg
 	fi
 	;;
     abort-upgrade|abort-remove|abort-deconfigure)
