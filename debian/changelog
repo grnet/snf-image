@@ -1,3 +1,9 @@
+snf-image (0.10.1-1~squeeze) squeeze; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 24 Sep 2013 11:54:46 +0300
+
 snf-image (0.9.3-1~squeeze) squeeze; urgency=low
 
   * New upstream version
