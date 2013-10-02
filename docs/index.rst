@@ -40,6 +40,7 @@ Contents:
    :maxdepth: 2
 
    architecture
+   interface
    installation
    usage
    advanced
