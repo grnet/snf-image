@@ -81,20 +81,25 @@ to be used. If no prefix is used, it defaults to the local backend:
 
 .. _image-properties:
 
-Image Properties
-^^^^^^^^^^^^^^^^
+Image Properties (img_properties)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order for *snf-image* to be able to properly configure an image, it may make
-use of a set of image properties. Those image properties are passed to
-*snf-image* by Ganeti through the *img_poroperties* OS parameter (see Ganeti OS
-Interface). The name of all image properties is case-insensitive. For the
-diskdump format some properties are mandatory. For {ext,ntfs}dump formats all
-image properties are optional.
+*snf-image* may use a number of properties to properly configure the image.
+Those image properties are passed to snf-image by Ganeti through the
+*img_poroperties* OS parameter (see Ganeti OS Interface). The name of all image
+properties is case-insensitive. For the diskdump format some properties are
+mandatory. For {ext,ntfs}dump formats all image properties are optional.
 
-A list of mandatory and optional properties follows:
+We can group image properties in two categories:
 
-Mandatory properties (diskdump only)
-++++++++++++++++++++++++++++++++++++
+1. Generic properties (*OSFAMILY*, *ROOT_PARTITION*, *USERS*)
+2. Configuration tasks to run (*EXCLUDE_ALL_TASKS*, *EXCLUDE_TASK_<task_name>*)
+   (see here for :ref:`valid configuration tasks <image-configuration-tasks>`)
+
+A list of all properties follows:
+
+Mandatory properties (for diskdump only)
+++++++++++++++++++++++++++++++++++++++++
 
  * **OSFAMILY={linux,windows}**
    This specifies whether the image is a Linux or a Windows Image.
@@ -136,9 +141,8 @@ Optional properties
    will probably end up with an unsuccessful deployment because B will fail and
    exit in an abnormal way. You can read more about configuration tasks here.
 
-
 img_properties OS parameter
-+++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++
 
 Image properties are passed to snf_image through the img_properties OS
 parameter as a simple json string like the one below:
@@ -154,15 +158,17 @@ parameter as a simple json string like the one below:
 | }
 
 
-A real life example for creating a new ganeti instance and passing image
-properties to snf-image would probably look more like this:
+A real life example for creating a new Ganeti instance and passing image
+properties to snf-image looks like this:
 
-``gnt-instance add -O img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"2"\,"USERS":"root guest"}',img_format=diskdump...``
+.. code-block:: console
+
+   ``gnt-instance add -O img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"2"\,"USERS":"root guest"}',img_format=diskdump,img_id=...``
 
 .. _image-personality:
 
-Personality OS Parameter
-^^^^^^^^^^^^^^^^^^^^^^^^
+Image Personality (img_personality)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This parameter is an extension of the Server Personality notation proposed by
 the OpenStack Compute API v1.1 and defines a list of files to be injected into
