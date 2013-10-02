@@ -21,8 +21,8 @@ following OS Parameters:
 
 .. _image-format:
 
-Image Format
-^^^^^^^^^^^^
+Image Format (img_format)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 snf-image supports 3 different types of image formats:
 
@@ -38,46 +38,46 @@ image formats please see the :ref:`corresponding advanced section
 
 .. _image-id:
 
-Image IDs & Storage back-ends
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Image ID (img_id)
+^^^^^^^^^^^^^^^^^
 
-*snf-image* capable of deploying images that are stored in a variety of
-different back-ends. The back-end to be used is determined by the value of the
-*img_id* OS parameter. The following back-ends are supported:
+The **img_id** OS parameter points to the actual Image that we want to deploy.
+It is a URI and its prefix denotes the type of :ref:`backend <storage-backends>`
+to be used. If no prefix is used, it defaults to the local backend:
 
- * **Local back-end**:
-   The local back-end is used to retrieve images that are stored in the ganeti
-   node that the image deployment takes place. The local back-end is used if
-   the value of the *img_id* ganeti OS parameter is either prefixed with
-   *file://* or is not prefixed at all. All local images are expected to be
-   found under a predifined image directory. By default */var/lib/snf-image* is
-   used, but the user may change this by overwriting the value of the
-   *IMAGE_DIR* variable under ``/etc/default/snf-image``. The name of the image
-   file is created by adding the image type extension in the end of the
-   *img_id*. For example if the *img_id* is *file://slackware* and the image
-   type is *diskdump*, snf-image will expect to find an image file under the
-   following path: ``/usr/lib/snf-image/slackware.diskdump``
+ * **Local backend**:
+   To select it, the prefix should be ``file://``, followed by the name of the
+   image. All local images are expected to be found under a predefined image
+   directory (``/var/lib/snf-image`` by default). The name of the actual file
+   should be ``<img_id>.<img_format>``.
+   | For example, if we want to deploy the image file:
+   | ``/var/lib/snf-image/slackware.diskdump``
+   | Then:
+   | ``img_format=diskdump`` and ``img_id=file://slackware``
 
- * **Network back-end**:
-   The network back-end is used to retrieve images that are accessible from the
-   network. If the *imd_id* starts with *http:*, *https:*, *ftp:* or *ftps:*,
-   snf-image will treat the *img_id* as a remote URL and will try to fetch the
+ * **Network backend**:
+   If the **imd_id** starts with ``http:``, ``https:``, ``ftp:`` or ``ftps:``,
+   snf-image will treat the **img_id** as a remote URL and will try to fetch the
    image using `cURL <http://curl.haxx.se/>`_.
+   | For example, if we want to deploy an image from an http location:
+   | ``img_id=http://www.synnefo.org/path/to/image/slackware-image``
 
- * **Pithos back-end**:
-   If an *img_id* is prefixed with *pithos:* or *pithosmap:* the image is
-   considered to be pithos back-ended. *snf-image* contains a special
-   command-line tool (*pithcat*) for retrieving this kind of images. For
-   *pithosmap:* images, the user needs to have set a valid value for the
-   *PITHOS_DATA* variable. For *pithos:* images, in addition to PITHOS_DATA,
-   the PITHOS_DB variable needs to contain a valid value too.
-   ``/etc/default/snf-image`` may be used to set both values.
+ * **Pithos backend**:
+   If the **img_id** is prefixed with ``pithos://`` or ``pithosmap://`` the
+   image is considered to reside on a Pithos deployment. For ``pithosmap://``
+   images, the user needs to have set a valid value for the
+   ``PITHOS_DATA`` variable in snf-image's configuration file
+   (``/etc/default/snf-image`` by default). For ``pithos://`` images, in
+   addition to ``PITHOS_DATA``, the user needs to have set a valid value for the
+   ``PITHOS_DB`` variable, too.
+   | For example, if we want to deploy using a full Pithos URI:
+   | ``img_id=pithos://<user-uuid>/<container>/<slackware-image>``
+   | or if we already know the map:
+   | ``img_id=pithosmap://<slackware-image-map-name>``
 
- * **Null back-end**:
-   The null back-end is used if the *img_id* value is *null*. In this case no
-   image copying is performed. This is usefull if the hard disk already
-   contains an OS installation before *snf-image* is executed (for example if
-   the hard disk is a snapshot of an existing VM's hard disk).
+ * **Null backend**:
+   To select the Null backend and skip the fetching and extraction step, we set
+   ``img_id=null``.
 
 .. _image-properties:
 

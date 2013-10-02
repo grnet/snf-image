@@ -80,14 +80,49 @@ The architecture is presented below:
 
 .. image:: /images/arch.png
 
+
+.. _storage-backends:
+
+Storage backends
+^^^^^^^^^^^^^^^^
+
+As stated above, for step (1), *snf-image* is capable of fetching images that
+are stored in a variety of different backends and then extracting them onto the
+newly created block device. The following backends are supported:
+
+ * **Local backend**:
+   The local backend is used to retrieve images that are stored on the Ganeti
+   node that the image deployment takes place. All local images are expected to be
+   found under a predifined image directory. By default */var/lib/snf-image* is
+   used, but the user may change this by overwriting the value of the
+   *IMAGE_DIR* variable under ``/etc/default/snf-image``.
+
+ * **Network backend**:
+   The network backend is used to retrieve images that are accessible from the
+   network. snf-image can fetch images via *http:*, *https:*, *ftp:* or *ftps:*,
+   using `cURL <http://curl.haxx.se/>`_.
+
+ * **Pithos backend**:
+   *snf-image* contains a special command-line tool (*pithcat*) for retrieving
+   images residing on a Pithos installation. To set up snf-image's Pithos backend
+   the user needs to setup the ``PITHOS_DATA`` and ``PITHOS_DB`` variables inside
+   ``/etc/default/snf-image`` accordingly.
+
+ * **Null backend**:
+   If the null backend is selected, no image copying is performed. This actually
+   is meant for bypassing step (1) alltogether. This is useful, if the disk
+   provisioned by Ganeti already contains an OS installation before *snf-image* is
+   executed (for example if the disk was created as a clone of an existing VM's
+   hard disk).
+
 .. _image-configuration-tasks:
 
 Image Configuration Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Configuration tasks are scripts called by snf-image-helper to accomplish
-various configuration steps on the newly created instance. See below for a
-description of each one of them:
+Configuration tasks are scripts called by snf-image-helper inside the helper VM
+to accomplish various configuration steps on the newly created instance. See
+below for a description of each one of them:
 
 **FixPartitionTable**: Enlarges the last partition in the partition table of
 the instance, to consume all the available space and optionally adds a swap
