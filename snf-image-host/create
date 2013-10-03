@@ -56,7 +56,21 @@ trap report_and_cleanup EXIT
 
 case $BACKEND_TYPE in
     local)
-        image_file="$IMAGE_DIR/$(echo "$IMAGE_NAME" | sed 's/^file://').$IMAGE_TYPE"
+        if [[ "$IMAGE_NAME" =~ ^local:// ]]; then
+            IMAGE_NAME="${IMAGE_NAME:8}"
+        elif [[ "$IMAGE_NAME" =~ ^file:// ]]; then
+            IMAGE_NAME="${IMAGE_NAME:7}"
+            log_warning "The file:// back-end identifier is deprecated and " \
+                        "will be removed in the future. Use local:// instead."
+        fi
+
+        if [ "$IMAGE_NAME" != "${IMAGE_NAME##*/}" ]; then
+            report_error "Image id is not allowed to contain /'s"
+            log_error "Image id is not allowed to contain /'s"
+            exit 1
+        fi
+
+        image_file="$IMAGE_DIR/$IMAGE_NAME.$IMAGE_TYPE"
         if [ ! -e "$image_file" ]; then
             log_error "Image file \`$image_file' does not exit."
             report_error "Unable to retrieve image file."
