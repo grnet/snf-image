@@ -263,6 +263,27 @@ get_backend_type() {
     fi
 }
 
+canonicalize() {
+    local name="$1"
+
+    if [ -d "$name" ]; then
+        name="$name/"
+    fi
+
+    local dname="${name%/*}"
+    local fname="${name##*/}"
+
+    if [ "x$dname" = "x" -a "${name:0:1}" = "/" ]; then
+        dname="/"
+    fi
+
+    if [ -d "$dname" ]; then
+        (cd -- "$dname" && echo "${PWD%/}/$fname")
+    else
+        echo
+    fi
+}
+
 # this one is only to be called by create
 ganeti_os_main() {
     if [ -z "$OS_API_VERSION" -o "$OS_API_VERSION" = "5" ]; then

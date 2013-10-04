@@ -64,18 +64,27 @@ case $BACKEND_TYPE in
                         "will be removed in the future. Use local:// instead."
         fi
 
-        if [ "$IMAGE_NAME" != "${IMAGE_NAME##*/}" ]; then
-            report_error "Image id is not allowed to contain /'s"
-            log_error "Image id is not allowed to contain /'s"
-            exit 1
+        canonical_image_dir="$(canonicalize "$IMAGE_DIR")"
+        if [ ! -d "$canonical_image_dir" ]; then
+            log_error "The IMAGE_DIR directory: \`$IMAGE_DIR' does not exist."
+            report_error "Unable to retrieve image file."
         fi
 
         image_file="$IMAGE_DIR/$IMAGE_NAME.$IMAGE_TYPE"
-        if [ ! -e "$image_file" ]; then
-            log_error "Image file \`$image_file' does not exit."
+        canonical_image_file="$(canonicalize "$image_file")"
+
+        if [ ! -e "$canonical_image_file" ]; then
+            log_error "Image file \`$image_file' does not exist."
             report_error "Unable to retrieve image file."
             exit 1
         fi
+
+        if [[ "$canonical_image_file" != "$canonical_image_dir"* ]]; then
+            log_error "Image ID points to a file outside the image directory: \`$IMAGE_DIR'"
+            report_error "Invalid image ID"
+            exit 1
+        fi
+
         image_size="$(stat -L -c %s "$image_file")"
         ;;
     null)
