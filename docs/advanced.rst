@@ -76,7 +76,7 @@ type.
 image-info
 ++++++++++
 
-This message type is used to display random progress information. It has an
+This message type is used to display arbitrary progress information. It has an
 extra *messages* field whose value is a list of strings. A valid ``image-info``
 message looks like this:
 

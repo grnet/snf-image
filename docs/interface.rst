@@ -116,7 +116,7 @@ Optional properties
 +++++++++++++++++++
 
  * **USERS="username1 username2...."**
-   This is a space-seperated list of users, whose password will be reset by
+   This is a space-separated list of users, whose password will be reset by
    *snf-image*. The use of this property is optional, but highly recommended.
    For now, if this property is missing, the users are chosen according to a
    set of rules, but those rules may change or even be dropped in the future.
