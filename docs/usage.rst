@@ -72,11 +72,43 @@ Make sure you also have its corresponding metadata file.
 Spawn a diskdump image
 ++++++++++++++++++++++
 
-If you want to deploy an image of type diskdump, you need to provide the
-corresponding *img_properties* as described in the
+If you want to deploy an image of type diskdump, you
+need to provide the corresponding *img_properties* as described in the
 :ref:`Image Format<image-format>` section. If using a diskdump found in the
 :ref:`sample-images` list, use the *img_properties* described in the image's
-metadata file. For example:
+metadata file. For example, to successfully deploy the
+*debian_base-7.0-x86_64.diskdump* image file, you need to provide the following
+image properties:
 
-``gnt-instance add -o snf-image+default --os-parameters img_passwd=SamplePassw0rd,img_format=diskdump,img_id=debian_base-6.0-7-x86_64,img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"1"}' -t plain --disk=0:size=10G --no-name-check --no-ip-check --no-nics test1``
+| OSFAMILY=linux
+| ROOT_PARTITION=1
+| USERS=root
+
+Hence, the ganeti command for creating a VM from this image file would look
+like this:
+
+.. code-block:: console
+
+  gnt-instance add -o snf-image+default \
+    -O img_passwd=1Ki77y,img_format=diskdump,img_id=debian_base-7.0-x86_64,img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"1"\,"USERS":"root"}' \
+    -t plain --disk=0:size=10G --no-name-check --no-ip-check --no-nics my_debian_server1
+
+If you don't want to configure the image at all and just copy it to the ganeti
+provided disk, use the ``EXCLUDE_ALL_TASKS`` image property, like this:
+
+.. code-block:: console
+
+  gnt-instance add -o snf-image+default \
+    -O img_passwd=1Ki77y,img_format=diskdump,img_id=debian_base-7.0-x86_64,img_properties='{"EXCLUDE_ALL_TASKS":"yes"}' \
+    -t plain --disk=0:size=10G --no-name-check --no-ip-check --no-nics my_debian_server2
+
+To configure a VM without first copying an image into the hard disk (e.g. if
+the hard disk is a snapshot from an existing VM's hard disk) you may use the
+*null* storage back-end like this:
+
+.. code-block:: console
+
+  gnt-instance add -o snf-image+default \
+    -O img_passwd=1Ki77y,img_format=diskdump,img_id=null,img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"1"\,"USERS":"root"}' \
+    -t plain --disk=0:size=10G --no-name-check --no-ip-check --no-nics my_debian_server3
 
