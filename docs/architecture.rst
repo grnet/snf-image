@@ -1,56 +1,78 @@
 Architecture
 ============
 
+Overview
+^^^^^^^^
+
+snf-image is a Ganeti OS definition. This means that Ganeti provisions a new
+disk (block device) and passes it to snf-image. Then, snf-image is responsible
+to deploy an Image on that disk. If snf-image returns successfully, Ganeti will
+then spawn a VM with that disk as its primary disk.
+
+Thus, snf-image is responsible for two (2) things, which are executed in two
+separate steps:
+
+| 1. Fill the newly provisioned disk with Image data
+| 2. Customize the Image accordingly
+
+For (1), snf-image can fetch the Image from a number of back-ends, as we
+describe later. For (2) snf-image spawns a helper VM and runs a number of
+configuration tasks inside the isolated environment. Once the last task returns
+successfully, the helper VM ceases and snf-image returns the newly configured
+disk to Ganeti.
+
+The whole procedure is configurable via OS interface parameters, that can be
+passed to snf-image from the Ganeti command line or RAPI.
+
 snf-image is split in two components: The main program running on the Ganeti
-host with full root privilege (*snf-image* previously *snf-image-host*) and a
+host with full root privilege (*snf-image*, previously *snf-image-host*) and a
 part running inside an unprivileged helper VM (*snf-image-helper*).
+
+We describe each part in the following sections:
 
 snf-image
 ^^^^^^^^^
 
 This part implements the Ganeti OS interface. It extracts the Image onto the
 Ganeti-provided block device, using streaming block I/O (dd with oflag=direct),
-then passes control to snf-image-helper running inside a helper VM. The helper
-VM is created using KVM, runs as an unprivileged user, nobody by default.
+then spawns a helper VM, and passes control to snf-image-helper running inside
+that helper VM. The helper VM is created using either KVM or XEN depending on
+the supported hypervisor as dictated by Ganeti. It runs as an unprivileged
+user.
 
 There is no restriction on the distribution running inside the helper VM, as
 long as it executes the snf-image-helper component automatically upon bootup.
 The snf-image-update-helper script is provided with snf-image to automate the
 creation of a helper VM image based on Debian Stable, using multistrap.
 
-The snf-image-helper component is spawned inside a specific hardware
-environment:
+The snf-image-helper component runs inside a specific environment, which is
+created and ensured by snf-image:
 
- * The VM features a virtual floppy, containing an ext2 filesystem with all
+ * The VM features a virtual floppy, containing an ext2 file system with all
    parameters needed for image customization.
- * The hard disk of the VM being deployed is accessible as the first virtio
-   hard disk.
+ * The hard disk provided by Ganeti that we want to deploy and customize is
+   accessible as the first VirtIO hard disk.
  * All kernel/console output is redirected to the first virtual serial console,
    and eventually finds its way into the OS definition log files that Ganeti
    maintains.
  * The helper VM is expected to output "SUCCESS" to its second serial port if
    image customization was successful inside the VM.
- * In any other case, execution of the helper VM or snf-image-helper has
-   failed.
+ * If "SUCCESS" is not returned, snf-image assumes that, execution of the helper
+   VM or snf-image-helper has failed.
  * The helper VM is expected to shutdown automatically once it is done. Its
    execution is time-limited; if it has not terminated after a number of
-   seconds, configurable via /etc/default/snf-image, it is sent a SIGTERM
-   and/or a SIGKILL.
-
-KVM is currently a dependency for snf-image, meaning it is needed to spawn the
-helper VM. There is no restriction on the hypervisor used for the actual Ganeti
-instances. This is not a strict requirement; KVM could be replaced by qemu,
-doing full CPU virtualization without any kernel support for spawning the
-helper VM.
+   seconds, configurable via ``/etc/default/snf-image``, snf-image sends a
+   SIGTERM and/or a SIGKILL to it.
 
 snf-image-helper
 ^^^^^^^^^^^^^^^^
 
-This part runs inside the helper VM and undertakes customization of the VM
-being deployed using a number of hooks, or tasks. The tasks run in an
-environment, specified by rules found in a virtual floppy, placed there by
-*snf-image*. *snf-image-helper* uses runparts to run tasks found under
-*/usr/lib/snf-image-helper/tasks* by default
+This part runs inside the helper VM during boot-up and undertakes customization
+of the target disk. It does so, by running a number of :ref:`configuration
+tasks <image-configuration-tasks>`. The exact tasks that should run, are
+specified by rules found in the virtual floppy, placed there by *snf-image*,
+before spawning the helper VM. *snf-image-helper* uses *runparts* to run the
+tasks which are found under ``/usr/lib/snf-image-helper/tasks``.
 
 Graphical Representation
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -59,14 +81,49 @@ The architecture is presented below:
 
 .. image:: /images/arch.png
 
+
+.. _storage-backends:
+
+Storage back-ends
+^^^^^^^^^^^^^^^^^
+
+As stated above, for step (1), *snf-image* is capable of fetching images that
+are stored in a variety of different back-ends and then extracting them onto
+the newly created block device. The following back-ends are supported:
+
+ * **Local back-end**:
+   The local back-end is used to retrieve images that are stored on the Ganeti
+   node that the image deployment takes place. All local images are expected to
+   be found under a predefined image directory. By default */var/lib/snf-image*
+   is used, but the user may change this by overwriting the value of the
+   *IMAGE_DIR* variable under ``/etc/default/snf-image``.
+
+ * **Network back-end**:
+   The network back-end is used to retrieve images that are accessible from the
+   network. snf-image can fetch images via *http:*, *https:*, *ftp:* or
+   *ftps:*, using `cURL <http://curl.haxx.se/>`_.
+
+ * **Pithos back-end**:
+   *snf-image* contains a special command-line tool (*pithcat*) for retrieving
+   images residing on a Pithos installation. To set up snf-image's Pithos
+   back-end the user needs to setup the ``PITHOS_DATA`` and ``PITHOS_DB``
+   variables inside ``/etc/default/snf-image`` accordingly.
+
+ * **Null back-end**:
+   If the null back-end is selected, no image copying is performed. This
+   actually is meant for bypassing step (1) altogether. This is useful, if the
+   disk provisioned by Ganeti already contains an OS installation before
+   *snf-image* is executed (for example if the disk was created as a clone of
+   an existing VM's hard disk).
+
 .. _image-configuration-tasks:
 
 Image Configuration Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Configuration tasks are scripts called by snf-image-helper to accomplish
-various configuration steps on the newly created instance. See below for a
-description of each one of them:
+Configuration tasks are scripts called by snf-image-helper inside the helper VM
+to accomplish various configuration steps on the newly created instance. See
+below for a description of each one of them:
 
 **FixPartitionTable**: Enlarges the last partition in the partition table of
 the instance, to consume all the available space and optionally adds a swap
@@ -82,13 +139,13 @@ by *SNF_IMAGE_PROPERTY_ROOT_PARTITION* variable under the directory specified
 by *SNF_IMAGE_TARGET*. The script will fail if any of those 3 variables has a
 non-sane value.
 
-**AddSwap**: Formats the swap partion added by *FixPartitionTable* task and
+**AddSwap**: Formats the swap partition added by *FixPartitionTable* task and
 adds an appropriate swap entry in the system's ``/etc/fstab``. The script will
 only run if *SNF_IMAGE_PROPERTY_SWAP* is present and will fail if
 *SNF_IMAGE_TARGET* in not defined.
 
-**DeleteSSHKeys**: For linux images, this script will clear out any ssh keys
-found in the image and for debian, it will recreate them too. In order to find
+**DeleteSSHKeys**: For Linux images, this script will clear out any ssh keys
+found in the image and for Debian, it will recreate them too. In order to find
 the ssh keys, the script looks in default locations (/etc/ssh/ssh_*_key) and
 also parses ``/etc/ssh/sshd_config`` file if present. The script will fail if
 *SNF_IMAGE_TARGET* is not set.
@@ -102,24 +159,27 @@ of the Windows setup. The task will fail if *SNF_IMAGE_TARGET* is not defined.
 needed by windows in order to perform an unattended setup. The
 *SNF_IMAGE_TARGET* variables needs to be present for this task to run.
 
-**SELinuxAutorelabel**: Creates *.autorelabel* file in RedHat images. This is
+**SELinuxAutorelabel**: Creates *.autorelabel* file in Red Hat images. This is
 needed if SELinux is enabled to enforce an automatic file system relabeling at
-the next boot. The only enviromental variable required by this task is
+the next boot. The only environmental variable required by this task is
 *SNF_IMAGE_TARGET*.
 
 **AssignHostname**: Assigns or changes the hostname in a Linux or Windows
 image. The task will fail if the Linux distribution is not supported. For now,
-we support Debian, Redhat, Slackware, SUSE and Gentoo derived distros. The
-hostname is read from *SNF_IMAGE_HOSTNAME* variable. In addition to the latter,
-*SNF_IMAGE_TARGET* is also required.
+we support Debian, Red Hat, Slackware, SUSE and Gentoo derived distributions.
+The hostname is read from *SNF_IMAGE_HOSTNAME* variable. In addition to the
+latter, *SNF_IMAGE_TARGET* is also required.
 
 **ChangePassword**: Changes the password for a list of users. For Linux systems
 this is accomplished by directly altering the image's ``/etc/shadow`` file. For
 Windows systems a script is injected into the VM's hard disk. This script will
-be executed during the specialize pass of the Windows setup. The list of users
-whose passwords will changed is determined by the *SNF_IMAGE_PROPERTY_USERS*
-variable (see :ref:`image-properties`). For this task to run *SNF_IMAGE_TARGET*
-and *SNF_IMAGE_PASSWORD* variables need to be present.
+be executed during the specialize pass of the Windows setup. For FreeBSD
+``/etc/master.passwd`` is altered, ``/etc/spwd.db`` is removed and a script is
+injected into the VM's hard disk that will recreate the aforementioned file.
+The list of users whose passwords will changed is determined by the
+*SNF_IMAGE_PROPERTY_USERS* variable (see :ref:`image-properties`). For this
+task to run *SNF_IMAGE_TARGET* and *SNF_IMAGE_PASSWORD* variables need to be
+present.
 
 **FilesystemResizeMounted**: Injects a script into a Windows image file system
 that will enlarge the last file system to cover up the whole partition. The
