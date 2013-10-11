@@ -54,6 +54,8 @@ trap "" SIGPIPE
 
 trap report_and_cleanup EXIT
 
+echo "Processing image with name: \`$IMAGE_NAME' and type: \`$IMAGE_TYPE'"
+
 case $BACKEND_TYPE in
     local)
         if [[ "$IMAGE_NAME" =~ ^local:// ]]; then
