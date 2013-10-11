@@ -46,15 +46,14 @@ It is a URI and its prefix denotes the type of :ref:`backend <storage-backends>`
 to be used. If no prefix is used, it defaults to the local backend:
 
  * **Local backend**:
-   To select it, the prefix should be ``file://``, followed by the name of the
+   To select it, the prefix should be ``local://``, followed by the name of the
    image. All local images are expected to be found under a predefined image
-   directory (``/var/lib/snf-image`` by default). The name of the actual file
-   should be ``<img_id>.<img_format>``.
+   directory (``/var/lib/snf-image`` by default).
 
   | For example, if we want to deploy the image file:
   | ``/var/lib/snf-image/slackware.diskdump``
   | We need to assign:
-  | ``img_format=diskdump`` and ``img_id=file://slackware``
+  | ``img_format=diskdump`` and ``img_id=file://slackware.diskdump``
 
  * **Network backend**:
    If the **imd_id** starts with ``http:``, ``https:``, ``ftp:`` or ``ftps:``,
