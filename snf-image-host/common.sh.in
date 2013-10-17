@@ -172,6 +172,7 @@ get_api20_arguments() {
 
     if [ -n "$CONFIG_URL" ]; then
         local config config_params
+        echo "Downloading configuration parameters from: \`$CONFIG_URL'" >&2
         config=$($CURL -f "$CONFIG_URL")
         config_params=$(./decode-config.py $osparams <<< "$config")
         eval "$config_params"
