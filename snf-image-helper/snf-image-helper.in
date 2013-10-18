@@ -109,11 +109,16 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
         log_error "Required image property \`ROOT_PARTITION' is missing or empty."
     fi
 
-    export SNF_IMAGE_RESIZE_PART="$(get_partition_to_resize "$SNF_IMAGE_DEV")"
-
     if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows|freebsd)$ ]]; then
         log_error "Supported values for OSFAMILY property are: linux|windows|freebsd"
     fi
+
+    SNF_IMAGE_RESIZE_PART="$(get_partition_to_resize "$SNF_IMAGE_DEV")"
+    if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then
+        exit 0
+    fi
+
+    export SNF_IMAGE_RESIZE_PART
 
     # If something goes wrong with the tasks, try to umount the disk file
     # systems that are still mounted.

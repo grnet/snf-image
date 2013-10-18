@@ -25,7 +25,7 @@ Since the backend does not have a "root" account we use the account given in
 the URL as the user when connecting to the backend.
 """
 
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 from sys import exit, stdout, stderr
 from os import environ
 from binascii import hexlify, unhexlify
@@ -39,13 +39,20 @@ except ImportError:
 
 
 parser = OptionParser(usage='%prog [options] <URL>')
-parser.add_option('--db', dest='db', metavar='URI',
-                  help='SQLAlchemy URI of the database [REQUIRED]')
 parser.add_option('--data', dest='data', metavar='DIR',
-                  help='path to the directory where data are'
-                       ' stored [REQUIRED]')
+                  help='path to the directory where data are stored')
 parser.add_option('-s', action='store_true', dest='size', default=False,
                   help='print file size and exit')
+group = OptionGroup(
+    parser, "Dangerous Options",
+    "Caution: If the <URL> is a LocationURL (pithos://...), then you'll also "
+    "need to define a database URI. You can use the `--db' option to do so, "
+    "but this raises security concerns. For database URI's and pithos data "
+    "paths, the recommended way to define them is to use the PITHCAT_INPUT_DB "
+    "and PITHCAT_INPUT_DATA environmental variables respectfully.")
+group.add_option('--db', dest='db', metavar='URI',
+                 help='SQLAlchemy URI of the database', default=None)
+parser.add_option_group(group)
 
 LocationURL = namedtuple('LocationURL', ['account', 'container', 'object'])
 HashmapURL = namedtuple('HashmapURL', ['hash', 'size'])
@@ -108,21 +115,29 @@ def main():
     url = parse_url(args[0])
 
     if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
-        stderr.write("Pithos data directory path is missing.\n")
+        stderr.write(
+            "Pithos data directory path is missing.\n"
+            "Use the PITHCAT_INPUT_DATA environmental variable (recommended) "
+            "or the --data command line option to define it.\n")
         exit(1)
 
     data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
         options.data
 
-    if not options.db and 'PITHCAT_INPUT_DB' not in environ:
-        stderr.write("Pithos database uri is missing.\n")
+    if options.db is None and 'PITHCAT_INPUT_DB' not in environ and \
+            type(url) is LocationURL:
+        stderr.write(
+            "Pithos database uri is missing.\n"
+            "Use the PITHCAT_INPUT_DB environmental variable (recommended) "
+            "or the --db command line option to define it.\n")
         exit(1)
 
     db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
 
+    print "%s" % db_uri
+
     backend = ModularBackend(None,
-                             db_uri if type(url) is LocationURL
-                                    else None,
+                             db_uri if type(url) is LocationURL else None,
                              None,
                              data_path)
 
@@ -133,3 +148,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

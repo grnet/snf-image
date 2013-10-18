@@ -1,6 +1,62 @@
 Advanced Topics
 ===============
 
+.. _image-format-advanced:
+
+Image Format
+^^^^^^^^^^^^
+
+snf-image supports 3 types of image formats:
+
+ * **extdump**: a raw dump of an ext{2,3,4} file system
+ * **ntfsdump**: a raw dump of an NTFS file system
+ * **diskdump** (recommended): a raw dump of a disk
+
+extdump and ntfsdump image formats
+++++++++++++++++++++++++++++++++++
+
+Those two formats are dumps (raw copies using dd) of partitions hosting Linux
+systems on ext{2,3,4} and Windows systems on ntfs file systems respectively.
+Partitions hosting a Windows or Linux system that are suitable for dumping
+should have the following properties:
+
+ * Be the first partition in the file system
+ * The OS they host should not depend on any other partitions
+ * Start at sector 2048
+ * Have a boot loader installed in the boot sector of the partition (not MBR)
+ * Have the root device in */etc/fstab* specified in a persistent way, using
+   UUID or LABEL (for extdump only)
+
+Known Issues
+------------
+
+ * For Linux systems, having grub installed in the partition is fragile and
+   things can go wrong when resizing the partitions, especially when shrinking.
+ * More complicated partition schemes are not supported.
+
+diskdump image format (recommended)
++++++++++++++++++++++++++++++++++++
+
+Diskdump is a newer format that overcomes most of the aforementioned issues.
+This format is a dump (raw copy using dd) of a whole disk.
+
+This design decision has the following benefits:
+
+ * Swap partitions are supported
+ * The system may use multiple partitions:
+    * dedicated partitions for /boot, /home etc in Linux
+    * system and boot partition in Windows
+ * There are no restrictions on starting sectors of partitions
+
+Although diskdump is a lot more flexible than the older formats, there are
+still some rules to follow:
+
+ * All devices in fstab should be specified by persistent names (UUID or LABEL)
+ * LVMs are not supported
+ * For Linux disks only ext{2,3,4} file systems are supported
+ * For FreeBSD disks only UFS file systems are supported
+ * For FreeBSD only GUID Partition Tables (GPT) are supported
+
 Progress Monitoring Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -20,7 +76,7 @@ type.
 image-info
 ++++++++++
 
-This message type is used to display random progress information. It has an
+This message type is used to display arbitrary progress information. It has an
 extra *messages* field whose value is a list of strings. A valid ``image-info``
 message looks like this:
 
