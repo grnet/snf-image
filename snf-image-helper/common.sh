@@ -336,6 +336,9 @@ get_partition_to_resize() {
     dev="$1"
 
     table=$(get_partition_table "$dev")
+    if [ -z "$table" ]; then
+        return 0
+    fi
 
     if [ $(get_partition_count "$table") -eq 0 ]; then
         return 0
