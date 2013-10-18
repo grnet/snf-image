@@ -1,3 +1,9 @@
+snf-image (0.11-2~squeeze) squeeze; urgency=low
+
+  * Fix corrupted package
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 18 Oct 2013 13:40:49 +0300
+
 snf-image (0.11-1~squeeze) squeeze; urgency=low
 
   * New upstream version
