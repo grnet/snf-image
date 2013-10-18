@@ -50,6 +50,10 @@ log_error() {
     echo "[ERROR] $*" >&2
 }
 
+log_warning() {
+    echo "[WARNING] $*" >&2
+}
+
 report_error() {
     ERROR_MSGS+=("$@")
 }
@@ -168,6 +172,7 @@ get_api20_arguments() {
 
     if [ -n "$CONFIG_URL" ]; then
         local config config_params
+        echo "Downloading configuration parameters from: \`$CONFIG_URL'" >&2
         config=$($CURL -f "$CONFIG_URL")
         config_params=$(./decode-config.py $osparams <<< "$config")
         eval "$config_params"
@@ -256,6 +261,27 @@ get_backend_type() {
         echo "null"
     else
         echo "local"
+    fi
+}
+
+canonicalize() {
+    local name="$1"
+
+    if [ -d "$name" ]; then
+        name="$name/"
+    fi
+
+    local dname="${name%/*}"
+    local fname="${name##*/}"
+
+    if [ "x$dname" = "x" -a "${name:0:1}" = "/" ]; then
+        dname="/"
+    fi
+
+    if [ -d "$dname" ]; then
+        (cd -- "$dname" && echo "${PWD%/}/$fname")
+    else
+        echo
     fi
 }
 
