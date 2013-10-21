@@ -1,3 +1,7 @@
+2013-10-21, v0.11.1
+	* Fix a bug in pithcat
+	* Minor updates in the documentation
+
 2013-10-18, v0.11
 	* Update the documentation
 	* Change local-backend identifier from file:// to local//
