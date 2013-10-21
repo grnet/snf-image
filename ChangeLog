@@ -1,3 +1,14 @@
+2013-10-21, v0.11.1
+	* Fix a bug in pithcat
+	* Minor updates in the documentation
+
+2013-10-18, v0.11
+	* Update the documentation
+	* Change local-backend identifier from file:// to local//
+	* Make sure the user does not specify local images outside IMAGE_DIR by
+	  using .. in the IMG_ID parameter
+	* HELPER: Fix a bug triggered when the image is corructed
+
 2013-09-23, v0.10.1
 	* Merge the ChangeLog files of snf-image and snf-image-helper
 	* Add version check in snf-image-update-helper
@@ -9,8 +20,8 @@
 	* Fix a bug in the network back-end
 
 2013-09-02, v0.9.3
-	* Add code to download and install a fixed snf-image-helper image. This is the default
-	  behaviour for snf-image-update-helper.
+	* Add code to download and install a fixed snf-image-helper image. This is
+	  the default behaviour for snf-image-update-helper.
 
 2013-08-27, v0.9.2
 	* Use devflow building system
