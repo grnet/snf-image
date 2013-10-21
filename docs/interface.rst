@@ -53,7 +53,7 @@ to be used. If no prefix is used, it defaults to the local backend:
   | For example, if we want to deploy the image file:
   | ``/var/lib/snf-image/slackware.diskdump``
   | We need to assign:
-  | ``img_format=diskdump`` and ``img_id=file://slackware.diskdump``
+  | ``img_id=local://slackware.diskdump``
 
  * **Network backend**:
    If the **imd_id** starts with ``http:``, ``https:``, ``ftp:`` or ``ftps:``,
