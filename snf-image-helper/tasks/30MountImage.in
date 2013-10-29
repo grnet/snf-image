@@ -45,11 +45,16 @@ if [ ! -b "$rootdev" ]; then
         "(=$SNF_IMAGE_PROPERTY_ROOT_PARTITION) is valid."
 fi
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "freebsd" ]; then
+if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" == *bsd ]]; then
     if ! $DUMPFS_UFS "$rootdev" &> /dev/null; then
-        log_error "For FreeBSD images only UFS root partitions are supported."
+        os=${SNF_IMAGE_PROPERTY_OSFAMILY^[bsd]}
+        log_error "For ${os^?} images only UFS root partitions are supported."
     fi
-    $MOUNT -t ufs -o ufstype=ufs2,rw "$rootdev" "$SNF_IMAGE_TARGET"
+    usftype="$(get_ufstype "$rootdev")"
+    if [ "x$ufstype" = "x" ]; then
+        exit 1
+    fi
+    $MOUNT -t ufs -o ufstype="$ufstype,rw" "$rootdev" "$SNF_IMAGE_TARGET"
 else
     $MOUNT -o rw "$rootdev" "$SNF_IMAGE_TARGET"
 fi

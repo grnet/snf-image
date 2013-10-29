@@ -50,7 +50,7 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     echo "$SNF_IMAGE_PERSONALITY" |
         @scriptsdir@/inject-files.py "$SNF_IMAGE_TARGET"
     exit 0
-elif [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|freebsd)$ ]]; then
+else
 
     tmpdir="$(env TMPDIR="$SNF_IMAGE_TARGET/tmp" mktemp -d)"
     add_cleanup rm -rf "$tmpdir"

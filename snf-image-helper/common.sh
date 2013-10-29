@@ -474,6 +474,26 @@ umount_all() {
     done
 }
 
+get_ufstype() {
+    local device ufs
+
+    device="$1"
+    ufs="$($DUMPFS_UFS "$device" | head -1 | awk '{ match ($3, /\((.+)\)/, ufs); print ufs[1] }')"
+
+    case "$ufs" in
+        UFS1)
+            echo 44bsd
+            ;;
+        UFS2)
+            echo ufs2
+            ;;
+        *)
+            log_error "Unsupported UFS type: \`$ufs' in device $device"
+            echo ""
+            ;;
+    esac
+}
+
 cleanup() {
     # if something fails here, it shouldn't call cleanup again...
     trap - EXIT
@@ -529,7 +549,6 @@ check_if_excluded() {
 
     return 0
 }
-
 
 return_success() {
     send_result_${HYPERVISOR} "SUCCESS"

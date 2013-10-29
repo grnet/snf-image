@@ -37,7 +37,7 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing."
 fi
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "linux" -a "$SNF_IMAGE_PROPERTY_OSFAMILY" != "freebsd" ]; then
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     exit 0
 fi
 

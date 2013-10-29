@@ -109,8 +109,8 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
         log_error "Required image property \`ROOT_PARTITION' is missing or empty."
     fi
 
-    if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows|freebsd)$ ]]; then
-        log_error "Supported values for OSFAMILY property are: linux|windows|freebsd"
+    if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(linux|windows|freebsd|openbsd|netbsd)$ ]]; then
+        log_error "Supported values for OSFAMILY property are: linux|windows|freebsd|openbsd|netbsd"
     fi
 
     SNF_IMAGE_RESIZE_PART="$(get_partition_to_resize "$SNF_IMAGE_DEV")"
