@@ -478,7 +478,7 @@ get_ufstype() {
     local device ufs
 
     device="$1"
-    ufs="$($DUMPFS_UFS "$device" | head -1 | awk '{ match ($3, /\((.+)\)/, ufs); print ufs[1] }')"
+    ufs="$($DUMPFS_UFS "$device" | head -1 | awk -F "[()]" '{ for (i=2; i<NF; i+=2) print $i }')"
 
     case "$ufs" in
         UFS1)
