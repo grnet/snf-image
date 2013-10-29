@@ -193,6 +193,12 @@ get_base_distro() {
         echo "arch"
     elif [ -e "$root_dir/etc/freebsd-update.conf" ]; then
         echo "freebsd"
+    elif [ -e "$root_dir/etc/release" ]; then
+        if grep -in netbsd "$root_dir/etc/release" &> /dev/null; then
+            echo "netbsd"
+        else
+            warn "Unknown Unix flavor."
+        fi
     else
         warn "Unknown base distro."
     fi
@@ -227,6 +233,12 @@ get_distro() {
         echo "arch"
     elif [ -e "$root_dir/etc/freebsd-update.conf" ]; then
         echo "freebsd"
+    elif [ -e "$root_dir/etc/release" ]; then
+        if grep -in netbsd "$root_dir/etc/release" &> /dev/null; then
+            echo "netbsd"
+        else
+            warn "Unknown Unix flavor"
+        fi
     else
         warn "Unknown distro."
     fi
