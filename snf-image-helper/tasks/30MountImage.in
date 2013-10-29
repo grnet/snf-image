@@ -50,7 +50,7 @@ if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" == *bsd ]]; then
         os=${SNF_IMAGE_PROPERTY_OSFAMILY^[bsd]}
         log_error "For ${os^?} images only UFS root partitions are supported."
     fi
-    usftype="$(get_ufstype "$rootdev")"
+    ufstype="$(get_ufstype "$rootdev")"
     if [ "x$ufstype" = "x" ]; then
         exit 1
     fi
