@@ -27,6 +27,7 @@ To do this, it generates a random salt internally.
 
 import sys
 import crypt
+import bcrypt
 
 from string import ascii_letters, digits
 from random import choice
@@ -40,7 +41,6 @@ from optparse import OptionParser
 HASH_ID_FROM_METHOD = {
     'md5': '1',
     'blowfish': '2a',
-    'sun-md5': 'md5',
     'sha256': '5',
     'sha512': '6'
 }
@@ -71,8 +71,13 @@ def parse_arguments(input_args):
 
 def main():
     (passwd, method) = parse_arguments(sys.argv[1:])
-    salt = random_salt()
-    hash = crypt.crypt(passwd, "$" + HASH_ID_FROM_METHOD[method] + "$" + salt)
+
+    if method != 'blowfish' :
+        hash = crypt.crypt(
+            passwd,"$" + HASH_ID_FROM_METHOD[method] + "$" + random_salt())
+    else:
+        hash = bcrypt.hashpw(passwd, bcrypt.gensalt(8))
+
     sys.stdout.write("%s\n" % (hash))
     return 0
 
