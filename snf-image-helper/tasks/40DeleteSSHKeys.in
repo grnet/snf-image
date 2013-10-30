@@ -41,7 +41,9 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     exit 0
 fi
 
-distro=$(get_base_distro "$SNF_IMAGE_TARGET")
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
+    distro=$(get_base_distro "$SNF_IMAGE_TARGET")
+fi
 
 HOST_KEY="/etc/ssh/ssh_host_key"
 RSA_KEY="/etc/ssh/ssh_host_rsa_key"
@@ -50,10 +52,12 @@ ECDSA_KEY="/etc/ssh/ssh_host_ecdsa_key"
 
 target="$SNF_IMAGE_TARGET"
 
-mount -o bind /proc "$target/proc"
-add_cleanup umount "$target/proc"
-mount -o bind /dev "$target/dev"
-add_cleanup umount "$target/dev"
+if [ "x$distro" = "xdebian" ]; then
+    mount -o bind /proc "$target/proc"
+    add_cleanup umount "$target/proc"
+    mount -o bind /dev "$target/dev"
+    add_cleanup umount "$target/dev"
+fi
 
 #Remove the default keys
 for pair in "$HOST_KEY@rsa1" "$RSA_KEY@rsa" "$DSA_KEY@dsa" "$ECDSA_KEY@ecdsa"; do
