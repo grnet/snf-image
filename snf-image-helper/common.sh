@@ -199,6 +199,12 @@ get_base_distro() {
         else
             warn "Unknown Unix flavor."
         fi
+    elif [ -e "$root_dir/etc/magic" ]; then
+        if grep -in openbsd "$root_dir/etc/magic" &> /dev/null; then
+            echo "openbsd"
+        else
+            warn "Unknown Unix flavor"
+        fi
     else
         warn "Unknown base distro."
     fi
@@ -239,11 +245,16 @@ get_distro() {
         else
             warn "Unknown Unix flavor"
         fi
+    elif [ -e "$root_dir/etc/magic" ]; then
+        if grep -in openbsd "$root_dir/etc/magic" &> /dev/null; then
+            echo "openbsd"
+        else
+            warn "Unknown Unix flavor"
+        fi
     else
         warn "Unknown distro."
     fi
 }
-
 
 get_partition_table() {
     local dev output
