@@ -34,9 +34,11 @@ from random import choice
 from os.path import basename
 from optparse import OptionParser
 
+
 def random_salt(length=8):
     pool = ascii_letters + digits + "/" + "."
     return ''.join(choice(pool) for i in range(length))
+
 
 METHOD = {
 #   Name:  (algoritm, options)
@@ -50,6 +52,7 @@ METHOD = {
         {'rounds': 5000, 'implicit_rounds': True, 'salt': random_salt()}),
     'sha1': (passlib.hash.sha1_crypt, {})
 }
+
 
 def parse_arguments(input_args):
     usage = "usage: %prog [-h] [-m encrypt-method] <password>"
