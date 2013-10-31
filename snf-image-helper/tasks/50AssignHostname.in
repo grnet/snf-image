@@ -118,7 +118,7 @@ openbsd_hostname() {
     echo "$hostname" > "$target/etc/myname"
 }
 
-netbsd_hoststame() {
+netbsd_hostname() {
     local target hostname
     target="$1"
     hostname="$2"
