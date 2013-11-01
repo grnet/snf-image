@@ -46,7 +46,7 @@ if [ -n "$SNF_IMAGE_PROPERTY_DO_SYNC" ]; then
 fi
 
 if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ (net)|(open)bsd ]]; then
-    os=${SNF_IMAGE_PROPERTY_OSFAMILY^[bsd]}
+    os=${SNF_IMAGE_PROPERTY_OSFAMILY^^[bsd]}
     warn "File sytem resizing currently not supported for ${os^?}"
     exit 0
 fi

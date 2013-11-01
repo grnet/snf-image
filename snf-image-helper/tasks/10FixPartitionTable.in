@@ -36,7 +36,7 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
 fi
 
 if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ (net)|(open)bsd ]]; then
-    os=${SNF_IMAGE_PROPERTY_OSFAMILY^[bsd]}
+    os=${SNF_IMAGE_PROPERTY_OSFAMILY^^[bsd]}
     warn "Partition resizing currently not supported for ${os^?}"
     exit 0
 fi

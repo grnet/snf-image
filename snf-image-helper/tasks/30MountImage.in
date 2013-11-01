@@ -47,7 +47,7 @@ fi
 
 if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" == *bsd ]]; then
     if ! $DUMPFS_UFS "$rootdev" &> /dev/null; then
-        os=${SNF_IMAGE_PROPERTY_OSFAMILY^[bsd]}
+        os=${SNF_IMAGE_PROPERTY_OSFAMILY^^[bsd]}
         log_error "For ${os^?} images only UFS root partitions are supported."
     fi
     ufstype="$(get_ufstype "$rootdev")"
