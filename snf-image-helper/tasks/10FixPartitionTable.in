@@ -35,6 +35,12 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi
 
+if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ (net)|(open)bsd ]]; then
+    os=${SNF_IMAGE_PROPERTY_OSFAMILY^^[bsd]}
+    warn "Partition resizing currently not supported for ${os^?}"
+    exit 0
+fi
+
 table=$(get_partition_table "$SNF_IMAGE_DEV")
 
 if [ $(get_partition_count "$table") -eq 0 ]; then
@@ -52,7 +58,8 @@ if [ "$table_type" == "gpt" ]; then
     "$SGDISK" --move-second-header "$SNF_IMAGE_DEV"
 elif [ "$table_type" != "msdos" ]; then
     log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition " \
-        "table type: \`$table_type'. Only msdos & gpt partitions are supported."
+              "table type: \`$table_type'. Only msdos & gpt partitions are" \
+              "supported."
 fi
 
 last_part=$(get_last_partition "$table")

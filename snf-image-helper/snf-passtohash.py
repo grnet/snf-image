@@ -26,7 +26,8 @@ To do this, it generates a random salt internally.
 """
 
 import sys
-import crypt
+
+import passlib.hash
 
 from string import ascii_letters, digits
 from random import choice
@@ -34,21 +35,23 @@ from os.path import basename
 from optparse import OptionParser
 
 
-# This dictionary maps the hashing algorithm method
-# with its <ID> as documented in:
-# http://www.akkadia.org/drepper/SHA-crypt.txt
-HASH_ID_FROM_METHOD = {
-    'md5': '1',
-    'blowfish': '2a',
-    'sun-md5': 'md5',
-    'sha256': '5',
-    'sha512': '6'
-}
-
-
 def random_salt(length=8):
     pool = ascii_letters + digits + "/" + "."
     return ''.join(choice(pool) for i in range(length))
+
+
+METHOD = {
+#   Name:  (algoritm, options)
+    'md5': (passlib.hash.md5_crypt, {}),
+    'blowfish': (passlib.hash.bcrypt, {}),
+    'sha256': (
+        passlib.hash.sha256_crypt,
+        {'rounds': 5000, 'implicit_rounds': True, 'salt': random_salt()}),
+    'sha512': (
+        passlib.hash.sha512_crypt,
+        {'rounds': 5000, 'implicit_rounds': True, 'salt': random_salt()}),
+    'sha1': (passlib.hash.sha1_crypt, {})
+}
 
 
 def parse_arguments(input_args):
@@ -56,9 +59,9 @@ def parse_arguments(input_args):
     parser = OptionParser(usage=usage)
     parser.add_option(
         "-m", "--encrypt-method", dest="encrypt_method", type='choice',
-        default="sha512", choices=HASH_ID_FROM_METHOD.keys(),
+        default="sha512", choices=METHOD.keys(),
         help="encrypt password with ENCRYPT_METHOD [%default] (supported: " +
-        ", ".join(HASH_ID_FROM_METHOD.keys()) + ")"
+        ", ".join(METHOD.keys()) + ")"
     )
 
     (opts, args) = parser.parse_args(input_args)
@@ -71,9 +74,10 @@ def parse_arguments(input_args):
 
 def main():
     (passwd, method) = parse_arguments(sys.argv[1:])
-    salt = random_salt()
-    hash = crypt.crypt(passwd, "$" + HASH_ID_FROM_METHOD[method] + "$" + salt)
-    sys.stdout.write("%s\n" % (hash))
+
+    algorithm, options = METHOD[method]
+    print algorithm.encrypt(passwd, **options)
+
     return 0
 
 if __name__ == "__main__":
