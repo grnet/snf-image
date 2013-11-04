@@ -41,7 +41,7 @@ if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then
     exit 0
 fi
 
-if [ -n "$SNF_IMAGE_PROPERTY_DO_SYNC" ]; then
+if [ "x$SNF_IMAGE_PROPERTY_DO_SYNC" = "xyes" ]; then
     unset EATMYDATA
 fi
 

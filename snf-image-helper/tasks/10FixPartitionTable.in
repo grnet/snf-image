@@ -58,7 +58,8 @@ if [ "$table_type" == "gpt" ]; then
     "$SGDISK" --move-second-header "$SNF_IMAGE_DEV"
 elif [ "$table_type" != "msdos" ]; then
     log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition " \
-        "table type: \`$table_type'. Only msdos & gpt partitions are supported."
+              "table type: \`$table_type'. Only msdos & gpt partitions are" \
+              "supported."
 fi
 
 last_part=$(get_last_partition "$table")
