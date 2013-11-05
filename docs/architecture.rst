@@ -127,16 +127,21 @@ below for a description of each one of them:
 
 **FixPartitionTable**: Enlarges the last partition in the partition table of
 the instance, to consume all the available space and optionally adds a swap
-partition in the end.
+partition in the end. The task will fail if the environmental variable
+*SNF_IMAGE_DEV*, which specifies the device file of the instance's hard disk,
+is missing.
 
 **FilesystemResizeUnmounted**: Extends the file system of the last partition to
-cover up the whole partition. This only works for ext{2,3,4} file systems. Any
-other file system type is ignored and a warning is triggered. The task will
-fail if *SNF_IMAGE_DEV* environmental variable is missing.
+cover up the whole partition. This only works for ext{2,3,4} and ufs2 file
+systems. Any other file system type is ignored and a warning is triggered. The
+task will fail if *SNF_IMAGE_DEV* environmental variable is missing.
 
-**MountImage**: Mounts the nth partition of *SNF_IMAGE_DEV*, which is specified
-by *SNF_IMAGE_PROPERTY_ROOT_PARTITION* variable under the directory specified
-by *SNF_IMAGE_TARGET*. The script will fail if any of those 3 variables has a
+**MountImage**: Mounts the root partition of the instance, specified by the
+*SNF_IMAGE_PROPERTY_ROOT_PARTITION* variable. On Linux systems after the root
+fs is mounted, the instance's ``/etc/fstab`` file is examined and the rest of
+the disk file systems are mounted too, in a correct order. The script will fail
+if any of the environmental variables *SNF_IMAGE_DEV*,
+*SNF_IMAGE_PROPERTY_ROOT_PARTITION* or *SNF_IMAGE_TARGET* is unset or has a
 non-sane value.
 
 **AddSwap**: Formats the swap partition added by *FixPartitionTable* task and
@@ -144,39 +149,42 @@ adds an appropriate swap entry in the system's ``/etc/fstab``. The script will
 only run if *SNF_IMAGE_PROPERTY_SWAP* is present and will fail if
 *SNF_IMAGE_TARGET* in not defined.
 
-**DeleteSSHKeys**: For Linux images, this script will clear out any ssh keys
-found in the image and for Debian, it will recreate them too. In order to find
-the ssh keys, the script looks in default locations (/etc/ssh/ssh_*_key) and
-also parses ``/etc/ssh/sshd_config`` file if present. The script will fail if
-*SNF_IMAGE_TARGET* is not set.
+**DeleteSSHKeys**: On Linux and \*BSD instances, this script will clear out any
+ssh keys found in the instance's disk. For Debian and Ubuntu systems, the keys
+are also recreated. Besides removing files that comply to the
+``/etc/ssh/ssh_*_key`` pattern, the script will also parses
+``/etc/ssh/sshd_config`` file for custom keys. The only variable this script
+depends on is *SNF_IMAGE_TARGET*.
 
 **DisableRemoteDesktopConnections**: This script temporary disables RDP
-connections in windows instances by changing the value *fDenyTSConnection*
+connections on windows instances by changing the value of *fDenyTSConnection*
 registry key. RDP connections will be enabled back during the specialize pass
 of the Windows setup. The task will fail if *SNF_IMAGE_TARGET* is not defined.
 
-**InstallUnattend**: Installs the Unattend.xml files in windows images. This is
-needed by windows in order to perform an unattended setup. The
+**InstallUnattend**: Installs the Unattend.xml files on windows instances. This
+is needed by windows in order to perform an unattended setup. The
 *SNF_IMAGE_TARGET* variables needs to be present for this task to run.
 
 **SELinuxAutorelabel**: Creates *.autorelabel* file in Red Hat images. This is
-needed if SELinux is enabled to enforce an automatic file system relabeling at
-the next boot. The only environmental variable required by this task is
+needed if SELinux is enabled to enforce an automatic file system relabeling
+during the first boot. The only environmental variable required by this task is
 *SNF_IMAGE_TARGET*.
 
-**AssignHostname**: Assigns or changes the hostname in a Linux or Windows
-image. The task will fail if the Linux distribution is not supported. For now,
-we support Debian, Red Hat, Slackware, SUSE and Gentoo derived distributions.
-The hostname is read from *SNF_IMAGE_HOSTNAME* variable. In addition to the
-latter, *SNF_IMAGE_TARGET* is also required.
+**AssignHostname**: Assigns or changes the hostname of the instance. The task
+will fail if the Linux distribution is not supported and ``/etc/hostname`` is
+not present on the file system. For now, we support Debian, Red Hat, Slackware,
+SUSE and Gentoo derived distributions. The hostname is read from
+*SNF_IMAGE_HOSTNAME* variable. In addition to the latter, *SNF_IMAGE_TARGET* is
+also required.
 
-**ChangePassword**: Changes the password for a list of users. For Linux systems
-this is accomplished by directly altering the image's ``/etc/shadow`` file. For
-Windows systems a script is injected into the VM's hard disk. This script will
-be executed during the specialize pass of the Windows setup. For FreeBSD
-``/etc/master.passwd`` is altered, ``/etc/spwd.db`` is removed and a script is
-injected into the VM's hard disk that will recreate the aforementioned file.
-The list of users whose passwords will changed is determined by the
+**ChangePassword**: Changes the password for a list of existing users. On Linux 
+systems this is accomplished by directly altering the instance's
+``/etc/shadow`` file. On Windows systems a script is injected into the VM's
+hard disk. This script will be executed during the specialize pass of the
+Windows setup. On \*BSD systems ``/etc/master.passwd`` is altered,
+``/etc/spwd.db`` is removed and a script is injected into the VM's hard disk
+that will recreate the aforementioned file during the first boot. The list of
+users whose passwords will changed is determined by the
 *SNF_IMAGE_PROPERTY_USERS* variable (see :ref:`image-properties`). For this
 task to run *SNF_IMAGE_TARGET* and *SNF_IMAGE_PASSWORD* variables need to be
 present.
@@ -188,10 +196,10 @@ script will run during the specialize pass of the Windows setup. If the
 
 **EnforcePersonality**: Injects the files specified by the
 *SNF_IMAGE_PROPERTY_OSFAMILY* variable into the file system. If the variable is
-missing a warning is produced. The only environmental variable required is
-*SNF_IMAGE_TARGET*.
+missing a warning is produced. Only *SNF_IMAGE_TARGET* is required for this
+task to run.
 
-**UmountImage**: Umounts the file system previously mounted by MountImage. The
+**UmountImage**: Umounts the file systems previously mounted by MountImage. The
 only environmental variable required is *SNF_IMAGE_TARGET*.
 
 

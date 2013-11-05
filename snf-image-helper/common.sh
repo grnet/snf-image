@@ -193,6 +193,18 @@ get_base_distro() {
         echo "arch"
     elif [ -e "$root_dir/etc/freebsd-update.conf" ]; then
         echo "freebsd"
+    elif [ -e "$root_dir/etc/release" ]; then
+        if grep -in netbsd "$root_dir/etc/release" &> /dev/null; then
+            echo "netbsd"
+        else
+            warn "Unknown Unix flavor."
+        fi
+    elif [ -e "$root_dir/etc/magic" ]; then
+        if grep -in openbsd "$root_dir/etc/magic" &> /dev/null; then
+            echo "openbsd"
+        else
+            warn "Unknown Unix flavor"
+        fi
     else
         warn "Unknown base distro."
     fi
@@ -227,11 +239,22 @@ get_distro() {
         echo "arch"
     elif [ -e "$root_dir/etc/freebsd-update.conf" ]; then
         echo "freebsd"
+    elif [ -e "$root_dir/etc/release" ]; then
+        if grep -in netbsd "$root_dir/etc/release" &> /dev/null; then
+            echo "netbsd"
+        else
+            warn "Unknown Unix flavor"
+        fi
+    elif [ -e "$root_dir/etc/magic" ]; then
+        if grep -in openbsd "$root_dir/etc/magic" &> /dev/null; then
+            echo "openbsd"
+        else
+            warn "Unknown Unix flavor"
+        fi
     else
         warn "Unknown distro."
     fi
 }
-
 
 get_partition_table() {
     local dev output
@@ -474,6 +497,26 @@ umount_all() {
     done
 }
 
+get_ufstype() {
+    local device ufs
+
+    device="$1"
+    ufs="$($DUMPFS_UFS "$device" | head -1 | awk -F "[()]" '{ for (i=2; i<NF; i+=2) print $i }')"
+
+    case "$ufs" in
+        UFS1)
+            echo 44bsd
+            ;;
+        UFS2)
+            echo ufs2
+            ;;
+        *)
+            log_error "Unsupported UFS type: \`$ufs' in device $device"
+            echo ""
+            ;;
+    esac
+}
+
 cleanup() {
     # if something fails here, it shouldn't call cleanup again...
     trap - EXIT
@@ -529,7 +572,6 @@ check_if_excluded() {
 
     return 0
 }
-
 
 return_success() {
     send_result_${HYPERVISOR} "SUCCESS"
