@@ -6,6 +6,10 @@ Package: ufsutils
 Pin: version 8.2-3+wheezy+grnet.growfs.fix
 Pin-Priority: 1001
 
+Package: python-bcrypt
+Pin: version 0.4-1grnet
+Pin-Priority: 1001
+
 Package: linux-image-3.2.0-4-amd64
 Pin: version 3.2.46-1+deb7u1+ufs.rw
 Pin-Priority: 1001
