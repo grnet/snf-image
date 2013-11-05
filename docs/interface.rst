@@ -42,10 +42,10 @@ Image ID (img_id)
 ^^^^^^^^^^^^^^^^^
 
 The **img_id** OS parameter points to the actual Image that we want to deploy.
-It is a URI and its prefix denotes the type of :ref:`backend <storage-backends>`
-to be used. If no prefix is used, it defaults to the local backend:
+It is a URI and its prefix denotes the type of :ref:`back-end <storage-backends>`
+to be used. If no prefix is used, it defaults to the local back-end:
 
- * **Local backend**:
+ * **Local back-end**:
    To select it, the prefix should be ``local://``, followed by the name of the
    image. All local images are expected to be found under a predefined image
    directory (``/var/lib/snf-image`` by default).
@@ -55,7 +55,7 @@ to be used. If no prefix is used, it defaults to the local backend:
   | We need to assign:
   | ``img_id=local://slackware.diskdump``
 
- * **Network backend**:
+ * **Network back-end**:
    If the **imd_id** starts with ``http:``, ``https:``, ``ftp:`` or ``ftps:``,
    snf-image will treat the **img_id** as a remote URL and will try to fetch the
    image using `cURL <http://curl.haxx.se/>`_.
@@ -63,7 +63,7 @@ to be used. If no prefix is used, it defaults to the local backend:
   | For example, if we want to deploy an image from an http location:
   | ``img_id=http://www.synnefo.org/path/to/image/slackware-image``
 
- * **Pithos backend**:
+ * **Pithos back-end**:
    If the **img_id** is prefixed with ``pithos://`` or ``pithosmap://`` the
    image is considered to reside on a Pithos deployment. For ``pithosmap://``
    images, the user needs to have set a valid value for the
@@ -77,8 +77,8 @@ to be used. If no prefix is used, it defaults to the local backend:
   | or if we already know the map:
   | ``img_id=pithosmap://<slackware-image-map-name>``
 
- * **Null backend**:
-   To select the Null backend and skip the fetching and extraction step, we set
+ * **Null back-end**:
+   To select the Null back-end and skip the fetching and extraction step, we set
    ``img_id=null``.
 
 .. _image-properties:
@@ -103,8 +103,8 @@ A list of all properties follows:
 Mandatory properties (for diskdump only)
 ++++++++++++++++++++++++++++++++++++++++
 
- * **OSFAMILY={linux,windows}**
-   This specifies whether the image is a Linux or a Windows Image.
+ * **OSFAMILY=linux|windows|freebsd|netbsd|openbsd**
+   This specifies whether the image is a Linux, a Windows or a \*BSD Image.
    {ext,ntfs}dump formats are self descriptive regarding this property.
  * **ROOT_PARTITION=n**
    This specifies the partition number of the root partition. As mentioned
@@ -122,7 +122,22 @@ Optional properties
    The rules we currently use are listed below:
 
      * For Windows images, the *Administrator*'s password is reset.
-     * For Linux and FreeBSD images, the *root* password is reset.
+     * For Linux and \*BSD images, the *root* password is reset.
+
+ * **DO_SYNC=yes**
+   By default in ResizeUnmounted task, when ``resize2fs`` is executed to
+   enlarge a ext[234] file system, ``fsync()`` is disabled to speed up the
+   whole process. I for some reason you need to disable this behavior, use the
+   *DO_SYNC* image property.
+
+ * **PASSWORD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
+   This property can be used on Unix instances to specify the method to be used
+   to hash the users password. By default this is determined by the type of the
+   instance. For Linux and FreeBSD instances ``sha512`` is used, for OpenBSD
+   ``blowfish`` and for NetBSD ``sha1``. Use this property with care. Most
+   systems don't support all hashing methods (see
+   `here <http://pythonhosted.org/passlib/modular_crypt_format.html#mcf-identifiers>`_
+   for more info).
 
  * **EXCLUDE_ALL_TASKS=yes**
    If this property is defined with a value other than null, then during the

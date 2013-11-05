@@ -41,8 +41,14 @@ if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then
     exit 0
 fi
 
-if [ -n "$SNF_IMAGE_PROPERTY_DO_SYNC" ]; then
+if [ "x$SNF_IMAGE_PROPERTY_DO_SYNC" = "xyes" ]; then
     unset EATMYDATA
+fi
+
+if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ (net)|(open)bsd ]]; then
+    os=${SNF_IMAGE_PROPERTY_OSFAMILY^^[bsd]}
+    warn "File sytem resizing currently not supported for ${os^?}"
+    exit 0
 fi
 
 table=$(get_partition_table "$SNF_IMAGE_DEV")
