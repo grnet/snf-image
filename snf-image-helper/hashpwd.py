@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2011 GRNET S.A.
+# Copyright (C) 2011, 2013 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,9 +19,8 @@
 
 """Generate a hash from a given password
 
-This program takes a password as an argument and
-returns to standard output a hash followed by a newline.
-To do this, it generates a random salt internally.
+This program takes a password as an argument and returns to standard output a
+hash followed by a newline.
 
 """
 
