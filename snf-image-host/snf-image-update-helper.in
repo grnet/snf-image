@@ -73,7 +73,7 @@ done
 cat >&1 <<EOF
 
 $(basename $0) will download a snf-image-helper image from:
-\`$HELPER_URL' and will install it under $IMAGE_DIR.
+\`$HELPER_URL' and will install it under $HELPER_DIR.
 The following files will be overwritten if present:
   \`$HELPER_DIR/initrd'
   \`$HELPER_DIR/kernel'
