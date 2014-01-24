@@ -162,28 +162,30 @@ get_api10_arguments() {
 get_api20_arguments() {
     get_api10_arguments
 
-    local required_osparams="IMG_ID IMG_FORMAT IMG_PASSWD"
-    local osparams="$required_osparams IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+    if [ "$SCRIPT_NAME" = "create" ]; then
+        local required_osparams="IMG_ID IMG_FORMAT IMG_PASSWD"
+        local osparams="$required_osparams IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
 
-    # Store OSP_VAR in VAR
-    for param in $osparams; do
-        eval $param=\"\$OSP_$param\"
-    done
+        # Store OSP_VAR in VAR
+        for param in $osparams; do
+            eval $param=\"\$OSP_$param\"
+        done
 
-    if [ -n "$CONFIG_URL" ]; then
-        local config config_params
-        echo "Downloading configuration parameters from: \`$CONFIG_URL'" >&2
-        config=$($CURL -f "$CONFIG_URL")
-        config_params=$(./decode-config.py $osparams <<< "$config")
-        eval "$config_params"
-    fi
-
-    for var in $required_osparams; do
-        if [ -z "${!var}" ]; then
-             log_error "Missing OS API Parameter: ${var}"
-             exit 1
+        if [ -n "$CONFIG_URL" ]; then
+            local config config_params
+            echo "Downloading configuration parameters from: \`$CONFIG_URL'" >&2
+            config=$($CURL -f "$CONFIG_URL")
+            config_params=$(./decode-config.py $osparams <<< "$config")
+            eval "$config_params"
         fi
-    done
+
+        for var in $required_osparams; do
+            if [ -z "${!var}" ]; then
+                 log_error "Missing OS API Parameter: ${var}"
+                 exit 1
+            fi
+        done
+    fi
 }
 
 map_disk0() {
