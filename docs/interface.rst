@@ -75,7 +75,7 @@ to be used. If no prefix is used, it defaults to the local back-end:
   | For example, if we want to deploy using a full Pithos URI:
   | ``img_id=pithos://<user-uuid>/<container>/<slackware-image>``
   | or if we already know the map:
-  | ``img_id=pithosmap://<slackware-image-map-name>``
+  | ``img_id=pithosmap://<slackware-image-map-name>/<size>``
 
  * **Null back-end**:
    To select the Null back-end and skip the fetching and extraction step, we set

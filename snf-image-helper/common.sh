@@ -194,13 +194,13 @@ get_base_distro() {
     elif [ -e "$root_dir/etc/freebsd-update.conf" ]; then
         echo "freebsd"
     elif [ -e "$root_dir/etc/release" ]; then
-        if grep -in netbsd "$root_dir/etc/release" &> /dev/null; then
+        if grep -i netbsd "$root_dir/etc/release" &> /dev/null; then
             echo "netbsd"
         else
             warn "Unknown Unix flavor."
         fi
-    elif [ -e "$root_dir/etc/magic" ]; then
-        if grep -in openbsd "$root_dir/etc/magic" &> /dev/null; then
+    elif [ -e "$root_dir/etc/motd" ]; then
+        if grep -i ^openbsd <(head -1 "$root_dir/etc/motd") &> /dev/null; then
             echo "openbsd"
         else
             warn "Unknown Unix flavor"
@@ -245,8 +245,8 @@ get_distro() {
         else
             warn "Unknown Unix flavor"
         fi
-    elif [ -e "$root_dir/etc/magic" ]; then
-        if grep -in openbsd "$root_dir/etc/magic" &> /dev/null; then
+    elif [ -e "$root_dir/etc/motd" ]; then
+        if grep -i ^openbsd <(head -1 "$root_dir/etc/motd") &> /dev/null; then
             echo "openbsd"
         else
             warn "Unknown Unix flavor"
