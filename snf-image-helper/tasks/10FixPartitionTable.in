@@ -37,6 +37,8 @@ fi
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = openbsd ]; then
     @scriptsdir@/disklabel.py -d "$(blockdev --getsz "$SNF_IMAGE_DEV")" -p "$SNF_IMAGE_DEV"
+    # Inform the kernel about the changes
+    partprobe "$SNF_IMAGE_DEV"
     exit 0
 fi
 
