@@ -55,6 +55,14 @@ if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" == *bsd ]]; then
         exit 1
     fi
     $MOUNT -t ufs -o ufstype="$ufstype,rw" "$rootdev" "$SNF_IMAGE_TARGET"
+
+    # In many cases when you try to mount a UFS file system read-write,
+    # the mount command returns SUCCESS and a message like this gets printed:
+    #
+    #   mount: warning: /mnt seems to be mounted read-only.
+    #
+    # remounting does the trick
+    $MOUNT -o remount,rw "$SNF_IMAGE_TARGET"
 else
     $MOUNT -o rw "$rootdev" "$SNF_IMAGE_TARGET"
 fi
