@@ -7,7 +7,7 @@ SUBDIRS = tasks
 
 dist_doc_DATA = COPYING AUTHORS
 dist_bin_SCRIPTS = snf-image-helper
-dist_scripts_SCRIPTS= hashpwd.py inject-files.py decode-properties.py
+dist_scripts_SCRIPTS= hashpwd.py inject-files.py decode-properties.py disklabel.py
 dist_common_DATA = common.sh unattend.xml
 
 edit = sed \

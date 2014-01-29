@@ -35,9 +35,13 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi
 
-if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ (net)|(open)bsd ]]; then
-    os=${SNF_IMAGE_PROPERTY_OSFAMILY^^[bsd]}
-    warn "Partition resizing currently not supported for ${os^?}"
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = openbsd ]; then
+    @scriptsdir@/disklabel.py -d "$(blockdev --getsz "$SNF_IMAGE_DEV")" -p "$SNF_IMAGE_DEV"
+    exit 0
+fi
+
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = netbsd ]; then
+    warn "Partition resizing currently not supported for NetBSD"
     exit 0
 fi
 
