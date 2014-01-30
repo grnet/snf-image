@@ -94,8 +94,15 @@ class MBR(object):
             """Packs a CHS tuple to an address string."""
 
             assert 1 <= sector <= 63
-            assert 0 <= cylinder <= 1023
             assert 0 <= head <= 255
+            assert 0 <= cylinder
+
+            # If the cylinders overflow then put the value (1023, 254, 63) to
+            # the tuple. At least this is what OpenBSD does.
+            if cylinder > 1023:
+                cylinder = 1023
+                head = 254
+                sector = 63
 
             byte0 = head
             byte1 = (cylinder >> 2) & 0xC0 | sector
