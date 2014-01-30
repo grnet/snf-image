@@ -354,7 +354,7 @@ class Disklabel:
                            self.bbsize,
                            self.sbsize,
                            self.ptable.pack() +
-                           ((364 - self.npartitions*16) * '\x00'))
+                           ((364 - self.npartitions * 16) * '\x00'))
 
     def compute_checksum(self):
         """Compute the checksum of the disklabel"""
