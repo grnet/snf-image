@@ -480,8 +480,8 @@ class Disklabel:
             "Magic Number: 0x%x\n" % self.magic + \
             "Drive type: %d\n" % self.dtype + \
             "Subtype: %d\n" % self.subtype + \
-            "Typename: %s\n" % self.typename + \
-            "Pack Identifier: %s\n" % self.packname + \
+            "Typename: %s\n" % self.typename.strip('\x00').strip() + \
+            "Pack Identifier: %s\n" % self.packname.strip('\x00').strip() + \
             "Number of bytes per sector: %d\n" % self.secsize + \
             "Number of data sectors per track: %d\n" % self.nsectors + \
             "Number of tracks per cylinder: %d\n" % self.ntracks + \
