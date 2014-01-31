@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2013 GRNET S.A.
@@ -232,7 +233,7 @@ class Disklabel:
             """Print the Partition table"""
             val = ""
             for i in range(len(self.part)):
-                val = "%s%s\n" % (val, str(self.part[i]))
+                val += "%c: %s\n" % (chr(ord('a') + i), str(self.part[i]))
             return val
 
         def pack(self):
