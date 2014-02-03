@@ -37,13 +37,19 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
 fi
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = openbsd ]; then
-   part="${SNF_IMAGE_DEV}$(@scriptsdir@/disklabel.py --print-last-linux "$SNF_IMAGE_DEV")"
+    bsd_part="$(@scriptsdir@/disklabel.py --get-last-partition "$SNF_IMAGE_DEV")"
+    if [ "$bsd_part" = "b" ]; then
+        warn "Last partition is swap space. Resizing ommited"
+        exit 0
+    fi
 
-   # If this fails the script will stop
-   $DUMPFS_OPENBSD "$part" > /dev/null
+    part="${SNF_IMAGE_DEV}$(disklabel2linux "$bsd_part")"
 
-   $GROWFS_OPENBSD -y "$part"
-   exit 0
+    $DUMPFS_OPENBSD "$part" > /dev/null ||
+        { warn "Filesystem is not UFS. Resizing ommited"; exit 0; }
+
+    $GROWFS_OPENBSD -y "$part"
+    exit 0
 fi
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = netbsd ]; then

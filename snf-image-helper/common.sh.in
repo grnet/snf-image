@@ -551,7 +551,7 @@ mount_all() {
             if [[ "$osfamily" =~ ^(open|net)bsd$ ]]; then
                 # OpenBSD DUIDs device naming
                 if [[ "${entry[1]}" =~ ^[a-f0-9]{16}\.[a-p]$ ]]; then
-                    duid="$(@scriptsdir@/disklabel.py --print-duid "$device")"
+                    duid="$(@scriptsdir@/disklabel.py --get-duid "$device")"
 
                     if [[ ! "${entry[1]}" =~ ^$duid ]]; then
                         warn "fstab refers to unknown DUID: \`$duid'"

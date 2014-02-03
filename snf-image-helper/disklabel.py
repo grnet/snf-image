@@ -515,13 +515,10 @@ if __name__ == '__main__':
     parser.add_option("-l", "--list", action="store_true", dest="list",
                       default=False,
                       help="list the disklabel on the specified media")
-    parser.add_option("--print-last", action="store_true", dest="last_part",
-                      default=False,
+    parser.add_option("--get-last-partition", action="store_true",
+                      dest="last_part", default=False,
                       help="print the label of the last partition")
-    parser.add_option("--print-last-linux", action="store_true",
-                      dest="last_linux", default=False,
-                      help="print the linux number for the last partition")
-    parser.add_option("--print-duid", action="store_true", dest="duid",
+    parser.add_option("--get-duid", action="store_true", dest="duid",
                       default=False,
                       help="print the disklabel unique identifier")
     parser.add_option("-d", "--enlarge-disk", type="int", dest="disk_size",
@@ -549,12 +546,6 @@ if __name__ == '__main__':
 
     if options.last_part:
         print "%c" % chr(ord('a') + disklabel.get_last_partition_id())
-
-    if options.last_linux:
-        part_id = disklabel.get_last_partition_id()
-        # The linux kernel does not assign a partition for label 'c' that
-        # describes the whole disk
-        print part_id + (4 if part_id > 2 else 5)
 
     if options.disk_size is not None:
         disklabel.enlarge_disk(options.disk_size)
