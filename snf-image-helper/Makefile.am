@@ -24,4 +24,4 @@ edit = sed \
 		   $(edit) $${srcdir}$@.in >$@.tmp
 	mv $@.tmp $@
 
-CLEANFILES = snf-image-helper
+CLEANFILES = snf-image-helper common.sh

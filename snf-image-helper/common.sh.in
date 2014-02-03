@@ -487,6 +487,110 @@ get_unattend() {
     echo "$exists"
 }
 
+disklabel2linux() {
+    local partition i p
+    partition="$1"
+
+    i=4
+    # Partition 'c' traditionally used to describe the entire disk is not
+    # mapped to /dev/sda7 by the kernel
+    for p in a b {d..p}; do
+        let i++
+        if [ "$p" = "$partition" ]; then
+           echo "$i"
+           return 0
+        fi
+    done
+
+    log_error "Invalid BSD partition label: \`$partition'"
+}
+
+mount_all() {
+    local osfamily target fs device fstab entry duid opts types num
+    osfamily="$1"
+    device="$2"
+    target="$3"
+
+    case "$osfamily" in
+    linux)
+        fs="ext[234]|msdos|vfat|ntfs"
+        ;;
+    freebsd)
+        fs="ufs|msdosfs|ntfs"
+        ;;
+    openbsd)
+        fs="ffs|msdos|ntfs|ext2fs"
+        ;;
+    netbsd)
+        fs="ffs|ufs|msdos|ext2fs|ntfs"
+        ;;
+    *)
+        log_error "Unsupported osfamily: \`$osfamily'"
+        ;;
+    esac
+
+    fstab="$(grep -v ^\# "${target}/etc/fstab" | awk "{ if (match(\$3, \"$fs\")) { print \$2,\$1,\$3 } }" | sort -bd)"
+    # <mpoint> <device> <fs>
+    while read -ra entry; do
+        # Skip root. It is already mounted
+        if [ "${entry[0]}" = "/" ]; then
+            continue
+        fi
+
+        opts="rw"
+        types="auto"
+
+        if [ "$osfamily" = linux ]; then
+            # Linux persistent block device naming
+            if [[ ${entry[1]} =~ ^(LABEL|UUID)= ]]; then
+                entry[1]=$(findfs "${entry[1]}")
+            else
+                log_error "fstab contains non-persistent block device names"
+            fi
+        else
+            if [[ "$osfamily" =~ ^(open|net)bsd$ ]]; then
+                # OpenBSD DUIDs device naming
+                if [[ "${entry[1]}" =~ ^[a-f0-9]{16}\.[a-p]$ ]]; then
+                    duid="$(@scriptsdir@/disklabel.py --print-duid "$device")"
+
+                    if [[ ! "${entry[1]}" =~ ^$duid ]]; then
+                        warn "fstab refers to unknown DUID: \`$duid'"
+                        continue
+                    fi
+                fi
+                num="$(disklabel2linux "${entry[1]: -1}")"
+                if [ "${entry[2]}" = ffs -o "$entry[2]" = ufs ]; then
+                    types="ufs"
+                    opts="ufstype=44bsd,rw"
+                fi
+            else # FreeBSD
+                # We do not support FreeBSD labels for now
+                if [[ "${entry[1]}" =~ ^/dev/(ufs|label)/ ]]; then
+                    log_error "fstab contains FreeBSD labels. We currently don't support them"
+                fi
+                num="${entry[1]: -1}"
+                if [ "${entry[2]}" = ufs ]; then
+                    types="ufs"
+                    opts="ufstype=ufs2,rw"
+                fi
+            fi
+            entry[1]="${device}${num}"
+        fi
+
+        $MOUNT -t "$types" -o "$opts" "${entry[1]}" "${target}${entry[0]}"
+        # In many cases when you try to mount a UFS file system read-write, the
+        # mount command returns SUCCESS and a message like this gets printed:
+        #
+        #   mount: warning: <target> seems to be mounted read-only.
+        #
+        # remounting does the trick
+        if [ "$types" = ufs ]; then
+            $MOUNT -o remount,rw "${entry[1]}"
+        fi
+
+    done <<< "$fstab"
+}
+
 umount_all() {
     local target mpoints
     target="$1"
