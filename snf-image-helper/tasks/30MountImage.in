@@ -50,44 +50,25 @@ if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" == *bsd ]]; then
         os=${SNF_IMAGE_PROPERTY_OSFAMILY^^[bsd]}
         log_error "For ${os^?} images only UFS root partitions are supported."
     fi
+
     ufstype="$(get_ufstype "$rootdev")"
     if [ "x$ufstype" = "x" ]; then
-        exit 1
+        log_error "Unable to recognize the UFS type in the root partition."
     fi
+
     $MOUNT -t ufs -o ufstype="$ufstype,rw" "$rootdev" "$SNF_IMAGE_TARGET"
+
+    # See mount_all() for a reason why we do this
+    $MOUNT -o remount,rw "$SNF_IMAGE_TARGET"
 else
     $MOUNT -o rw "$rootdev" "$SNF_IMAGE_TARGET"
 fi
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "linux" ]; then
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     exit 0
 fi
 
-if [ ! -f "${SNF_IMAGE_TARGET}/etc/fstab" ]; then
-    log_error "/etc/fstab is missing from the root file system"
-fi
-
-# Read the local partitions from fstab and get a sorted list:
-#<mount_point> <device> <options>
-fstab="$(grep -v ^\# "${SNF_IMAGE_TARGET}/etc/fstab" | awk '{ if (match($3, "ext[234]")) { print $2,$1,$4 } }' | sort -bd)"
-
-# Mount non-root filesystems
-while read line; do
-    read -ra entry <<< "$line"
-    # Skip root. It is already mounted
-    if [ "${entry[0]}" = "/" ]; then
-        continue
-    fi
-
-    if [[ ${entry[1]} =~ ^(LABEL|UUID)= ]]; then
-        entry[1]=$(findfs "${entry[1]}")
-    fi
-
-    # I'm in doupt. Sould I mount the filesystems with the mount options
-    # found in the image's /etc/fstab or not?
-    $MOUNT "${entry[1]}" "${SNF_IMAGE_TARGET}${entry[0]}" # -o "${entry[2]}"
-
-done <<< "$fstab"
+mount_all "$SNF_IMAGE_PROPERTY_OSFAMILY" "$SNF_IMAGE_DEV" "$SNF_IMAGE_TARGET"
 
 exit 0
 
