@@ -40,8 +40,8 @@ fi
 rootdev="${SNF_IMAGE_DEV}${SNF_IMAGE_PROPERTY_ROOT_PARTITION}"
 
 if [ ! -b "$rootdev" ]; then
-    log_error "Root partition device:\`$rootdev' is not a block device. " \
-        "Please check if the value for image property \`ROOT_PARTITION' " \
+    log_error "Root partition device:\`$rootdev' is not a block device." \
+        "Please check if the value for image property \`ROOT_PARTITION'" \
         "(=$SNF_IMAGE_PROPERTY_ROOT_PARTITION) is valid."
 fi
 
@@ -66,6 +66,12 @@ fi
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     exit 0
+fi
+
+if [ ! -f "$SNF_IMAGE_TARGET/etc/fstab" ]; then
+    log_error "\`/etc/fstab' is missing from the root partition." \
+        "Please check if the value for image property \`ROOT_PARTITION'" \
+        "(=$SNF_IMAGE_PROPERTY_ROOT_PARTITION) is valid."
 fi
 
 mount_all "$SNF_IMAGE_PROPERTY_OSFAMILY" "$SNF_IMAGE_DEV" "$SNF_IMAGE_TARGET"
