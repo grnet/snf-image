@@ -1,3 +1,8 @@
+2014-02-06, v0.13
+	* Add support for extending OpenBSD partitions
+	* Add a new HELPER_MEMORY option in /etc/default/snf-image. This can be
+	  used to specify the Virtual RAM size of the helper VM
+
 2014-01-24, v0.12.1
 	* Fix a bug affecting import and export scripts
 
