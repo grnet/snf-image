@@ -35,7 +35,7 @@ launch_helper() {
 
     $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
       kvm -runas "$HELPER_USER" -drive file="$HELPER_DIR/image",format=raw,if=virtio,readonly \
-      -drive file="$blockdev",format=raw,if=virtio,cache=none \
+      -drive file="$blockdev",format=raw,if=virtio,cache=none -m "$HELPER_MEMORY" \
       -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
       -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
       -fda "$floppy" -vga none -nographic -parallel none -monitor null \

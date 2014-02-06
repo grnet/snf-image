@@ -19,16 +19,15 @@ snf-image supports `KVM <http://www.linux-kvm.org/page/Main_Page>`_ and
 
 snf-image also supports Image customization via hooks. Hooks allow for:
 
- * changing the password of root or arbitrary users
- * injecting files at arbitrary locations inside the filesystem, e.g., SSH keys
+ * Changing the password of root or arbitrary users
+ * Injecting files into the file system, e.g., SSH keys
  * setting a custom hostname
  * re-creating SSH host keys to ensure the image uses unique keys
 
 snf-image is being used in large scale production environments with Ganeti to
 successfully deploy many major Linux distributions (Debian, Ubuntu/Kubuntu,
-CentOS, Fedora, OpenSUSE), Windows 2008 R2 & Windows Server 2012, as well as
-FreeBSD. Support for OpenBSD and NetBSD is also included with exception to
-extending partitions.
+CentOS, Fedora, OpenSUSE, Slackware, Arch Linux), Windows Server flavors
+(2008 R2, 2012, 20012 R2), as well as BSD systems (FreeBSD, OpenBSD, NetBSD).
 
 The snf-image Ganeti OS Definition is released under
 `GPLv2 <http://www.gnu.org/licenses/gpl-2.0.html>`_.
