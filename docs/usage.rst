@@ -59,6 +59,14 @@ that have been tested with snf-image and provided here for testing purposes:
    [`diskdump <http://cdn.synnefo.org/freebsd-9.2-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/freebsd-9.2-x86_64.diskdump.md5sum>`_]
    [`metadata <http://cdn.synnefo.org/freebsd-9.2-x86_64.diskdump.meta>`_]
+ * OpenBSD 5.4
+   [`diskdump <http://cdn.synnefo.org/openbsd-5.4-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/openbsd-5.4-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/openbsd-5.4-x86_64.diskdump.meta>`_]
+ * NetBSD 6.1
+   [`diskdump <http://cdn.synnefo.org/netbsd-6.1-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/netbsd-6.1-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/netbsd-6.1-x86_64.diskdump.meta>`_]
 
 Sample Usage
 ^^^^^^^^^^^^
