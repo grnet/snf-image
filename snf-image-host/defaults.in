@@ -38,6 +38,9 @@
 # HELPER_USER imeddiately before starting execution of the helper VM.
 # HELPER_USER="nobody"
 
+# HELPER_MEMORY: Virtual RAM size in megabytes to be given to the helper VM.
+# HELPER_MEMORY="256"
+
 # MULTISTRAP_CONFIG: Configuration file to be used with multistrap to create
 # the rootfs of the helper image.
 # MULTISTRAP_CONFIG="@MULTISTRAP_CONFIG@"
