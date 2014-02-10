@@ -27,10 +27,10 @@ that have been tested with snf-image and provided here for testing purposes:
    [`diskdump <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump.md5sum>`_]
    [`metadata <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump.meta>`_]
- * Fedora Desktop 19
-   [`diskdump <http://cdn.synnefo.org/fedora-19-x86_64.diskdump>`_]
-   [`md5sum <http://cdn.synnefo.org/fedora-19-x86_64.diskdump.md5sum>`_]
-   [`metadata <http://cdn.synnefo.org/fedora-19-x86_64.diskdump.meta>`_]
+ * Fedora Desktop 20
+   [`diskdump <http://cdn.synnefo.org/fedora-20-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/fedora-20-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/fedora-20-x86_64.diskdump.meta>`_]
  * Ubuntu Desktop LTS 12.04
    [`diskdump <http://cdn.synnefo.org/ubuntu_desktop-12.04-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/ubuntu_desktop-12.04-x86_64.diskdump.md5sum>`_]
