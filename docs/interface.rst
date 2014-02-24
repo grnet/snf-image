@@ -139,6 +139,18 @@ Optional properties
    `here <http://pythonhosted.org/passlib/modular_crypt_format.html#mcf-identifiers>`_
    for more info).
 
+ * **SWAP=<partition id>:<size>**
+   If this property is defined, *snf-image* will create a swap partition with
+   the specified size in MB. The *partition id* is the number that the linux
+   kernel will assign to this partition. For example, if you have a disk with
+   an msdos partition table on it and one primary partition, the image
+   property *SWAP=2:512* would instruct *snf-image* to create a 512MB long
+   primary partition for swap with id=2. On the other hand, if the SWAP
+   property had this form: *SWAP=5:512*, since primary partitions may have an
+   id from 1 to 4, *snf-image* would create a 512MB extended partition with
+   id=2 and a logical swap partition with id=5 in it with the same size. This
+   property only applies to Linux instances.
+
  * **EXCLUDE_ALL_TASKS=yes**
    If this property is defined with a value other than null, then during the
    deployment, the image will not be configured at all. This is really handy
