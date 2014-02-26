@@ -24,9 +24,9 @@ that have been tested with snf-image and provided here for testing purposes:
    [`md5sum <http://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump.md5sum>`_]
    [`metadata <http://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump.meta>`_]
  * CentOS 6.x
-   [`diskdump <http://cdn.synnefo.org/centos-6.x-x86_64.diskdump>`_]
-   [`md5sum <http://cdn.synnefo.org/centos-6.x-x86_64.diskdump.md5sum>`_]
-   [`metadata <http://cdn.synnefo.org/centos-6.x-x86_64.diskdump.meta>`_]
+   [`diskdump <http://cdn.synnefo.org/centos-6-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/centos-6-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/centos-6-x86_64.diskdump.meta>`_]
  * Fedora Desktop 20
    [`diskdump <http://cdn.synnefo.org/fedora-20-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/fedora-20-x86_64.diskdump.md5sum>`_]
