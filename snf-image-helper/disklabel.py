@@ -28,6 +28,7 @@ import cStringIO
 import optparse
 
 from collections import namedtuple
+from collections import OrderedDict
 
 BLOCKSIZE = 512
 
@@ -48,14 +49,13 @@ class MBR(object):
 
         def __init__(self, raw_part):
             """Create a Partition instance"""
-            (
-                self.status,
-                self.start,
-                self.type,
-                self.end,
-                self.first_sector,
-                self.sector_count
-            ) = struct.unpack(self.format, raw_part)
+            (self.status,
+             self.start,
+             self.type,
+             self.end,
+             self.first_sector,
+             self.sector_count
+             ) = struct.unpack(self.format, raw_part)
 
         def pack(self):
             """Pack the partition values into a binary string"""
@@ -213,19 +213,110 @@ class Disk(object):
         start = self.mbr.part[self.part_num].first_sector
         self.mbr.part[self.part_num].sector_count = end - start + 1
 
-        cylinder = end // (self.disklabel.ntracks * self.disklabel.nsectors)
-        header = (end // self.disklabel.nsectors) % self.disklabel.ntracks
-        sector = (end % self.disklabel.nsectors) + 1
+        ntracks = self.disklabel.field['ntracks']
+        nsectors = self.disklabel.field['nsectors']
+
+        cylinder = end // (ntracks * nsectors)
+        header = (end // nsectors) % ntracks
+        sector = (end % nsectors) + 1
         chs = MBR.Partition.pack_chs(cylinder, header, sector)
         self.mbr.part[self.part_num].end = chs
 
     def enlarge_last_partition(self):
+        """Enlarge the last partition to cover up all the free space"""
         self.disklabel.enlarge_last_partition()
+
+    def get_last_partition_id(self):
+        """Get the ID of the last partition"""
+        return self.disklabel.get_last_partition_id()
+
+    def get_duid(self):
+        """Get the Disklabel Unique Identifier (works only for OpenBSD)"""
+        if 'uid' in self.disklabel.field:
+            return self.disklabel.field['uid']
+
+        return ""
+
+
+class DisklabelBase(object):
+    """Disklabel base class"""
+
+    def __init__(self, device):
+        """Create a Disklabel instance"""
+        pass
+
+    @property
+    def format(self):
+        """Fields format string"""
+        raise NotImplementedError
+
+    @property
+    def field(self):
+        """Diskalabel Fields data structure"""
+        raise NotImplementedError
+
+    @property
+    def ptable(self):
+        """Partition Table data structure"""
+        raise NotImplementedError
+
+    def pack(self, checksum=None):
+        """Return a binary copy of the Disklabel block"""
+
+        if checksum is not None:
+            out = self.field.copy()
+            out['checksum'] = checksum
+        else:
+            out = self.field
+
+        return struct.pack(self.format, * out.values() + [self.ptable.pack()])
+
+    def compute_checksum(self):
+        """Compute the checksum of the disklabel"""
+
+        raw = cStringIO.StringIO(self.pack(0))
+        checksum = 0
+        try:
+            uint16 = raw.read(2)
+            while uint16 != "":
+                checksum ^= struct.unpack('<H', uint16)[0]
+                uint16 = raw.read(2)
+        finally:
+            raw.close()
+
+        return checksum
+
+    def enlarge(self, new_size):
+        """Enlarge the disk and return the last useable sector"""
+        raise NotImplementedError
+
+    def write_to(self, device):
+        """Write the disklabel to a device"""
+
+        # The disklabel starts at sector 1
+        device.seek(BLOCKSIZE, os.SEEK_CUR)
+        device.write(self.pack())
+
+    def enlarge_last_partition(self):
+        """Enlarge the last partition to consume all the useable space"""
+        raise NotImplementedError
+
+    def get_last_partition_id(self):
+        """Get the ID of the last partition"""
+        raise NotImplementedError
+
+    def __str__(self):
+        """Print the Disklabel"""
+        raise NotImplementedError
 
 
 class PartitionTableBase(object):
     """Base Class for disklabel partition tables"""
-    format = ""
+
+    @property
+    def format(self):
+        """Partition table format string"""
+        raise NotImplementedError
 
     Partition = namedtuple('Partition', '')
 
@@ -256,10 +347,10 @@ class PartitionTableBase(object):
         ret = ""
         for i in xrange(len(self.part)):
             ret += struct.pack(self.format, *self.part[i])
-        return ret
+        return ret + ((364 - len(self.part) * 16) * '\x00')
 
 
-class BSDDisklabel(object):
+class BSDDisklabel(DisklabelBase):
     """Represents a BSD Disklabel"""
 
     class PartitionTable(PartitionTableBase):
@@ -276,7 +367,7 @@ class BSDDisklabel(object):
              'cpg'        # 14      2      Filesystem cylinders per group
              ])
 
-    format = "<IHH16s16sIIIIIIHHIHHHHIII20s20sIHHII64s"
+    format = "<IHH16s16sIIIIIIHHIHHHHIII20s20sIHHII364s"
     """
     Offset  Length          Contents
     0       4               Magic
@@ -311,7 +402,7 @@ class BSDDisklabel(object):
     """
 
 
-class OpenBSDDisklabel(object):
+class OpenBSDDisklabel(DisklabelBase):
     """Represents an OpenBSD Disklabel"""
 
     class PartitionTable(PartitionTableBase):
@@ -329,13 +420,12 @@ class OpenBSDDisklabel(object):
              'cpg'        # 14      2      File system cylinders per group
              ])
 
-
         def setpsize(self, i, size):
             """Set size for partition i"""
             tmp = self.part[i]
-            self.part[i] = self.Partition(size & 0xffffffff, tmp.offset,
-                                          tmp.offseth, size >> 32, tmp.fstype,
-                                          tmp.frag, tmp.cpg)
+            self.part[i] = self.Partition(
+                size & 0xffffffff, tmp.offset, tmp.offseth, size >> 32,
+                tmp.fstype, tmp.frag, tmp.cpg)
 
         def getpsize(self, i):
             """Get size for partition i"""
@@ -344,187 +434,113 @@ class OpenBSDDisklabel(object):
         def setpoffset(self, i, offset):
             """Set offset for partition i"""
             tmp = self.part[i]
-            self.part[i] = self.Partition(tmp.size, offset & 0xffffffff,
-                                          offset >> 32, tmp.sizeh, tmp.frag,
-                                          tmp.cpg)
+            self.part[i] = self.Partition(
+                tmp.size, offset & 0xffffffff, offset >> 32, tmp.sizeh,
+                tmp.frag, tmp.cpg)
 
         def getpoffset(self, i):
             """Get offset for partition i"""
             return (self.part[i].offseth << 32) + self.part[i].offset
 
-    format = "<IHH16s16sIIIIII8sIHHIII20sHH16sIHHII364s"
-    """
-    Offset  Length          Contents
-    0       4               Magic
-    4       2               Drive Type
-    6       2               Subtype
-    8       16              Type Name
-    24      16              Pack Identifier
-    32      4               Bytes per sector
-    36      4               Data sectors per track
-    40      4               Tracks per cylinder
-    44      4               Data cylinders per unit
-    48      4               Data sectors per cylinder
-    52      4               Data sectors per unit
-    56      8               Unique label identifier
-    64      4               Alt cylinders per unit
-    68      2               Start of useable region (high part)
-    70      2               Size of useable region (high part)
-    72      4               Start of useable region
-    76      4               End of useable region
-    80      4               Generic Flags
-    84      5*4             Drive-type specific information
-    104     2               Number of data sectors (high part)
-    106     2               Version
-    108     4*4             Reserved for future use
-    124     4               Magic number
-    128     2               Xor of data including partitions
-    130     2               Number of partitions in following
-    132     4               size of boot area at sn0, bytes
-    136     4               Max size of fs superblock, bytes
-    140     16*16           Partition Table
-    """
     def __init__(self, device):
         """Create a DiskLabel instance"""
 
+        super(OpenBSDDisklabel, self).__init__(device)
+
+        # Disklabel starts at offset one
         device.seek(BLOCKSIZE, os.SEEK_CUR)
-        # The offset of the disklabel from the beginning of the partition is
-        # one sector
         sector1 = device.read(BLOCKSIZE)
 
-        (self.magic,
-         self.dtype,
-         self.subtype,
-         self.typename,
-         self.packname,
-         self.secsize,
-         self.nsectors,
-         self.ntracks,
-         self.ncylinders,
-         self.secpercyl,
-         self.secperunit,
-         self.uid,
-         self.acylinders,
-         self.bstarth,
-         self.bendh,
-         self.bstart,
-         self.bend,
-         self.flags,
-         self.drivedata,
-         self.secperunith,
-         self.version,
-         self.spare,
-         self.magic2,
-         self.checksum,
-         self.npartitions,
-         self.bbsize,
-         self.sbsize,
-         ptable_raw) = struct.unpack(self.format, sector1)
+        self.format = "<IHH16s16sIIIIII8sIHHIII20sHH16sIHHII364s"
+        d_ = OrderedDict()   # Off  Len    Content
+        (d_["magic"],        # 0    4      Magic
+         d_["dtype"],        # 4    2      Drive Type
+         d_["subtype"],      # 6    2      Subtype
+         d_["typename"],     # 8    16     Type Name
+         d_["packname"],     # 24   16     Pack Identifier
+         d_["secsize"],      # 32   4      Bytes per sector
+         d_["nsectors"],     # 36   4      Data sectors per track
+         d_["ntracks"],      # 40   4      Tracks per cylinder
+         d_["ncylinders"],   # 44   4      Data cylinders per unit
+         d_["secpercyl"],    # 48   4      Data sectors per cylinder
+         d_["secperunit"],   # 52   4      Data sectors per unit
+         d_["uid"],          # 56   8      Unique label identifier
+         d_["acylinders"],   # 64   4      Alt cylinders per unit
+         d_["bstarth"],      # 68   2      Start of useable region (high part)
+         d_["bendh"],        # 70   2      Size of useable region (high part)
+         d_["bstart"],       # 72   4      Start of useable region
+         d_["bend"],         # 76   4      End of useable region
+         d_["flags"],        # 80   4      Generic Flags
+         d_["drivedata"],    # 84   5*4    Drive-type specific information
+         d_["secperunith"],  # 104  2      Number of data sectors (high part)
+         d_["version"],      # 106  2      Version
+         d_["spare"],        # 108  4*4    Reserved for future use
+         d_["magic2"],       # 124  4      Magic number
+         d_["checksum"],     # 128  2      Xor of data including partitions
+         d_["npartitions"],  # 130  2      Number of partitions in following
+         d_["bbsize"],       # 132  4      size of boot area at sn0, bytes
+         d_["sbsize"],       # 136  4      Max size of fs superblock, bytes
+         ptable_raw          # 140  16*16  Partition Table
+         ) = struct.unpack(self.format, sector1)
 
-        assert self.magic == DISKMAGIC, "Disklabel is not valid"
-
-        self.ptable = self.PartitionTable(ptable_raw, self.npartitions)
-
-    def pack(self, checksum=None):
-        return struct.pack(self.format,
-                           self.magic,
-                           self.dtype,
-                           self.subtype,
-                           self.typename,
-                           self.packname,
-                           self.secsize,
-                           self.nsectors,
-                           self.ntracks,
-                           self.ncylinders,
-                           self.secpercyl,
-                           self.secperunit,
-                           self.uid,
-                           self.acylinders,
-                           self.bstarth,
-                           self.bendh,
-                           self.bstart,
-                           self.bend,
-                           self.flags,
-                           self.drivedata,
-                           self.secperunith,
-                           self.version,
-                           self.spare,
-                           self.magic2,
-                           self.checksum if checksum is None else checksum,
-                           self.npartitions,
-                           self.bbsize,
-                           self.sbsize,
-                           self.ptable.pack() +
-                           ((364 - self.npartitions * 16) * '\x00'))
-
-    def compute_checksum(self):
-        """Compute the checksum of the disklabel"""
-
-        raw = cStringIO.StringIO(self.pack(0))
-        checksum = 0
-        try:
-            uint16 = raw.read(2)
-            while uint16 != "":
-                checksum ^= struct.unpack('<H', uint16)[0]
-                uint16 = raw.read(2)
-        finally:
-            raw.close()
-
-        return checksum
+        assert d_['magic'] == d_['magic2'] == DISKMAGIC, "Disklabel not valid"
+        self.ptable = self.PartitionTable(ptable_raw, d_['npartitions'])
+        self.field = d_
 
     def setdsize(self, dsize):
         """Set disk size"""
-        self.secperunith = dsize >> 32
-        self.secperunit = dsize & 0xffffffff
+        self.field['secperunith'] = dsize >> 32
+        self.field['secperunit'] = dsize & 0xffffffff
 
     def getdsize(self):
         """Get disk size"""
-        return (self.secperunith << 32) + self.secperunit
+        return (self.field['secperunith'] << 32) + self.field['secperunit']
+
+    dsize = property(getdsize, setdsize, None, "disk size")
 
     def setbstart(self, bstart):
         """Set start of useable region"""
-        self.bstarth = bstart >> 32
-        self.bstart = bstart & 0xffffffff
+        self.field['bstarth'] = bstart >> 32
+        self.field['bstart'] = bstart & 0xffffffff
 
     def getbstart(self):
         """Get start of useable region"""
-        return (self.bstarth << 32) + self.bstart
+        return (self.field['bstarth'] << 32) + self.field['bstart']
+
+    bstart = property(getbstart, setbstart, None, "start of useable region")
 
     def setbend(self, bend):
         """Set end of useable region"""
-        self.bendh = bend >> 32
-        self.bend = bend & 0xffffffff
+        self.field['bendh'] = bend >> 32
+        self.field['bend'] = bend & 0xffffffff
 
     def getbend(self):
         """Get end of useable region"""
-        return (self.bendh << 32) + self.bend
+        return (self.field['bendh'] << 32) + self.field['bend']
+
+    bend = property(getbend, setbend, None, "end of useable region")
 
     def enlarge(self, new_size):
-        """Enlarge the size of the disk and return the last useable sector"""
+        """Enlarge the disk and return the last useable sector"""
 
-        assert new_size >= self.getdsize(), \
-            "New size cannot be smaller that %d" % self.getdsize()
+        assert new_size >= self.dsize, \
+            "New size cannot be smaller that %d" % self.dsize
 
         # Fix the disklabel
-        self.setdsize(new_size)
-        self.ncylinders = self.getdsize() // (self.nsectors * self.ntracks)
-        self.setbend(self.ncylinders * self.nsectors * self.ntracks)
+        self.dsize = new_size
+        self.field['ncylinders'] = self.dsize // (self.field['nsectors'] *
+                                                  self.field['ntracks'])
+        self.bend = (self.field['ncylinders'] * self.field['nsectors'] *
+                     self.field['ntracks'])
 
         # Partition 'c' describes the entire disk
         self.ptable.setpsize(2, new_size)
 
         # Update the checksum
-        self.checksum = self.compute_checksum()
+        self.field['checksum'] = self.compute_checksum()
 
         # The last useable sector is the end of the useable region minus one
-        return self.getbend() - 1
-
-    def write_to(self, device):
-        """Write the disklabel to a device"""
-
-        # The disklabel starts at sector 1
-        device.seek(BLOCKSIZE, os.SEEK_CUR)
-        device.write(self.pack())
+        return self.bend - 1
 
     def get_last_partition_id(self):
         """Returns the id of the last partition"""
@@ -553,47 +569,53 @@ class OpenBSDDisklabel(object):
             #TODO: Maybe create a warning?
             return
 
-        if end > (self.getbend() - 1024):
+        if end > (self.bend - 1024):
             return
 
         self.ptable.setpsize(
-            part_num, self.getbend() - self.ptable.getpoffset(part_num) - 1024)
+            part_num, self.bend - self.ptable.getpoffset(part_num) - 1024)
 
-        self.checksum = self.compute_checksum()
+        self.field['checksum'] = self.compute_checksum()
 
     def __str__(self):
         """Print the Disklabel"""
 
+        # Those values may contain null bytes
+        typename = self.field['typename'].strip('\x00').strip()
+        packname = self.field['packname'].strip('\x00').strip()
+
+        duid = "".join(x.encode('hex') for x in self.field['uid'])
+
         title = "Disklabel"
         return \
             "%s\n%s\n" % (title, len(title) * "=") + \
-            "Magic Number: 0x%x\n" % self.magic + \
-            "Drive type: %d\n" % self.dtype + \
-            "Subtype: %d\n" % self.subtype + \
-            "Typename: %s\n" % self.typename.strip('\x00').strip() + \
-            "Pack Identifier: %s\n" % self.packname.strip('\x00').strip() + \
-            "Number of bytes per sector: %d\n" % self.secsize + \
-            "Number of data sectors per track: %d\n" % self.nsectors + \
-            "Number of tracks per cylinder: %d\n" % self.ntracks + \
-            "Number of data cylinders per unit: %d\n" % self.ncylinders + \
-            "Number of data sectors per cylinder: %d\n" % self.secpercyl + \
-            "Number of data sectors per unit: %d\n" % self.secperunit + \
-            "DUID: %s\n" % "".join(x.encode('hex') for x in self.uid) + \
-            "Alt. cylinders per unit: %d\n" % self.acylinders + \
-            "Start of useable region (high part): %d\n" % self.bstarth + \
-            "Size of useable region (high part): %d\n" % self.bendh + \
-            "Start of useable region: %d\n" % self.bstart + \
-            "End of useable region: %d\n" % self.bend + \
-            "Generic Flags: %r\n" % self.flags + \
-            "Drive data: %r\n" % self.drivedata + \
-            "Number of data sectors (high part): %d\n" % self.secperunith + \
-            "Version: %d\n" % self.version + \
-            "Reserved for future use: %r\n" % self.spare + \
-            "The magic number again: 0x%x\n" % self.magic2 + \
-            "Checksum: %d\n" % self.checksum + \
-            "Number of partitions: %d\n" % self.npartitions + \
-            "Size of boot area at sn0: %d\n" % self.bbsize + \
-            "Max size of fs superblock: %d\n" % self.sbsize + \
+            "Magic Number: 0x%(magic)x\n" \
+            "Drive type: %(dtype)d\n" \
+            "Subtype: %(subtype)d\n" % self.field + \
+            "Typename: %s\n" % typename + \
+            "Pack Identifier: %s\n" % packname + \
+            "# of bytes per sector: %(secsize)d\n" \
+            "# of data sectors per track: %(nsectors)d\n" \
+            "# of tracks per cylinder: %(ntracks)d\n" \
+            "# of data cylinders per unit: %(ncylinders)d\n" \
+            "# of data sectors per cylinder: %(secpercyl)d\n" \
+            "# of data sectors per unit: %(secperunit)d\n" % self.field + \
+            "DUID: %s\n" % duid + \
+            "Alt. cylinders per unit: %(acylinders)d\n" \
+            "Start of useable region (high part): %(bstarth)d\n" \
+            "Size of useable region (high part): %(bendh)d\n" \
+            "Start of useable region: %(bstart)d\n" \
+            "End of useable region: %(bend)d\n" \
+            "Generic Flags: %(flags)r\n" \
+            "Drive data: %(drivedata)r\n" \
+            "Number of data sectors (high part): %(secperunith)d\n" \
+            "Version: %(version)d\n" \
+            "Reserved for future use: %(spare)r\n" \
+            "The magic number again: 0x%(magic2)x\n" \
+            "Checksum: %(checksum)d\n" \
+            "Number of partitions: %(npartitions)d\n"  \
+            "Size of boot area at sn0: %(bbsize)d\n"  \
+            "Max size of fs superblock: %(sbsize)d\n" % self.field + \
             "%s" % self.ptable
 
 
@@ -631,7 +653,7 @@ def main():
         return 0
 
     if options.duid:
-        print "%s" % "".join(x.encode('hex') for x in disk.uid)
+        print "%s" % "".join(x.encode('hex') for x in disk.get_duid())
         return 0
 
     if options.last_part:
