@@ -367,39 +367,91 @@ class BSDDisklabel(DisklabelBase):
              'cpg'        # 14      2      Filesystem cylinders per group
              ])
 
-    format = "<IHH16s16sIIIIIIHHIHHHHIII20s20sIHHII364s"
-    """
-    Offset  Length          Contents
-    0       4               Magic
-    4       2               Drive Type
-    6       2               Subtype
-    8       16              Type Name
-    24      16              Pack Identifier
-    32      4               Bytes per sector
-    36      4               Data sectors per track
-    40      4               Tracks per cylinder
-    44      4               Data cylinders per unit
-    48      4               Data sectors per cylinder
-    52      4               Data sectors per unit
-    56      2               Spare sectors per track
-    58      2               Spare sectors per cylinder
-    60      4               Alternative cylinders per unit
-    64      2               Rotation Speed
-    66      2               Hardware sector interleave
-    68      2               Sector 0 skew, per track
-    70      2               Sector 0 skew, per cylinder
-    72      4               Head switch time
-    76      4               Track-to-track seek
-    80      4               Generic Flags
-    84      5*4             Drive-type specific information
-    104     5*4             Reserved for future use
-    124     4               Magic Number
-    128     2               Xor of data including partitions
-    130     2               Number of partitions following
-    132     4               size of boot area at sn0, bytes
-    136     4               Max size of fs superblock, bytes
-    140     16*16           Partition Table
-    """
+    def __init__(self, device):
+        """Create a BSD DiskLabel instance"""
+
+        super(BSDDisklabel, self).__init__(device)
+
+        # Disklabel starts at offset one
+        device.seek(BLOCKSIZE, os.SEEK_CUR)
+        sector1 = device.read(BLOCKSIZE)
+
+        self.format = "<IHH16s16sIIIIIIHHIHHHHIII20s20sIHHII364s"
+        d_ = OrderedDict()      # Off  Len    Content
+        (d_["magic"],           # 0    4      Magic
+         d_["dtype"],           # 4    2      Drive Type
+         d_["subtype"],         # 6    2      Subtype
+         d_["typename"],        # 8    16     Type Name
+         d_["packname"],        # 24   16     Pack Identifier
+         d_["secsize"],         # 32   4      Bytes per sector
+         d_["nsectors"],        # 36   4      Data sectors per track
+         d_["ntracks"],         # 40   4      Tracks per cylinder
+         d_["ncylinders"],      # 44   4      Data cylinders per unit
+         d_["secpercyl"],       # 48   4      Data sectors per cylinder
+         d_["secperunit"],      # 52   4      Data sectors per unit
+         d_["sparespertrack"],  # 56   2      Spare sectors per track
+         d_["sparespercyl"],    # 58   2      Spare sectors per cylinder
+         d_["acylinders"],      # 60   4      Alternative cylinders per unit
+         d_["rpm"],             # 64   2      Rotation Speed
+         d_["interleave"],      # 66   2      Hardware sector interleave
+         d_["trackskew"],       # 68   2      Sector 0 skew, per track
+         d_["cylskew"],         # 70   2      Sector 0 skew, per cylinder
+         d_["headswitch"],      # 72   4      Head switch time
+         d_["trkseek"],         # 76   4      Track-to-track seek
+         d_["flags"],           # 80   4      Generic Flags
+         d_["drivedata"],       # 84   5*4    Drive-type specific information
+         d_["spare"],           # 104  5*4    Reserved for future use
+         d_["magic2"],          # 124  4      Magic Number
+         d_["checksum"],        # 128  2      Xor of data including partitions
+         d_["npartitions"],     # 130  2      Number of partitions following
+         d_["bbsize"],          # 132  4      size of boot area at sn0, bytes
+         d_["sbsize"],          # 136  4      Max size of fs superblock, bytes
+         ptable_raw             # 140  16*16  Partition Table
+         ) = struct.unpack(self.format, sector1)
+
+        assert d_['magic'] == d_['magic2'] == DISKMAGIC, "Disklabel not valid"
+        self.ptable = self.PartitionTable(ptable_raw, d_['npartitions'])
+        self.field = d_
+
+    def __str__(self):
+        """Print the Disklabel"""
+
+        # Those fields may contain null bytes
+        typename = self.field['typename'].strip('\x00').strip()
+        packname = self.field['packname'].strip('\x00').strip()
+
+        title = "Disklabel"
+        return \
+            "%s\n%s\n" % (title, len(title) * "=") + \
+            "Magic Number: 0x%(magic)x\n" \
+            "Drive type: %(dtype)d\n" \
+            "Subtype: %(subtype)d\n" % self.field + \
+            "Typename: %s\n" % typename + \
+            "Pack Identifier: %s\n" % packname + \
+            "# of bytes per sector: %(secsize)d\n" \
+            "# of data sectors per track: %(nsectors)d\n" \
+            "# of tracks per cylinder: %(ntracks)d\n" \
+            "# of data cylinders per unit: %(ncylinders)d\n" \
+            "# of data sectors per cylinder: %(secpercyl)d\n" \
+            "# of data sectors per unit: %(secperunit)d\n" \
+            "# of spare sectors per track: %(sparespertrack)d\n" \
+            "# of spare sectors per cylinder: %(sparespercyl)d\n" \
+            "Alt. cylinders per unit: %(acylinders)d\n" \
+            "Rotational speed: %(rpm)d\n" \
+            "Hardware sector interleave: %(interleave)d\n" \
+            "Sector 0 skew, per track: %(trackskew)d\n" \
+            "Sector 0 skew, per cylinder: %(cylskew)d\n" \
+            "Head switch time, usec: %(headswitch)d\n" \
+            "Track-to-track seek, usec: %(trkseek)d\n" \
+            "Generic Flags: %(flags)r\n" \
+            "Drive data: %(drivedata)r\n" \
+            "Reserved for future use: %(spare)r\n" \
+            "The magic number again: 0x%(magic2)x\n" \
+            "Checksum: %(checksum)d\n" \
+            "Number of partitions: %(npartitions)d\n"  \
+            "Size of boot aread at sn0: %(bbsize)d\n"  \
+            "Max size of fs superblock: %(sbsize)d\n" % self.field + \
+            "%s" % self.ptable
 
 
 class OpenBSDDisklabel(DisklabelBase):
