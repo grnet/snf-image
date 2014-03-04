@@ -26,6 +26,7 @@ import sys
 import os
 import cStringIO
 import optparse
+import abc
 
 from collections import namedtuple
 from collections import OrderedDict
@@ -45,7 +46,7 @@ class MBR(object):
     """Represents a Master Boot Record."""
     class Partition(object):
         """Represents a partition entry in MBR"""
-        format = "<B3sB3sLL"
+        fmt = "<B3sB3sLL"
 
         def __init__(self, raw_part):
             """Create a Partition instance"""
@@ -55,11 +56,11 @@ class MBR(object):
              self.end,
              self.first_sector,
              self.sector_count
-             ) = struct.unpack(self.format, raw_part)
+             ) = struct.unpack(self.fmt, raw_part)
 
         def pack(self):
             """Pack the partition values into a binary string"""
-            return struct.pack(self.format,
+            return struct.pack(self.fmt,
                                self.status,
                                self.start,
                                self.type,
@@ -70,7 +71,7 @@ class MBR(object):
         @staticmethod
         def size():
             """Returns the size of an MBR partition entry"""
-            return struct.calcsize(MBR.Partition.format)
+            return struct.calcsize(MBR.Partition.fmt)
 
         def __str__(self):
             return "%02Xh %s %02Xh %s %d %d" % (self.status,
@@ -117,7 +118,7 @@ class MBR(object):
     def __init__(self, block):
         """Create an MBR instance"""
 
-        self.format = "<444s2x16s16s16s16s2s"
+        self.fmt = "<444s2x16s16s16s16s2s"
         raw_part = {}     # Offset  Length          Contents
         (self.code_area,  # 0       440(max. 446)   code area
                           # 440     2(optional)     disk signature
@@ -127,7 +128,7 @@ class MBR(object):
          raw_part[2],     # 478     16              Partition 2
          raw_part[3],     # 494     16              Partition 3
          self.signature   # 510     2               MBR signature
-         ) = struct.unpack(self.format, block)
+         ) = struct.unpack(self.fmt, block)
 
         self.part = {}
         for i in range(4):
@@ -135,11 +136,11 @@ class MBR(object):
 
     def size(self):
         """Return the size of a Master Boot Record."""
-        return struct.calcsize(self.format)
+        return struct.calcsize(self.fmt)
 
     def pack(self):
         """Pack an MBR to a binary string."""
-        return struct.pack(self.format,
+        return struct.pack(self.fmt,
                            self.code_area,
                            self.part[0].pack(),
                            self.part[1].pack(),
@@ -235,25 +236,19 @@ class Disk(object):
 
 class DisklabelBase(object):
     """Disklabel base class"""
+    __metaclass__ = abc.ABCMeta
 
     def __init__(self, device):
         """Create a Disklabel instance"""
+
+        # Subclasses need to overwrite this
+        self.field = None
+        self.ptable = None
+
+    @abc.abstractproperty
+    def fmt(self):
+        """Fields format string for the disklabel fields"""
         pass
-
-    @property
-    def format(self):
-        """Fields format string"""
-        raise NotImplementedError
-
-    @property
-    def field(self):
-        """Diskalabel Fields data structure"""
-        raise NotImplementedError
-
-    @property
-    def ptable(self):
-        """Partition Table data structure"""
-        raise NotImplementedError
 
     def pack(self, checksum=None):
         """Return a binary copy of the Disklabel block"""
@@ -264,7 +259,7 @@ class DisklabelBase(object):
         else:
             out = self.field
 
-        return struct.pack(self.format, * out.values() + [self.ptable.pack()])
+        return struct.pack(self.fmt, * out.values() + [self.ptable.pack()])
 
     def compute_checksum(self):
         """Compute the checksum of the disklabel"""
@@ -281,10 +276,6 @@ class DisklabelBase(object):
 
         return checksum
 
-    def enlarge(self, new_size):
-        """Enlarge the disk and return the last useable sector"""
-        raise NotImplementedError
-
     def write_to(self, device):
         """Write the disklabel to a device"""
 
@@ -292,40 +283,63 @@ class DisklabelBase(object):
         device.seek(BLOCKSIZE, os.SEEK_CUR)
         device.write(self.pack())
 
-    def enlarge_last_partition(self):
-        """Enlarge the last partition to consume all the useable space"""
-        raise NotImplementedError
-
+    @abc.abstractmethod
     def get_last_partition_id(self):
         """Get the ID of the last partition"""
-        raise NotImplementedError
+        pass
 
+    @abc.abstractmethod
     def __str__(self):
         """Print the Disklabel"""
-        raise NotImplementedError
+        pass
 
 
 class PartitionTableBase(object):
     """Base Class for disklabel partition tables"""
+    __metaclass__ = abc.ABCMeta
 
-    @property
-    def format(self):
-        """Partition table format string"""
-        raise NotImplementedError
+    @abc.abstractproperty
+    def fmt(self):
+        """Partition fields format string"""
+        pass
 
-    Partition = namedtuple('Partition', '')
+    @abc.abstractproperty
+    def fields(self):
+        """The partition fields"""
+        pass
+
+    @abc.abstractmethod
+    def setpsize(self, i, size):
+        """Set size for partition i"""
+        pass
+
+    @abc.abstractmethod
+    def getpsize(self, i):
+        """Get size for partition i"""
+        pass
+
+    @abc.abstractmethod
+    def setpoffset(self, i, offset):
+        """Set offset for partition i"""
+        pass
+
+    @abc.abstractmethod
+    def getpoffset(self, i):
+        """Get offset for partition i"""
+        pass
 
     def __init__(self, ptable, pnumber):
         """Create a Partition Table instance"""
+
+        self.Partition = namedtuple('Partition', self.fields)
         self.part = []
 
-        size = struct.calcsize(self.format)
-
+        size = struct.calcsize(self.fmt)
         raw = cStringIO.StringIO(ptable)
         try:
             for _ in xrange(pnumber):
                 self.part.append(
-                    self.Partition(*struct.unpack(self.format, raw.read(size)))
+                    self.Partition(*struct.unpack(self.fmt, raw.read(size)))
                     )
         finally:
             raw.close()
@@ -341,7 +355,7 @@ class PartitionTableBase(object):
         """Packs the partition table into a binary string."""
         ret = ""
         for i in xrange(len(self.part)):
-            ret += struct.pack(self.format, *self.part[i])
+            ret += struct.pack(self.fmt, *self.part[i])
         return ret + ((364 - len(self.part) * 16) * '\x00')
 
 
@@ -351,16 +365,46 @@ class BSDDisklabel(DisklabelBase):
     class PartitionTable(PartitionTableBase):
         """Represents a BSD Partition Table"""
 
-        format = "<IIIBBH"
-        Partition = namedtuple(
-            'Partition',  # Offset  Length Contents
-            ['size',      # 0       4      Number of sectors in partition
-             'offset',    # 4       4      Starting sector
-             'fsize',     # 8       4      Filesystem basic fragment size
-             'fstype',    # 12      1      Filesystem type
-             'frag',      # 13      1      Filesystem fragments per block
-             'cpg'        # 14      2      Filesystem cylinders per group
-             ])
+        @property
+        def fmt(self):
+            """Partition fields format string"""
+            return "<IIIBBH"
+
+        @property
+        def fields(self):
+            """The partition fields"""
+            return [    # Offset  Length Contents
+                'size',     # 0       4      Number of sectors in partition
+                'offset',   # 4       4      Starting sector of the partition
+                'fsize',    # 8       4      File system basic fragment size
+                'fstype',   # 12      1      File system type
+                'frag',     # 13      1      File system fragments per block
+                'cpg'       # 14      2      File system cylinders per group
+                ]
+
+        def setpsize(self, i, size):
+            """Set size for partition i"""
+            tmp = self.part[i]
+            self.part[i] = self.Partition(size, tmp.offset, tmp.fsize,
+                                          tmp.fstype, tmp.frag, tmp.cpg)
+
+        def getpsize(self, i):
+            """Get size for partition i"""
+            return self.part[i].size
+
+        def setpoffset(self, i, offset):
+            """Set offset for partition i"""
+            tmp = self.part[i]
+            self.part[i] = self.Partition(tmp.size, offset, tmp.fsize,
+                                          tmp.fstype, tmp.frag, tmp.cpg)
+
+        def getpoffset(self, i):
+            """Get offset for partition i"""
+            return self.part[i].offset
+
+    @property
+    def fmt(self):
+        return "<IHH16s16sIIIIIIHHIHHHHIII20s20sIHHII364s"
 
     def __init__(self, device):
         """Create a BSD DiskLabel instance"""
@@ -371,7 +415,6 @@ class BSDDisklabel(DisklabelBase):
         device.seek(BLOCKSIZE, os.SEEK_CUR)
         sector1 = device.read(BLOCKSIZE)
 
-        self.format = "<IHH16s16sIIIIIIHHIHHHHIII20s20sIHHII364s"
         d_ = OrderedDict()      # Off  Len    Content
         (d_["magic"],           # 0    4      Magic
          d_["dtype"],           # 4    2      Drive Type
@@ -402,11 +445,20 @@ class BSDDisklabel(DisklabelBase):
          d_["bbsize"],          # 132  4      size of boot area at sn0, bytes
          d_["sbsize"],          # 136  4      Max size of fs superblock, bytes
          ptable_raw             # 140  16*16  Partition Table
-         ) = struct.unpack(self.format, sector1)
+         ) = struct.unpack(self.fmt, sector1)
 
         assert d_['magic'] == d_['magic2'] == DISKMAGIC, "Disklabel not valid"
         self.ptable = self.PartitionTable(ptable_raw, d_['npartitions'])
         self.field = d_
+
+    def enlarge(self, new_size):
+        raise NotImplementedError
+
+    def enlarge_last_partition(self):
+        raise NotImplementedError
+
+    def get_last_partition_id(self):
+        raise NotImplementedError
 
     def __str__(self):
         """Print the Disklabel"""
@@ -455,17 +507,21 @@ class OpenBSDDisklabel(DisklabelBase):
     class PartitionTable(PartitionTableBase):
         """Reprepsents an OpenBSD Partition Table"""
 
-        format = "<IIHHBBH"
-        Partition = namedtuple(
-            'Partition',  # Offset  Length Contents
-            ['size',      # 0       4      Number of sectors in the partition
-             'offset',    # 4       4      Starting sector
-             'offseth',   # 8       2      Starting sector (high part)
-             'sizeh',     # 10      2      Number of sectors (high part)
-             'fstype',    # 12      1      File system type
-             'frag',      # 13      1      File system Fragments per block
-             'cpg'        # 14      2      File system cylinders per group
-             ])
+        @property
+        def fmt(self):
+            return "<IIHHBBH"
+
+        @property
+        def fields(self):
+            return [        # Offset  Length Contents
+                'size',     # 0       4      Number of sectors in the partition
+                'offset',   # 4       4      Starting sector of the partition
+                'offseth',  # 8       2      Starting sector (high part)
+                'sizeh',    # 10      2      Number of sectors (high part)
+                'fstype',   # 12      1      File system type
+                'frag',     # 13      1      File system fragments per block
+                'cpg'       # 14      2      File system cylinders per group
+                ]
 
         def setpsize(self, i, size):
             """Set size for partition i"""
@@ -489,6 +545,10 @@ class OpenBSDDisklabel(DisklabelBase):
             """Get offset for partition i"""
             return (self.part[i].offseth << 32) + self.part[i].offset
 
+    @property
+    def fmt(self):
+        return "<IHH16s16sIIIIII8sIHHIII20sHH16sIHHII364s"
+
     def __init__(self, device):
         """Create a DiskLabel instance"""
 
@@ -498,7 +558,6 @@ class OpenBSDDisklabel(DisklabelBase):
         device.seek(BLOCKSIZE, os.SEEK_CUR)
         sector1 = device.read(BLOCKSIZE)
 
-        self.format = "<IHH16s16sIIIIII8sIHHIII20sHH16sIHHII364s"
         d_ = OrderedDict()   # Off  Len    Content
         (d_["magic"],        # 0    4      Magic
          d_["dtype"],        # 4    2      Drive Type
@@ -528,7 +587,7 @@ class OpenBSDDisklabel(DisklabelBase):
          d_["bbsize"],       # 132  4      size of boot area at sn0, bytes
          d_["sbsize"],       # 136  4      Max size of fs superblock, bytes
          ptable_raw          # 140  16*16  Partition Table
-         ) = struct.unpack(self.format, sector1)
+         ) = struct.unpack(self.fmt, sector1)
 
         assert d_['magic'] == d_['magic2'] == DISKMAGIC, "Disklabel not valid"
         self.ptable = self.PartitionTable(ptable_raw, d_['npartitions'])
