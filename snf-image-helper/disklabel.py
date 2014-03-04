@@ -98,16 +98,9 @@ class MBR(object):
         def pack_chs(cylinder, head, sector):
             """Packs a CHS tuple to an address string."""
 
-            assert 1 <= sector <= 63
-            assert 0 <= head <= 255
-            assert 0 <= cylinder
-
-            # If the cylinders overflow then put the value (1023, 254, 63) to
-            # the tuple. At least this is what OpenBSD does.
-            if cylinder > 1023:
-                cylinder = 1023
-                head = 254
-                sector = 63
+            assert 1 <= sector < 2**6, "Invalid sector value"
+            assert 0 <= head < 2**8, "Invalid head value"
+            assert 0 <= cylinder < 2**10, "Invalid cylinder value"
 
             byte0 = head
             byte1 = (cylinder >> 2) & 0xC0 | sector
@@ -209,14 +202,17 @@ class Disk(object):
         start = self.mbr.part[self.part_num].first_sector
         self.mbr.part[self.part_num].sector_count = end - start + 1
 
-        ntracks = self.disklabel.field['ntracks']
-        nsectors = self.disklabel.field['nsectors']
+        # There are cases where the CHS address changes although the LBA
+        # address remains the same. For example when the BIOS is configured
+        # to use a disk in LBA-Assisted translation mode, the CHS
+        # representation depends on the size of the disk. When we enlarge the
+        # size of the disk we may have to update the starting sector's CHS
+        # address too.
+        start_chs = MBR.Partition.pack_chs(*self.disklabel.lba2chs(start))
+        self.mbr.part[self.part_num].start = start_chs
 
-        cylinder = end // (ntracks * nsectors)
-        header = (end // nsectors) % ntracks
-        sector = (end % nsectors) + 1
-        chs = MBR.Partition.pack_chs(cylinder, header, sector)
-        self.mbr.part[self.part_num].end = chs
+        end_chs = MBR.Partition.pack_chs(*self.disklabel.lba2chs(end))
+        self.mbr.part[self.part_num].end = end_chs
 
     def enlarge_last_partition(self):
         """Enlarge the last partition to cover up all the free space"""
@@ -282,6 +278,33 @@ class DisklabelBase(object):
         # The disklabel starts at sector 1
         device.seek(BLOCKSIZE, os.SEEK_CUR)
         device.write(self.pack())
+
+    def lba2chs(self, lba, hpc=None, spt=None):
+        """Returns the CHS address for a given LBA address"""
+
+        assert (hpc is None) or (hpc > 0), "Invalid heads per cylinder value"
+        assert (spt is None) or (spt > 0), "Invalid sectors per track value"
+
+        if hpc is None:
+            hpc = self.field['ntracks']
+
+        if spt is None:
+            spt = self.field['nsectors']
+
+        # See:
+        # http://en.wikipedia.org/wiki/Logical_Block_Addressing#CHS_conversion
+        #
+
+        cylinder = lba // (spt * hpc)
+        header = (lba // spt) % hpc
+        sector = (lba % spt) + 1
+
+        return (cylinder, header, sector)
+
+    @abc.abstractmethod
+    def enlarge(self, new_size):
+        """Enlarge the disk and return the last usable sector"""
+        pass
 
     @abc.abstractmethod
     def get_last_partition_id(self):
@@ -459,6 +482,29 @@ class BSDDisklabel(DisklabelBase):
 
     def get_last_partition_id(self):
         raise NotImplementedError
+
+    def lba2chs(self, lba, hpc=None, spt=None):
+        """Return the CHS address for a given LBA address"""
+
+        # NetBSD uses LBA-Assisted translation. The sectors per track (spt)
+        # value is always 63 and the heads per cylinder (hpc) value depends on
+        # the size of the disk
+
+        disk_size = self.field['secperunit']
+
+        # Maximum disk size that can be addressed is 1024 * HPC* SPT
+        spt = 63
+        for hpc in 16, 32, 64, 128, 255:
+            if disk_size <= 1024 * hpc * spt:
+                break
+
+        chs = super(BSDDisklabel, self).lba2chs(lba, hpc, spt)
+
+        if chs[0] > 1023:  # Cylinders overflowed
+            assert hpc == 255  # Cylinders may overflow only for large disks
+            return (1023, chs[1], chs[2])
+
+        return chs
 
     def __str__(self):
         """Print the Disklabel"""
@@ -682,6 +728,18 @@ class OpenBSDDisklabel(DisklabelBase):
             part_num, self.bend - self.ptable.getpoffset(part_num) - 1024)
 
         self.field['checksum'] = self.compute_checksum()
+
+    def lba2chs(self, lba, hpc=None, spt=None):
+        """Returns the CHS address for a given LBA address"""
+
+        chs = super(OpenBSDDisklabel, self).lba2chs(lba, hpc, spt)
+
+        # If the cylinders overflow, then OpenBSD will put the value
+        #(1023, 254, 63) to the tuple.
+        if chs[0] > 1023:
+            return (1023, 254, 63)
+
+        return chs
 
     def __str__(self):
         """Print the Disklabel"""
