@@ -73,10 +73,12 @@ class MBR(object):
             return struct.calcsize(MBR.Partition.format)
 
         def __str__(self):
-            start = self.unpack_chs(self.start)
-            end = self.unpack_chs(self.end)
-            return "%d %s %d %s %d %d" % (self.status, start, self.type, end,
-                                          self.first_sector, self.sector_count)
+            return "%02Xh %s %02Xh %s %d %d" % (self.status,
+                                                self.unpack_chs(self.start),
+                                                self.type,
+                                                self.unpack_chs(self.end),
+                                                self.first_sector,
+                                                self.sector_count)
 
         @staticmethod
         def unpack_chs(chs):
@@ -112,36 +114,28 @@ class MBR(object):
 
             return struct.pack('<BBB', byte0, byte1, byte2)
 
-    format = "<444s2x16s16s16s16s2s"
-    """
-    Offset  Length          Contents
-    0       440(max. 446)   code area
-    440     2(optional)     disk signature
-    444     2               Usually nulls
-    446     16              Partition 0
-    462     16              Partition 1
-    478     16              Partition 2
-    494     16              Partition 3
-    510     2               MBR signature
-    """
     def __init__(self, block):
         """Create an MBR instance"""
-        raw_part = {}
-        (self.code_area,
-         raw_part[0],
-         raw_part[1],
-         raw_part[2],
-         raw_part[3],
-         self.signature) = struct.unpack(self.format, block)
+
+        self.format = "<444s2x16s16s16s16s2s"
+        raw_part = {}     # Offset  Length          Contents
+        (self.code_area,  # 0       440(max. 446)   code area
+                          # 440     2(optional)     disk signature
+                          # 444     2               Usually nulls
+         raw_part[0],     # 446     16              Partition 0
+         raw_part[1],     # 462     16              Partition 1
+         raw_part[2],     # 478     16              Partition 2
+         raw_part[3],     # 494     16              Partition 3
+         self.signature   # 510     2               MBR signature
+         ) = struct.unpack(self.format, block)
 
         self.part = {}
         for i in range(4):
             self.part[i] = self.Partition(raw_part[i])
 
-    @staticmethod
-    def size():
+    def size(self):
         """Return the size of a Master Boot Record."""
-        return struct.calcsize(MBR.format)
+        return struct.calcsize(self.format)
 
     def pack(self):
         """Pack an MBR to a binary string."""
@@ -154,6 +148,7 @@ class MBR(object):
                            self.signature)
 
     def __str__(self):
+        """Print the MBR"""
         ret = ""
         for i in range(4):
             ret += "Partition %d: %s\n" % (i, self.part[i])
