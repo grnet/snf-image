@@ -171,11 +171,11 @@ class Disk(object):
                     d.seek(BLOCKSIZE * self.mbr.part[i].first_sector)
                     self.part_num = i
                     if ptype == 0xa5:  # FreeBSD
-                        self.disklabel = BSDDisklabel(d)
+                        self.disklabel = FreeBSDDisklabel(d)
                     elif ptype == 0xa6:  # OpenBSD
                         self.disklabel = OpenBSDDisklabel(d)
                     else:  # NetBSD
-                        self.disklabel = BSDDisklabel(d)
+                        self.disklabel = NetBSDDisklabel(d)
                     break
 
         assert self.disklabel is not None, "No *BSD partition found"
@@ -302,11 +302,6 @@ class DisklabelBase(object):
         return (cylinder, header, sector)
 
     @abc.abstractmethod
-    def enlarge(self, new_size):
-        """Enlarge the disk and return the last usable sector"""
-        pass
-
-    @abc.abstractmethod
     def get_last_partition_id(self):
         """Get the ID of the last partition"""
         pass
@@ -315,6 +310,14 @@ class DisklabelBase(object):
     def __str__(self):
         """Print the Disklabel"""
         pass
+
+    def enlarge(self, new_size):
+        """Enlarge the disk and return the last useable sector"""
+        raise NotImplementedError
+
+    def enlarge_last_partition(self):
+        """Enlarge the last partition to consume all the useable space"""
+        raise NotImplementedError
 
 
 class PartitionTableBase(object):
@@ -475,36 +478,26 @@ class BSDDisklabel(DisklabelBase):
         self.field = d_
 
     def enlarge(self, new_size):
+        """Enlarge the disk and return the last useable sector"""
         raise NotImplementedError
 
     def enlarge_last_partition(self):
         raise NotImplementedError
 
     def get_last_partition_id(self):
-        raise NotImplementedError
+        """Returns the id of the last partition"""
+        end = 0
 
-    def lba2chs(self, lba, hpc=None, spt=None):
-        """Return the CHS address for a given LBA address"""
+        # Exclude partition 'c' which describes the whole disk
+        for i in [n for n in range(len(self.ptable.part)) if n != 2]:
+            current_end = self.ptable.part[i].size + self.ptable.part[i].offset
+            if end < current_end:
+                end = current_end
+                part = i
 
-        # NetBSD uses LBA-Assisted translation. The sectors per track (spt)
-        # value is always 63 and the heads per cylinder (hpc) value depends on
-        # the size of the disk
+        assert end > 0, "No partition found"
 
-        disk_size = self.field['secperunit']
-
-        # Maximum disk size that can be addressed is 1024 * HPC* SPT
-        spt = 63
-        for hpc in 16, 32, 64, 128, 255:
-            if disk_size <= 1024 * hpc * spt:
-                break
-
-        chs = super(BSDDisklabel, self).lba2chs(lba, hpc, spt)
-
-        if chs[0] > 1023:  # Cylinders overflowed
-            assert hpc == 255  # Cylinders may overflow only for large disks
-            return (1023, chs[1], chs[2])
-
-        return chs
+        return part
 
     def __str__(self):
         """Print the Disklabel"""
@@ -545,6 +538,89 @@ class BSDDisklabel(DisklabelBase):
             "Size of boot aread at sn0: %(bbsize)d\n"  \
             "Max size of fs superblock: %(sbsize)d\n" % self.field + \
             "%s" % self.ptable
+
+
+class FreeBSDDisklabel(BSDDisklabel):
+    """Represents a FreeBSD Disklabel"""
+    pass
+
+
+class NetBSDDisklabel(BSDDisklabel):
+    """Represents a NetBSD Disklabel"""
+
+    def lba2chs(self, lba, hpc=None, spt=None):
+        """Return the CHS address for a given LBA address"""
+
+        # NetBSD uses LBA-Assisted translation. The sectors per track (spt)
+        # value is always 63 and the heads per cylinder (hpc) value depends on
+        # the size of the disk
+
+        disk_size = self.field['secperunit']
+
+        # Maximum disk size that can be addressed is 1024 * HPC* SPT
+        spt = 63
+        for hpc in 16, 32, 64, 128, 255:
+            if disk_size <= 1024 * hpc * spt:
+                break
+
+        chs = super(NetBSDDisklabel, self).lba2chs(lba, hpc, spt)
+
+        if chs[0] > 1023:  # Cylinders overflowed
+            assert hpc == 255  # Cylinders may overflow only for large disks
+            return (1023, chs[1], chs[2])
+
+        return chs
+
+    def enlarge(self, new_size):
+        """Enlarge the disk and return the last useable sector"""
+
+        assert new_size >= self.field['secperunit'], \
+            "New size cannot be smaller than %d" % self.field['secperunit']
+
+        self.field['secperunit'] = new_size
+
+        # According to the ATA specifications, "If the content of words (61:60)
+        # is greater than or equal to 16,514,064 then the content of word 1
+        # [the number of logical cylinders] shall be equal to 16,383."
+        # NetBSD respects this.
+        self.field['ncylinders'] = 16383 if new_size >= 16514064 else \
+            new_size // self.field['secpercyl']
+
+        # Partition 'c' describes the NetBSD MBR partition
+        self.ptable.setpsize(2, new_size - self.ptable.getpoffset(2))
+
+        # Partition 'd' describes the entire disk
+        self.ptable.setpsize(3, new_size)
+
+        # Update the checksum
+        self.field['checksum'] = self.compute_checksum()
+
+        return new_size - 1
+
+    def enlarge_last_partition(self):
+        """Enlarge the last partition to cover up all the free space"""
+
+        last = self.get_last_partition_id()
+        size = self.field['secperunit'] - self.ptable.part[last].offset
+        self.ptable.setpsize(last, size)
+
+        self.field['checksum'] = self.compute_checksum()
+
+    def get_last_partition_id(self):
+        """Returns the id of the last partition"""
+        end = 0
+
+        # Exclude partition 'c' which describes the NetBSD MBR partition and
+        # partition 'd' which describes the whole disk
+        for i in [n for n in range(len(self.ptable.part)) if n not in (2, 3)]:
+            current_end = self.ptable.part[i].size + self.ptable.part[i].offset
+            if end < current_end:
+                end = current_end
+                part = i
+
+        assert end > 0, "No partition found"
+
+        return part
 
 
 class OpenBSDDisklabel(DisklabelBase):
