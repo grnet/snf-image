@@ -825,21 +825,24 @@ class OpenBSDDisklabel(DisklabelBase):
     def enlarge_last_partition(self):
         """Enlarge the last partition to cover up all the free space"""
 
-        part_num = self.get_last_partition_id()
+        last_id = self.get_last_partition_id()
+        start = self.ptable.getpoffset(last_id)
+        size = self.ptable.getpsize(last_id)
 
-        end = self.ptable.getpsize(part_num) + self.ptable.getpoffset(part_num)
+        assert size > 0, "No partition found"
 
-        assert end > 0, "No partition found"
-
-        if self.ptable.part[part_num].fstype == 1:  # Swap partition.
+        if self.ptable.part[last_id].fstype == 1:  # Swap partition.
             warn("Last partition is swap. Not enlarging it.")
             return
 
-        if end > (self.bend - 1024):
+        # Round the partition to 16512B. This is the default bsize in OpenBSD
+        new_size = (self.bend - start) // 32 * 32
+
+        if size >= new_size:
+            warn("No partition resize performed, partition is large enough.")
             return
 
-        self.ptable.setpsize(
-            part_num, self.bend - self.ptable.getpoffset(part_num) - 1024)
+        self.ptable.setpsize(last_id, new_size)
 
         self.field['checksum'] = self.compute_checksum()
 
