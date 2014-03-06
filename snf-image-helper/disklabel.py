@@ -21,6 +21,8 @@
 
 """This module provides the code for handling BSD disklabels"""
 
+from __future__ import print_function
+
 import struct
 import sys
 import os
@@ -40,6 +42,11 @@ BBSIZE = 8192  # size of boot area with label
 SBSIZE = 8192  # max size of fs superblock
 
 DISKMAGIC = 0x82564557
+
+
+def warn(*objs):
+    """Print a warning to stderr"""
+    print("WARNING:", *objs, file=sys.stderr)
 
 
 class MBR(object):
@@ -825,7 +832,7 @@ class OpenBSDDisklabel(DisklabelBase):
         assert end > 0, "No partition found"
 
         if self.ptable.part[part_num].fstype == 1:  # Swap partition.
-            #TODO: Maybe create a warning?
+            warn("Last partition is swap. Not enlarging it.")
             return
 
         if end > (self.bend - 1024):
@@ -923,19 +930,19 @@ def main():
     disk = Disk(args[0])
 
     if options.list:
-        print disk
+        print(disk)
         return 0
 
     if options.duid:
-        print "%s" % "".join(x.encode('hex') for x in disk.get_duid())
+        print("%s" % "".join(x.encode('hex') for x in disk.get_duid()))
         return 0
 
     if options.mapping:
-        print disk.linux_partition_mapping()
+        print(disk.linux_partition_mapping())
         return 0
 
     if options.last_part:
-        print "%c" % chr(ord('a') + disk.get_last_partition_id())
+        print("%c" % chr(ord('a') + disk.get_last_partition_id()))
         return 0
 
     if options.disk_size is not None:
