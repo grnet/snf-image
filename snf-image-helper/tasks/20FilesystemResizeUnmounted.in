@@ -43,7 +43,7 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = openbsd ]; then
         exit 0
     fi
 
-    part="${SNF_IMAGE_DEV}$(disklabel2linux "$bsd_part")"
+    part="${SNF_IMAGE_DEV}$(bsd2linux "$bsd_part" "$SNF_IMAGE_DEV")"
 
     $DUMPFS_OPENBSD "$part" > /dev/null ||
         { warn "Filesystem is not UFS. Resizing ommited"; exit 0; }

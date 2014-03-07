@@ -487,22 +487,19 @@ get_unattend() {
     echo "$exists"
 }
 
-disklabel2linux() {
-    local partition i p
+bsd2linux() {
+    local partition device
     partition="$1"
+    device="$2"
 
-    i=4
-    # Partition 'c' traditionally used to describe the entire disk is not
-    # mapped to /dev/sda7 by the kernel
-    for p in a b {d..p}; do
-        let i++
-        if [ "$p" = "$partition" ]; then
-           echo "$i"
-           return 0
-        fi
-    done
+    linux_part=$(@scriptsdir@/disklabel.py --get-partitions-mapping "$device" | grep ^"$partition": | cut -d" " -f2)
 
-    log_error "Invalid BSD partition label: \`$partition'"
+    if [[ "$linux_part" =~ ^[1-9][0-9]*$ ]]; then
+        echo "$linux_part"
+        return 0
+    fi
+
+    log_error "Couldn't find out mapping for BSD partition: \`$partition' in \`$device'"
 }
 
 mount_all() {
