@@ -6,7 +6,7 @@
 Welcome to snf-image's documentation!
 =====================================
 
-.. image:: /images/logo.png
+.. image:: images/logo.png
 
 snf-image is a `Ganeti <http://code.google.com/p/ganeti/>`_ OS definition. It
 allows Ganeti to launch instances from predefined or untrusted custom Images.
