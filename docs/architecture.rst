@@ -79,7 +79,7 @@ Graphical Representation
 
 The architecture is presented below:
 
-.. image:: /images/arch.png
+.. image:: images/arch.png
 
 
 .. _storage-backends:
