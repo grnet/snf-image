@@ -229,6 +229,37 @@ class Disk(object):
 
         return ""
 
+    def linux_partition_mapping(self):
+        """Print the Linux kernel partition mapping"""
+
+        offset = self.mbr.part[self.part_num].first_sector
+        size = self.mbr.part[self.part_num].sector_count
+
+        title = "BSD to Linux partition mapping"
+        ret = "%s\n%s\n" % (title, "=" * len(title))
+
+        # I peeped the kernel (linux/block/partitions/msdos.c) and this is how
+        # the mapping is done
+        i = 5
+        for p in xrange(self.disklabel.field['npartitions']):
+            bsd_start = self.disklabel.ptable.getpoffset(p)
+            bsd_size = self.disklabel.ptable.getpsize(p)
+            name = chr(ord('a') + p)
+
+            if (offset == bsd_start) and (size == bsd_size):
+                # full parent partition
+                ret += "%c: %d\n" % (name, self.part_num + 1)
+                continue
+
+            if (offset > bsd_start) or \
+                    ((offset + size) < (bsd_start + bsd_size)):
+                # Bad subpartition - ignored
+                continue
+
+            ret += "%c: %d\n" % (name, i)
+            i += 1
+        return ret
+
 
 class DisklabelBase(object):
     """Disklabel base class"""
@@ -880,6 +911,9 @@ def main():
         "-p", "--enlarge-partition", action="store_true",
         dest="enlarge_partition", default=False,
         help="enlarge the last partition to cover up the free space")
+    parser.add_option(
+        "--get-partitions-mapping", action="store_true", dest="mapping",
+        default=False, help="print kernel mapping for the BSD partitions")
 
     options, args = parser.parse_args(sys.argv[1:])
 
@@ -896,8 +930,13 @@ def main():
         print "%s" % "".join(x.encode('hex') for x in disk.get_duid())
         return 0
 
+    if options.mapping:
+        print disk.linux_partition_mapping()
+        return 0
+
     if options.last_part:
         print "%c" % chr(ord('a') + disk.get_last_partition_id())
+        return 0
 
     if options.disk_size is not None:
         disk.enlarge(options.disk_size)
