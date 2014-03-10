@@ -138,11 +138,6 @@ if test -z "$SFDISK" ; then
   AC_MSG_ERROR([sfdisk not found in $PATH:/usr/sbin:/sbin])
 fi
 
-AC_PATH_PROG(QEMU_IMG, [qemu-img], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$QEMU_IMG" ; then
-  AC_MSG_ERROR([qemu-img not found in $PATH:/usr/sbin:/sbin])
-fi
-
 AC_PATH_PROG(INSTALL_MBR, [install-mbr], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$INSTALL_MBR" ; then
   AC_MSG_ERROR([install-mbr not found in $PATH:/usr/sbin:/sbin])

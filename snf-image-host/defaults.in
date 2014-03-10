@@ -74,7 +74,6 @@
 # LOSETUP="losetup"
 # KPARTX="kpartx"
 # SFDISK="sfdisk"
-# QEMU_IMG="qemu-img"
 # INSTALL_MBR="install-mbr"
 # TIMEOUT="timeout"
 # CURL="curl"
