@@ -26,8 +26,8 @@
 
 #
 # This task will change the value of `fDenyTSConnection' registry key located
-# in `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\' to
-# "true". This will disable RDP connections. The key will change back to
+# under `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\'
+# to "true". This will disable RDP connections. The key will change back to
 # "false" during the specialize pass of the Windows setup.
 #
 
@@ -48,26 +48,34 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
     exit 0
 fi
 
-# Supress a specific reglookup warning messages. In Windows 2012, although the
-# command works correct, it polluts the output with hundreds of warning
-# messages about not being able to interprete registry key values.
-RGLKP_WRNG="^WARN: While quoting value for '.\+', warning returned: Data could not be interpreted, quoting raw buffer."
 hive="$SNF_IMAGE_TARGET/Windows/System32/config/SYSTEM"
-current=$($REGLOOKUP "$hive" 2> >(grep -v "$RGLKP_WRNG" >&2) | grep ^/Select/Current | cut -d, -f3)
 
-# Change the key value.
-# For a stupid reason chntpw returns 2!
-chntpw -e "$hive" <<EOF || { test $? -eq 2 && chntpw_ret="success"; }
-cd ControlSet${current: -3}\Control\Terminal Server
-ed fDenyTSConnections
-1
-q
-y
+current=$($HIVEXGET "$hive" Select Current)
+if [ "$current" = "" ]; then
+    log_error "Unable to find CurrentControlSet in the registry"
+fi
+# Pad the value with zeroes
+current=$(printf "%03d" "$current")
+
+#The current '\SYSTEM\CurrentContolSet\Control\Terminal Server' values
+values=$($HIVEXGET "$hive" "ControlSet${current}\Control\Terminal Server")
+
+# Remove fDenyTSConnections if present
+values=$(grep -v ^'"fDenyTSConnections"=' <<< "$values")
+
+regfile=$(mktemp)
+add_cleanup rm "$regfile"
+
+cat > "$regfile" <<EOF
+Windows Registry Editor Version 5.00
+
+[\ControlSet${current}\Control\Terminal Server]
+$values
+"fDenyTSConnections"=dword:00000001
+
 EOF
 
-if [ x"$chntpw_ret" != "xsuccess" ]; then
-    log_error "$CHNTPW failed"
-fi
+$HIVEXREGEDIT --merge "$hive" "$regfile"
 
 exit 0
 

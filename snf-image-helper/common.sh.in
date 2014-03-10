@@ -29,8 +29,6 @@ SFDISK=sfdisk
 MKSWAP=mkswap
 BLKID=blkid
 BLOCKDEV=blockdev
-REGLOOKUP=reglookup
-CHNTPW=chntpw
 SGDISK=sgdisk
 GROWFS_UFS=growfs.ufs
 DUMPFS_UFS=dumpfs.ufs
@@ -39,6 +37,8 @@ DUMPFS_OPENBSD=dumpfs.openbsd
 DATE="date -u" # Time in UTC
 EATMYDATA=eatmydata
 MOUNT="mount -n"
+HIVEXGET="hivexget"
+HIVEXREGEDIT="hivexregedit"
 
 CLEANUP=( )
 ERRORS=( )

@@ -29,14 +29,14 @@ if test -z "$PARTED" ; then
   AC_MSG_ERROR([parted not found in $PATH])
 fi
 
-AC_PATH_PROG(REGLOOKUP, [reglookup], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$REGLOOKUP" ; then
-  AC_MSG_ERROR([reglookup not found in $PATH])
+AC_PATH_PROG(HIVEXGET, [hivexget], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$HIVEXGET" ; then
+  AC_MSG_ERROR([hivexget not found in $PATH])
 fi
 
-AC_PATH_PROG(CHNTPW, [chntpw], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$CHNTPW" ; then
-  AC_MSG_ERROR([chntpw not found in $PATH])
+AC_PATH_PROG(HIVEXREGEDIT, [hivexregedit], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$HIVEXREGEDIT" ; then
+  AC_MSG_ERROR([hivexregedit not found in $PATH])
 fi
 
 AC_CONFIG_FILES([
