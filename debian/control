@@ -3,7 +3,8 @@ Section: admin
 Priority: extra
 Maintainer: Nikos Skalkotos <skalkoto@grnet.gr>
 Build-Depends: debhelper (>= 7.0.50~), automake, autotools-dev, kpartx,
- qemu-utils, mbr, curl, xmlstarlet, parted, libhivex-bin, libwin-hivex-perl
+ gdisk, eatmydata, mbr, curl, xmlstarlet, parted, libhivex-bin,
+ libwin-hivex-perl
 Standards-Version: 3.9.3
 Homepage: https://code.grnet.gr/projects/snf-image
 Vcs-Git: git://code.grnet.gr/git/snf-image
