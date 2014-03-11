@@ -19,6 +19,11 @@ if test -z "$XMLSTARLET" ; then
   AC_MSG_ERROR([xmlstarlet not found in $PATH])
 fi
 
+AC_PATH_PROG(TUNE2FS, [tune2fs], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$TUNE2FS" ; then
+  AC_MSG_ERROR([tune2fs not found in $PATH])
+fi
+
 AC_PATH_PROG(RESIZE2FS, [resize2fs], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$RESIZE2FS" ; then
   AC_MSG_ERROR([resize2fs not found in $PATH])
@@ -27,6 +32,21 @@ fi
 AC_PATH_PROG(PARTED, [parted], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$PARTED" ; then
   AC_MSG_ERROR([parted not found in $PATH])
+fi
+
+AC_PATH_PROG(SFDISK, [sfdisk], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$SFDISK" ; then
+  AC_MSG_ERROR([sfdisk not found in $PATH])
+fi
+
+AC_PATH_PROG(SGDISK, [sgdisk], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$SGDISK" ; then
+  AC_MSG_ERROR([SGDISK not found in $PATH])
+fi
+
+AC_PATH_PROG(EATMYDATA, [eatmydata], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$EATMYDATA" ; then
+  AC_MSG_ERROR([EATMYDATA not found in $PATH])
 fi
 
 AC_PATH_PROG(HIVEXGET, [hivexget], [], [$PATH:/usr/sbin:/sbin])
