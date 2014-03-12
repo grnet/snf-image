@@ -27,10 +27,10 @@ that have been tested with snf-image and provided here for testing purposes:
    [`diskdump <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump.md5sum>`_]
    [`metadata <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump.meta>`_]
- * Fedora Desktop 18
-   [`diskdump <http://cdn.synnefo.org/fedora-18-x86_64.diskdump>`_]
-   [`md5sum <http://cdn.synnefo.org/fedora-18-x86_64.diskdump.md5sum>`_]
-   [`metadata <http://cdn.synnefo.org/fedora-18-x86_64.diskdump.meta>`_]
+ * Fedora Desktop 19
+   [`diskdump <http://cdn.synnefo.org/fedora-19-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/fedora-19-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/fedora-19-x86_64.diskdump.meta>`_]
  * Ubuntu Desktop LTS 12.04
    [`diskdump <http://cdn.synnefo.org/ubuntu_desktop-12.04-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/ubuntu_desktop-12.04-x86_64.diskdump.md5sum>`_]
@@ -39,26 +39,34 @@ that have been tested with snf-image and provided here for testing purposes:
    [`diskdump <http://cdn.synnefo.org/kubuntu_desktop-12.04-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/kubuntu_desktop-12.04-x86_64.diskdump.md5sum>`_]
    [`metadata <http://cdn.synnefo.org/kubuntu_desktop-12.04-x86_64.diskdump.meta>`_]
- * Ubuntu Desktop 13.04
-   [`diskdump <http://cdn.synnefo.org/ubuntu_desktop-13.04-x86_64.diskdump>`_]
-   [`md5sum <http://cdn.synnefo.org/ubuntu_desktop-13.04-x86_64.diskdump.md5sum>`_]
-   [`metadata <http://cdn.synnefo.org/ubuntu_desktop-13.04-x86_64.diskdump.meta>`_]
- * Kubuntu 13.04
-   [`diskdump <http://cdn.synnefo.org/kubuntu_desktop-13.04-x86_64.diskdump>`_]
-   [`md5sum <http://cdn.synnefo.org/kubuntu_desktop-13.04-x86_64.diskdump.md5sum>`_]
-   [`metadata <http://cdn.synnefo.org/kubuntu_desktop-13.04-x86_64.diskdump.meta>`_]
+ * Ubuntu Desktop 13.10
+   [`diskdump <http://cdn.synnefo.org/ubuntu_desktop-13.10-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/ubuntu_desktop-13.10-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/ubuntu_desktop-13.10-x86_64.diskdump.meta>`_]
+ * Kubuntu 13.10
+   [`diskdump <http://cdn.synnefo.org/kubuntu_desktop-13.10-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/kubuntu_desktop-13.10-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/kubuntu_desktop-13.10-x86_64.diskdump.meta>`_]
  * Ubuntu Server 12.04
    [`diskdump <http://cdn.synnefo.org/ubuntu_server-12.04-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/ubuntu_server-12.04-x86_64.diskdump.md5sum>`_]
    [`metadata <http://cdn.synnefo.org/ubuntu_server-12.04-x86_64.diskdump.meta>`_]
- * OpenSUSE Desktop 12.3
-   [`diskdump <http://cdn.synnefo.org/opensuse_desktop-12.3-x86_64.diskdump>`_]
-   [`md5sum <http://cdn.synnefo.org/opensuse_desktop-12.3-x86_64.diskdump.md5sum>`_]
-   [`metadata <http://cdn.synnefo.org/opensuse_desktop-12.3-x86_64.diskdump.meta>`_]
+ * OpenSUSE Desktop 13.1
+   [`diskdump <http://cdn.synnefo.org/opensuse_desktop-13.1-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/opensuse_desktop-13.1-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/opensuse_desktop-13.1-x86_64.diskdump.meta>`_]
  * FreeBSD 9.2
    [`diskdump <http://cdn.synnefo.org/freebsd-9.2-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/freebsd-9.2-x86_64.diskdump.md5sum>`_]
    [`metadata <http://cdn.synnefo.org/freebsd-9.2-x86_64.diskdump.meta>`_]
+ * OpenBSD 5.4
+   [`diskdump <http://cdn.synnefo.org/openbsd-5.4-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/openbsd-5.4-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/openbsd-5.4-x86_64.diskdump.meta>`_]
+ * NetBSD 6.1
+   [`diskdump <http://cdn.synnefo.org/netbsd-6.1-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/netbsd-6.1-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/netbsd-6.1-x86_64.diskdump.meta>`_]
 
 Sample Usage
 ^^^^^^^^^^^^
