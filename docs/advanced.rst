@@ -31,7 +31,7 @@ Known Issues
 ------------
 
  * For Linux systems, having grub installed in the partition is fragile and
-   things can go wrong when resizing the partitions, especially when shrinking.
+   things can go wrong if you shrink the partition.
  * More complicated partition schemes are not supported.
 
 diskdump image format (recommended)
@@ -44,18 +44,24 @@ This design decision has the following benefits:
 
  * Swap partitions are supported
  * The system may use multiple partitions:
-    * dedicated partitions for /boot, /home etc in Linux
-    * system and boot partition in Windows
+    * Dedicated partitions for /boot, /home etc. in Linux
+    * Separate system and boot partition in Windows
  * There are no restrictions on starting sectors of partitions
 
 Although diskdump is a lot more flexible than the older formats, there are
 still some rules to follow:
 
- * All devices in fstab should be specified by persistent names (UUID or LABEL)
- * LVMs are not supported
- * For Linux disks only ext{2,3,4} file systems are supported
- * For FreeBSD disks only UFS file systems are supported
- * For FreeBSD only GUID Partition Tables (GPT) are supported
+ * For Linux:
+   * All block devices in */etc/fstab* should be specified using persistent
+     names (UUID or LABEL)
+   * LVM partitions are not supported
+   * Only ext{2,3,4} file systems are supported
+ * For FreeBSD:
+   * GUID Partition Tables (GPT) should be used
+   * Only UFS2 file systems are supported
+   * Labels should be omitted in */etc/fstab* entries
+ * For {Open,Net}BSD:
+   * Only FFS file systems should be used
 
 Progress Monitoring Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -67,7 +73,7 @@ the *PROGRESS_MONITOR* variable under ``/etc/default/snf-image`` and
 program. In this section we will describe the format and the fields of the
 progress messages.
 
-The progress messages are json strings with standardized fields. All messages
+The progress messages are JSON strings with standardized fields. All messages
 have a **type** field whose value is a string and a **timestamp** field whose
 value is a floating point number referring to a time encoded as the number of
 seconds elapsed since the epoch. The rest of the field depend on the specific
@@ -138,7 +144,7 @@ warning
 This messages are produced to display a warning. The actual warning message
 itself is present in the *messages* field:
 
-``{"subtype": "warning", "type": "image-helper", "messages": [" No swap partition defined"], "timestamp": 1379075807.71704}``
+``{"subtype": "warning", "type": "image-helper", "messages": ["No swap partition defined"], "timestamp": 1379075807.71704}``
 
 error
 -----

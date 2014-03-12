@@ -7,7 +7,7 @@ VERSION := $(shell cat version)
 
 override_dh_auto_clean:
 	dh_auto_clean -Dsnf-image-host
-	cd snf-image-host; rm -rf autotools; \
+	cd snf-image-host; rm -f autotools/{missing,install-sh} \
 	rm -f Makefile.in aclocal.m4 configure config.status config.log
 	dh_auto_clean -Dsnf-image-helper
 	cd snf-image-helper ; rm -rf autotools; \

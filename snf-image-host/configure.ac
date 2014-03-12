@@ -9,6 +9,7 @@ AC_CONFIG_SRCDIR(configure)
 AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability])
 AM_INIT_AUTOMAKE([subdir-objects])
 
+
 # --enable-version-consistency-ckeck
 AC_ARG_ENABLE([version_consistency_check],
    AS_HELP_STRING([--enable-version-consistency-check],
@@ -156,6 +157,12 @@ AC_PATH_PROG(CURL, [curl], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$CURL" ; then
   AC_MSG_ERROR([curl not found in $PATH:/usr/sbin:/sbin])
 fi
+
+#Python Dependencies
+AM_PATH_PYTHON(2.6)
+
+AC_PYTHON_MODULE(prctl, t)
+AC_PYTHON_MODULE(scapy, t)
 
 AC_CONFIG_FILES([
     Makefile
