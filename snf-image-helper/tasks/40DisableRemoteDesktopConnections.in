@@ -54,7 +54,7 @@ current=$($HIVEXGET "$hive" Select Current)
 if [ "$current" = "" ]; then
     log_error "Unable to find CurrentControlSet in the registry"
 fi
-# Pad the value with zeroes
+# Pad the value with zeros
 current=$(printf "%03d" "$current")
 
 #The current '\SYSTEM\CurrentContolSet\Control\Terminal Server' values

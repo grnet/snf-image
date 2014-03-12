@@ -261,9 +261,9 @@ get_distro() {
 get_partition_table() {
     local dev output
     dev="$1"
-    # If the partition table is gpt then parted will raise an error if the
-    # secondary gpt is not it the end of the disk, and a warning that has to
-    # do with the "Last Usable LBA" entry in gpt.
+    # If the partition table is GUID and the secondary GPT header is not at the
+    # end of the disk, parted will raise an error and will also print a warning
+    # about the "Last Usable LBA" entry of the header.
     if ! output="$("$PARTED" -s -m "$dev" unit s print | grep -E -v "^(Warning|Error): ")"; then
         log_error "Unable to read partition table for device \`${dev}'. The image seems corrupted."
     fi
@@ -410,7 +410,7 @@ create_partition() {
             $PARTED -s -m $device set "$id" "$flag" on
         done
     else
-        # For gpt
+        # For GPT
         start=${start:0:${#start}-1} # remove the s at the end
         end=${end:0:${#end}-1} # remove the s at the end
         $SGDISK -n "$id":"$start":"$end" -t "$id":"$ptype" "$device"
@@ -633,10 +633,10 @@ cleanup() {
         for i in $REVERSE_INDEXES; do
             # If something fails here, it's better to retry it for a few times
             # before we give up with an error. This is needed for kpartx when
-            # dealing with ntfs partitions mounted through fuse. umount is not
+            # dealing with NTFS partitions mounted through fuse. umount is not
             # synchronous and may return while the partition is still busy. A
             # premature attempt to delete partition mappings through kpartx on
-            # a device that hosts previously mounted ntfs partition may fail
+            # a device that hosts previously mounted NTFS partition may fail
             # with a `device-mapper: remove ioctl failed: Device or resource
             # busy' error. A sensible workaround for this is to wait for a
             # while and then try again.

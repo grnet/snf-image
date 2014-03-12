@@ -21,7 +21,7 @@
 # Provides:		InstallUnattend
 # RunBefore:		EnforcePersonality
 # RunAfter:		MountImage
-# Short-Description:	Installs Unattend.xml for unattended windows setup
+# Short-Description:	Installs Unattend.xml for unattended Windows setup
 ### END TASK INFO
 
 set -e

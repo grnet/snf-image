@@ -403,7 +403,7 @@ check_helper_result() {
 }
 
 cleanup() {
-    # if something fails here, it souldn't call cleanup again...
+    # if something fails here, it shouldn't call cleanup again...
     trap - EXIT
 
     if [ ${#CLEANUP[*]} -gt 0 ]; then
@@ -412,10 +412,10 @@ cleanup() {
         for i in $REVERSE_INDEXES; do
             # If something fails here, it's better to retry it for a few times
             # before we give up with an error. This is needed for kpartx when
-            # dealing with ntfs partitions mounted through fuse. umount is not
+            # dealing with NTFS partitions mounted through fuse. umount is not
             # synchronous and may return while the partition is still busy. A
             # premature attempt to delete partition mappings through kpartx on
-            # a device that hosts previously mounted ntfs partition may fail
+            # a device that hosts previously mounted NTFS partition may fail
             # with errors like this one:
             # `device-mapper: remove ioctl failed: Device or resource busy'
             # A sensible workaround for this is to wait for a while and then
