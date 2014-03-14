@@ -173,9 +173,9 @@ class Disklabel:
     24      16              Pack Identifier
     32      4               Bytes per sector
     36      4               Data sectors per track
-    40      4               Tracks per cilinder
+    40      4               Tracks per cylinder
     44      4               Data cylinders per unit
-    48      4               Data sectors per cylynder
+    48      4               Data sectors per cylinder
     52      4               Data sectors per unit
     56      8               Unique label identifier
     64      4               Alt cylinders per unit
@@ -189,7 +189,7 @@ class Disklabel:
     106     2               Version
     108     4*4             Reserved for future use
     124     4               Magic number
-    128     2               Xor of data Inclu. partitions
+    128     2               Xor of data including partitions
     130     2               Number of partitions in following
     132     4               size of boot area at sn0, bytes
     136     4               Max size of fs superblock, bytes
@@ -206,9 +206,9 @@ class Disklabel:
         4       4               Starting sector
         8       2               Starting sector (high part)
         10      2               Number of sectors (high part)
-        12      1               Filesystem type
-        13      1               Filesystem Fragment per block
-        14      2               FS cylinders per group
+        12      1               File system type
+        13      1               File system Fragment per block
+        14      2               File system cylinders per group
         """
 
         Partition = namedtuple(
@@ -387,7 +387,7 @@ class Disklabel:
         self.bstart = bstart & 0xffffffff
 
     def getbstart(self):
-        """Get start of usable region"""
+        """Get start of useable region"""
         return (self.bstarth << 32) + self.bstart
 
     def setbend(self, bend):
@@ -396,6 +396,7 @@ class Disklabel:
         self.bend = bend & 0xffffffff
 
     def getbend(self):
+        """Get end of useable region"""
         return (self.bendh << 32) + self.bend
 
     def enlarge_disk(self, new_size):
@@ -409,7 +410,7 @@ class Disklabel:
         self.ncylinders = self.getdsize() // (self.nsectors * self.ntracks)
         self.setbend(self.ncylinders * self.nsectors * self.ntracks)
 
-        # Partition 'c' descriptes the entire disk
+        # Partition 'c' describes the entire disk
         self.ptable.setpsize(2, new_size)
 
         # Fix the MBR table
@@ -502,7 +503,7 @@ class Disklabel:
             "The magic number again: 0x%x\n" % self.magic2 + \
             "Checksum: %d\n" % self.checksum + \
             "Number of partitions: %d\n" % self.npartitions + \
-            "Size of boot aread at sn0: %d\n" % self.bbsize + \
+            "Size of boot area at sn0: %d\n" % self.bbsize + \
             "Max size of fs superblock: %d\n" % self.sbsize + \
             "%s" % self.ptable
 

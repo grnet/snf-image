@@ -13,9 +13,7 @@ dist_common_DATA = common.sh unattend.xml
 edit = sed \
 	-e 's|@commondir[@]|$(commondir)|g' \
 	-e 's|@scriptsdir[@]|$(scriptsdir)|g' \
-	-e 's|@tasksdir[@]|$(tasksdir)|g' \
-	-e 's|@RESIZE2FS[@]|$(RESIZE2FS)|g' \
-	-e 's|@XMLSTARLET[@]|$(XMLSTARLET)|g'
+	-e 's|@tasksdir[@]|$(tasksdir)|g'
 
 %:%.in Makefile
 	rm -f $@ $@.tmp

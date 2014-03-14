@@ -42,6 +42,7 @@ Contents:
    architecture
    interface
    installation
+   configuration
    usage
    advanced
 

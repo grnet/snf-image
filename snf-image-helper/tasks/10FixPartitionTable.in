@@ -39,7 +39,7 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = openbsd ]; then
     @scriptsdir@/disklabel.py -d "$($BLOCKDEV --getsz "$SNF_IMAGE_DEV")" -p "$SNF_IMAGE_DEV"
     # Tell the kernel to recreate the disk partitions.
     # We cannot use partprobe to do this because partprobe uses BLKPG ioctl
-    # to create the partitions device files by itself one by one. Since parted
+    # and creates the partition device files by itself one by one. Since parted
     # does not support disklabels, the partitions with id larger than 4 will
     # not be created.
     # We need to tell the kernel to read the partition table by itself.
@@ -69,7 +69,7 @@ if [ "$table_type" == "gpt" ]; then
     "$SGDISK" --move-second-header "$SNF_IMAGE_DEV"
 elif [ "$table_type" != "msdos" ]; then
     log_error "Device: \'${SNF_IMAGE_DEV}' contains unsupported partition " \
-              "table type: \`$table_type'. Only msdos & gpt partitions are" \
+              "table type: \`$table_type'. Only MSDOS & GPT partitions are" \
               "supported."
 fi
 
@@ -112,7 +112,7 @@ fi
 extended=""
 
 if [ "$table_type" != "msdos" ]; then
-    # For gpt partitions, get the partition GUID code as partition type
+    # For GPT partitions, get the partition GUID code as partition type
     last_part_type="$($SGDISK -i "$last_part_id" "$SNF_IMAGE_DEV" | grep "^Partition GUID code:" | cut -d"(" -f1 | cut -d: -f2 | xargs echo)"
 elif [ $last_part_id -gt 4 ]; then
     last_part_type="logical"
@@ -161,7 +161,7 @@ enlarge_partition "$SNF_IMAGE_DEV" "$last_part" "$last_part_type" "${new_end}s"
 if [ $swap_num -gt 0 ]; then
     swap_part="$swap_num:${swap_start}s:${swap_end}s:0:linux-swap(v1)::;"
     if [ "$table_type" != "msdos" ]; then
-        swap_ptype="swap" # in gpt this is used as a partition name
+        swap_ptype="swap" # in GPT this is used as a partition name
     elif [ $swap_num -ge 5 ]; then
         if [ -z "$extended" ]; then
             extended="0:$((swap_start - 2))s:${swap_end}s:0:::;"

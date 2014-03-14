@@ -15,7 +15,7 @@ separate steps:
 | 1. Fill the newly provisioned disk with Image data
 | 2. Customize the Image accordingly
 
-For (1), snf-image can fetch the Image from a number of back-ends, as we
+For (1), snf-image can fetch the Image from a number of backends, as we
 describe later. For (2) snf-image spawns a helper VM and runs a number of
 configuration tasks inside the isolated environment. Once the last task returns
 successfully, the helper VM ceases and snf-image returns the newly configured
@@ -41,7 +41,7 @@ the supported hypervisor as dictated by Ganeti. It runs as an unprivileged
 user.
 
 There is no restriction on the distribution running inside the helper VM, as
-long as it executes the snf-image-helper component automatically upon bootup.
+long as it executes the snf-image-helper component automatically upon boot-up.
 The snf-image-update-helper script is provided with snf-image to automate the
 creation of a helper VM image based on Debian Stable, using multistrap.
 
@@ -57,8 +57,8 @@ created and ensured by snf-image:
    maintains.
  * The helper VM is expected to output "SUCCESS" to its second serial port if
    image customization was successful inside the VM.
- * If "SUCCESS" is not returned, snf-image assumes that, execution of the helper
-   VM or snf-image-helper has failed.
+ * If "SUCCESS" is not returned, snf-image assumes that, execution of the
+   helper VM or snf-image-helper has failed.
  * The helper VM is expected to shutdown automatically once it is done. Its
    execution is time-limited; if it has not terminated after a number of
    seconds, configurable via ``/etc/default/snf-image``, snf-image sends a
@@ -84,33 +84,33 @@ The architecture is presented below:
 
 .. _storage-backends:
 
-Storage back-ends
-^^^^^^^^^^^^^^^^^
+Storage backends
+^^^^^^^^^^^^^^^^
 
 As stated above, for step (1), *snf-image* is capable of fetching images that
-are stored in a variety of different back-ends and then extracting them onto
-the newly created block device. The following back-ends are supported:
+are stored in a variety of different backends and then extracting them onto the
+newly created block device. The following back-ends are supported:
 
- * **Local back-end**:
-   The local back-end is used to retrieve images that are stored on the Ganeti
+ * **Local backend**:
+   The local backend is used to retrieve images that are stored on the Ganeti
    node that the image deployment takes place. All local images are expected to
    be found under a predefined image directory. By default */var/lib/snf-image*
    is used, but the user may change this by overwriting the value of the
    *IMAGE_DIR* variable under ``/etc/default/snf-image``.
 
- * **Network back-end**:
-   The network back-end is used to retrieve images that are accessible from the
+ * **Network backend**:
+   The network backend is used to retrieve images that are accessible from the
    network. snf-image can fetch images via *http:*, *https:*, *ftp:* or
    *ftps:*, using `cURL <http://curl.haxx.se/>`_.
 
- * **Pithos back-end**:
+ * **Pithos backend**:
    *snf-image* contains a special command-line tool (*pithcat*) for retrieving
    images residing on a Pithos installation. To set up snf-image's Pithos
-   back-end the user needs to setup the ``PITHOS_DATA`` and ``PITHOS_DB``
+   backend the user needs to setup the ``PITHOS_DATA`` and ``PITHOS_DB``
    variables inside ``/etc/default/snf-image`` accordingly.
 
- * **Null back-end**:
-   If the null back-end is selected, no image copying is performed. This
+ * **Null backend**:
+   If the null backend is selected, no image copying is performed. This
    actually is meant for bypassing step (1) altogether. This is useful, if the
    disk provisioned by Ganeti already contains an OS installation before
    *snf-image* is executed (for example if the disk was created as a clone of
@@ -132,7 +132,7 @@ partition in the end. The task will fail if the environmental variable
 is missing.
 
 **FilesystemResizeUnmounted**: Extends the file system of the last partition to
-cover up the whole partition. This only works for ext{2,3,4} and ufs2 file
+cover up the whole partition. This only works for ext{2,3,4}, FFS and UFS2 file
 systems. Any other file system type is ignored and a warning is triggered. The
 task will fail if *SNF_IMAGE_DEV* environmental variable is missing.
 
@@ -157,12 +157,12 @@ are also recreated. Besides removing files that comply to the
 depends on is *SNF_IMAGE_TARGET*.
 
 **DisableRemoteDesktopConnections**: This script temporary disables RDP
-connections on windows instances by changing the value of *fDenyTSConnection*
+connections on Windows instances by changing the value of *fDenyTSConnection*
 registry key. RDP connections will be enabled back during the specialize pass
 of the Windows setup. The task will fail if *SNF_IMAGE_TARGET* is not defined.
 
-**InstallUnattend**: Installs the Unattend.xml files on windows instances. This
-is needed by windows in order to perform an unattended setup. The
+**InstallUnattend**: Installs the Unattend.xml files on Windows instances. This
+is needed by Windows in order to perform an unattended setup. The
 *SNF_IMAGE_TARGET* variables needs to be present for this task to run.
 
 **SELinuxAutorelabel**: Creates *.autorelabel* file in Red Hat images. This is
