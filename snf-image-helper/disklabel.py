@@ -225,7 +225,57 @@ class Disk(object):
 
 class BSDDisklabel(object):
     """Represents a BSD Disklabel"""
-    pass
+
+    class PartitionTable:
+        """Represents a BSD Partition Table"""
+        format = "<IIIBBH"
+        """
+        Partition Entry:
+        Offset  Length          Contents
+        0       4               Number of sectors in partition
+        4       4               Starting sector
+        8       4               Filesystem basic fragment size
+        12      1               Filesystem type
+        13      1               Filesystem fragments per block
+        14      2               Filesystem cylinders per group
+        """
+
+        Partition = namedtuple(
+            'Partition', 'size, offset, fsize, fstype, frag, cpg')
+
+    format = "<IHH16s16sIIIIIIHHIHHHHIII20s20sIHHII64s"
+    """
+    Offset  Length          Contents
+    0       4               Magic
+    4       2               Drive Type
+    6       2               Subtype
+    8       16              Type Name
+    24      16              Pack Identifier
+    32      4               Bytes per sector
+    36      4               Data sectors per track
+    40      4               Tracks per cylinder
+    44      4               Data cylinders per unit
+    48      4               Data sectors per cylinder
+    52      4               Data sectors per unit
+    56      2               Spare sectors per track
+    58      2               Spare sectors per cylinder
+    60      4               Alternative cylinders per unit
+    64      2               Rotation Speed
+    66      2               Hardware sector interleave
+    68      2               Sector 0 skew, per track
+    70      2               Sector 0 skew, per cylinder
+    72      4               Head switch time
+    76      4               Track-to-track seek
+    80      4               Generic Flags
+    84      5*4             Drive-type specific information
+    104     5*4             Reserved for future use
+    124     4               Magic Number
+    128     2               Xor of data including partitions
+    130     2               Number of partitions following
+    132     4               size of boot area at sn0, bytes
+    136     4               Max size of fs superblock, bytes
+    140     16*16           Partition Table
+    """
 
 
 class OpenBSDDisklabel(object):
