@@ -223,25 +223,58 @@ class Disk(object):
         self.disklabel.enlarge_last_partition()
 
 
+class PartitionTableBase(object):
+    """Base Class for disklabel partition tables"""
+    format = ""
+
+    Partition = namedtuple('Partition', '')
+
+    def __init__(self, ptable, pnumber):
+        """Create a Partition Table instance"""
+        self.part = []
+
+        size = struct.calcsize(self.format)
+
+        raw = cStringIO.StringIO(ptable)
+        try:
+            for _ in xrange(pnumber):
+                self.part.append(
+                    self.Partition(*struct.unpack(self.format, raw.read(size)))
+                    )
+        finally:
+            raw.close()
+
+    def __str__(self):
+        """Print the Partition table"""
+        val = ""
+        for i in xrange(len(self.part)):
+            val += "%c: %s\n" % (chr(ord('a') + i), str(self.part[i]))
+        return val
+
+    def pack(self):
+        """Packs the partition table into a binary string."""
+        ret = ""
+        for i in xrange(len(self.part)):
+            ret += struct.pack(self.format, *self.part[i])
+        return ret
+
+
 class BSDDisklabel(object):
     """Represents a BSD Disklabel"""
 
-    class PartitionTable:
+    class PartitionTable(PartitionTableBase):
         """Represents a BSD Partition Table"""
-        format = "<IIIBBH"
-        """
-        Partition Entry:
-        Offset  Length          Contents
-        0       4               Number of sectors in partition
-        4       4               Starting sector
-        8       4               Filesystem basic fragment size
-        12      1               Filesystem type
-        13      1               Filesystem fragments per block
-        14      2               Filesystem cylinders per group
-        """
 
+        format = "<IIIBBH"
         Partition = namedtuple(
-            'Partition', 'size, offset, fsize, fstype, frag, cpg')
+            'Partition',  # Offset  Length Contents
+            ['size',      # 0       4      Number of sectors in partition
+             'offset',    # 4       4      Starting sector
+             'fsize',     # 8       4      Filesystem basic fragment size
+             'fstype',    # 12      1      Filesystem type
+             'frag',      # 13      1      Filesystem fragments per block
+             'cpg'        # 14      2      Filesystem cylinders per group
+             ])
 
     format = "<IHH16s16sIIIIIIHHIHHHHIII20s20sIHHII64s"
     """
@@ -281,59 +314,21 @@ class BSDDisklabel(object):
 class OpenBSDDisklabel(object):
     """Represents an OpenBSD Disklabel"""
 
-    class PartitionTable:
+    class PartitionTable(PartitionTableBase):
         """Reprepsents an OpenBSD Partition Table"""
+
         format = "<IIHHBBH"
-        """
-        Partition Entry:
-        Offset  Length          Contents
-        0       4               Number of sectors in the partition
-        4       4               Starting sector
-        8       2               Starting sector (high part)
-        10      2               Number of sectors (high part)
-        12      1               File system type
-        13      1               File system Fragment per block
-        14      2               File system cylinders per group
-        """
-
         Partition = namedtuple(
-            'Partition', 'size, offset, offseth, sizeh, fstype, frag, cpg')
+            'Partition',  # Offset  Length Contents
+            ['size',      # 0       4      Number of sectors in the partition
+             'offset',    # 4       4      Starting sector
+             'offseth',   # 8       2      Starting sector (high part)
+             'sizeh',     # 10      2      Number of sectors (high part)
+             'fstype',    # 12      1      File system type
+             'frag',      # 13      1      File system Fragments per block
+             'cpg'        # 14      2      File system cylinders per group
+             ])
 
-        def __init__(self, ptable, pnumber):
-            """Create a Partition Table instance"""
-            self.part = []
-
-            size = struct.calcsize(self.format)
-
-            raw = cStringIO.StringIO(ptable)
-            try:
-                for i in range(pnumber):
-                    p = self.Partition(
-                        *struct.unpack(self.format, raw.read(size)))
-                    self.part.append(p)
-            finally:
-                raw.close()
-
-        def __str__(self):
-            """Print the Partition table"""
-            val = ""
-            for i in range(len(self.part)):
-                val += "%c: %s\n" % (chr(ord('a') + i), str(self.part[i]))
-            return val
-
-        def pack(self):
-            """Packs the partition table into a binary string."""
-            ret = ""
-            for i in range(len(self.part)):
-                ret += struct.pack(self.format,
-                                   self.part[i].size,
-                                   self.part[i].offset,
-                                   self.part[i].offseth,
-                                   self.part[i].sizeh,
-                                   self.part[i].fstype,
-                                   self.part[i].frag,
-                                   self.part[i].cpg)
-            return ret
 
         def setpsize(self, i, size):
             """Set size for partition i"""
