@@ -552,8 +552,8 @@ class OpenBSDDisklabel(object):
             "%s" % self.ptable
 
 
-if __name__ == '__main__':
-
+def main():
+    """Main entry point"""
     usage = "Usage: %prog [options] <input_media>"
     parser = optparse.OptionParser(usage=usage)
 
@@ -563,16 +563,16 @@ if __name__ == '__main__':
     parser.add_option("--get-last-partition", action="store_true",
                       dest="last_part", default=False,
                       help="print the label of the last partition")
-    parser.add_option("--get-duid", action="store_true", dest="duid",
-                      default=False,
-                      help="print the disklabel unique identifier")
+    parser.add_option(
+        "--get-duid", action="store_true", dest="duid", default=False,
+        help="print the Disklabel Unique Identifier (OpenBSD only)")
     parser.add_option("-d", "--enlarge-disk", type="int", dest="disk_size",
                       default=None, metavar="SIZE",
-                      help="Enlarge the disk to this SIZE (in sectors)")
+                      help="enlarge the disk to this SIZE (in sectors)")
     parser.add_option(
         "-p", "--enlarge-partition", action="store_true",
         dest="enlarge_partition", default=False,
-        help="Enlarge the last partition to cover up the free space")
+        help="enlarge the last partition to cover up the free space")
 
     options, args = parser.parse_args(sys.argv[1:])
 
@@ -583,11 +583,11 @@ if __name__ == '__main__':
 
     if options.list:
         print disk
-        sys.exit(0)
+        return 0
 
     if options.duid:
         print "%s" % "".join(x.encode('hex') for x in disk.uid)
-        sys.exit(0)
+        return 0
 
     if options.last_part:
         print "%c" % chr(ord('a') + disk.get_last_partition_id())
@@ -599,7 +599,10 @@ if __name__ == '__main__':
         disk.enlarge_last_partition()
 
     disk.write()
+    return 0
 
-sys.exit(0)
+
+if __name__ == '__main__':
+    sys.exit(main())
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
