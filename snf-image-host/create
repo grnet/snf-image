@@ -159,9 +159,9 @@ if [ "$BACKEND_TYPE" = "local" ]; then
     # Deploying an image file on a target block device is a streaming copy
     # operation. Enable the direct I/O flag on the output fd to avoid polluting
     # the host cache with useless data.
-    $monitor dd bs=4M if="$image_file" of="$target" oflag=direct
+    $monitor dd bs=4M if="$image_file" of="$target" oflag=direct iflag=fullblock
 else
-    $image_cmd | $monitor dd bs=4M of="$target" oflag=direct
+    $image_cmd | $monitor dd bs=4M of="$target" oflag=direct iflag=fullblock
 fi
 report_info "Image copy finished."
 
