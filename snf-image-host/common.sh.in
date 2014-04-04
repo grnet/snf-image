@@ -189,7 +189,7 @@ get_api20_arguments() {
 
 map_disk0() {
     blockdev="$1"
-    filesystem_dev_base=$($KPARTX -l -p- $blockdev | \
+    filesystem_dev_base=$($KPARTX -l -s -p- $blockdev | \
                             grep -m 1 -- "-1.*$blockdev" | \
                             $AWK '{print $1}')
     if [ -z "$filesystem_dev_base" ]; then
