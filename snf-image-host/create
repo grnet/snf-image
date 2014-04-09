@@ -62,7 +62,7 @@ case $BACKEND_TYPE in
             IMAGE_NAME="${IMAGE_NAME:8}"
         elif [[ "$IMAGE_NAME" =~ ^file:// ]]; then
             IMAGE_NAME="${IMAGE_NAME:7}"
-            log_warning "The file:// back-end identifier is deprecated and" \
+            log_warning "The file:// backend identifier is deprecated and" \
                         "will be removed in the future. Use local:// instead."
         fi
 
@@ -77,8 +77,8 @@ case $BACKEND_TYPE in
             if [ -e "$image_file.$IMAGE_TYPE" ] ; then
                 image_file="$image_file.$IMAGE_TYPE"
                 log_warning "The \`.$IMAGE_TYPE' extension is missing from" \
-                    "the local back-end id. This id form is deprecated and" \
-                    " will be remove in the future."
+                    "the local backend id. This id form is deprecated and" \
+                    "will be remove in the future."
             else
                 log_error "Image file \`$image_file' does not exist."
                 report_error "Unable to retrieve image file."
@@ -159,9 +159,9 @@ if [ "$BACKEND_TYPE" = "local" ]; then
     # Deploying an image file on a target block device is a streaming copy
     # operation. Enable the direct I/O flag on the output fd to avoid polluting
     # the host cache with useless data.
-    $monitor dd bs=4M if="$image_file" of="$target" oflag=direct
+    $monitor dd bs=4M if="$image_file" of="$target" oflag=direct iflag=fullblock
 else
-    $image_cmd | $monitor dd bs=4M of="$target" oflag=direct
+    $image_cmd | $monitor dd bs=4M of="$target" oflag=direct iflag=fullblock
 fi
 report_info "Image copy finished."
 

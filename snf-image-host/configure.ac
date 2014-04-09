@@ -23,7 +23,7 @@ fi
 # --with-helper-url
 AC_ARG_WITH([helper-url],
   [AS_HELP_STRING([--with-helper-url=URL],
-      [url to download the helper image from [http://cdn.synnefo.org/snf_image_helper_image-PROG_VERSION.tar.xz]])],
+      [URL to download the helper image from [http://cdn.synnefo.org/snf_image_helper_image-PROG_VERSION.tar.xz]])],
   [helper_url="$withval"],
   [helper_url="http://cdn.synnefo.org/snf_image_helper_image-$VERSION.tar.xz"]
 )
@@ -47,7 +47,7 @@ AC_ARG_WITH([progress-monitor],
 # --with-unattend-file
 AC_ARG_WITH([unattend-file],
   [AS_HELP_STRING([--with-unattend-file=UNATTEND_PATH],
-    [path to unattend.xml windows setup file []])],
+    [path to unattend.xml Windows setup file []])],
     [if test "$withval" != "yes" -a "$withval" != "no"; then
 	AC_SUBST(UNATTEND, "$withval")
         AC_MSG_NOTICE(using unattend file: $withval)
@@ -136,11 +136,6 @@ fi
 AC_PATH_PROG(SFDISK, [sfdisk], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$SFDISK" ; then
   AC_MSG_ERROR([sfdisk not found in $PATH:/usr/sbin:/sbin])
-fi
-
-AC_PATH_PROG(QEMU_IMG, [qemu-img], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$QEMU_IMG" ; then
-  AC_MSG_ERROR([qemu-img not found in $PATH:/usr/sbin:/sbin])
 fi
 
 AC_PATH_PROG(INSTALL_MBR, [install-mbr], [], [$PATH:/usr/sbin:/sbin])
