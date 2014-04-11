@@ -71,8 +71,8 @@ linux_hostname() {
             slackware|suse)
                 #local domain=$(sed -e 's/^[^\.]*//g' < /etc/HOSTNAME)
 
-                # In slackware hostname and domain name are joined together. For now
-                # I will not retain the domain name.
+                # In Slackware hostname and domain name are joined together.
+                # For now I will not retain the domain name.
                 echo "$hostname" > "${target}/etc/HOSTNAME";;
             gentoo)
                 sed -i -e "s/\(\(HOSTNAME\)\|\(hostname\)\)=.*$/\1=\"$hostname\"/" "$target/etc/conf.d/hostname";;

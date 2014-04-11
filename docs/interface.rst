@@ -15,9 +15,9 @@ following OS Parameters:
    injected to the image
  * **img_properties** (optional): additional image properties used to customize
    the image (:ref:`details <image-properties>`)
- * **img_personality** (optional): files to be injected into the image
-   filesystem (:ref:`details <image-personality>`)
- * **config_url** (optional): the url to download configuration data from
+ * **img_personality** (optional): files to be injected into the image's file
+   system (:ref:`details <image-personality>`)
+ * **config_url** (optional): the URL to download configuration data from
 
 .. _image-format:
 
@@ -42,10 +42,10 @@ Image ID (img_id)
 ^^^^^^^^^^^^^^^^^
 
 The **img_id** OS parameter points to the actual Image that we want to deploy.
-It is a URI and its prefix denotes the type of :ref:`back-end <storage-backends>`
+It is a URI and its prefix denotes the type of :ref:`backend <storage-backends>`
 to be used. If no prefix is used, it defaults to the local back-end:
 
- * **Local back-end**:
+ * **Local backend**:
    To select it, the prefix should be ``local://``, followed by the name of the
    image. All local images are expected to be found under a predefined image
    directory (``/var/lib/snf-image`` by default).
@@ -55,7 +55,7 @@ to be used. If no prefix is used, it defaults to the local back-end:
   | We need to assign:
   | ``img_id=local://slackware.diskdump``
 
- * **Network back-end**:
+ * **Network backend**:
    If the **imd_id** starts with ``http:``, ``https:``, ``ftp:`` or ``ftps:``,
    snf-image will treat the **img_id** as a remote URL and will try to fetch the
    image using `cURL <http://curl.haxx.se/>`_.
@@ -63,7 +63,7 @@ to be used. If no prefix is used, it defaults to the local back-end:
   | For example, if we want to deploy an image from an http location:
   | ``img_id=http://www.synnefo.org/path/to/image/slackware-image``
 
- * **Pithos back-end**:
+ * **Pithos backend**:
    If the **img_id** is prefixed with ``pithos://`` or ``pithosmap://`` the
    image is considered to reside on a Pithos deployment. For ``pithosmap://``
    images, the user needs to have set a valid value for the
@@ -77,7 +77,7 @@ to be used. If no prefix is used, it defaults to the local back-end:
   | or if we already know the map:
   | ``img_id=pithosmap://<slackware-image-map-name>/<size>``
 
- * **Null back-end**:
+ * **Null backend**:
    To select the Null back-end and skip the fetching and extraction step, we set
    ``img_id=null``.
 
@@ -139,6 +139,18 @@ Optional properties
    `here <http://pythonhosted.org/passlib/modular_crypt_format.html#mcf-identifiers>`_
    for more info).
 
+ * **SWAP=<partition id>:<size>**
+   If this property is defined, *snf-image* will create a swap partition with
+   the specified size in MB. The *partition id* is the number that the Linux
+   kernel will assign to this partition. For example, if you have a disk with
+   an MSDOS  partition table on it and one primary partition, the image
+   property *SWAP=2:512* would instruct *snf-image* to create a 512MB long
+   primary partition for swap with id=2. On the other hand, if the SWAP
+   property had this form: *SWAP=5:512*, since primary partitions may have an
+   id from 1 to 4, *snf-image* would create a 512MB extended partition with
+   id=2 and a logical swap partition with id=5 in it with the same size. This
+   property only applies to Linux instances.
+
  * **EXCLUDE_ALL_TASKS=yes**
    If this property is defined with a value other than null, then during the
    deployment, the image will not be configured at all. This is really handy
@@ -162,7 +174,7 @@ img_properties OS parameter
 +++++++++++++++++++++++++++
 
 Image properties are passed to snf_image through the img_properties OS
-parameter as a simple json string like the one below:
+parameter as a simple JSON string like the one below:
 
 | {
 |     "PROPERTY1": "VALUE1",
@@ -198,7 +210,7 @@ The format of this parameter is a JSON array of objects. Each object in the
 array supports the following keys:
 
  * **path**: The absolute path of the file (string)
- * **contents**: The content of the file encoded as a base64 string (string)
+ * **contents**: The content of the file encoded as a Base64 string (string)
  * **owner**: The user ownership of the file (string)
  * **group**: The group ownership of the file (string)
  * **mode**: The permission mode of the file (number)
