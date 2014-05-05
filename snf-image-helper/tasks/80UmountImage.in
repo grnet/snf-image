@@ -37,10 +37,10 @@ fi
 umount_all "$SNF_IMAGE_TARGET"
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
-    # Sleep for a second after umounting windows file systems just to be on
-    # the safe side. The ntfs driver is over fuse and umount with fuse is not
+    # Sleep for a second after umounting Windows file systems just to be on
+    # the safe side. The NTFS driver is over fuse and umount with fuse is not
     # synchronous. Since the helper VM gets killed using a sysrq call, there
-    # is a 0.0000000001% posibility that the altered data are not written back
+    # is a 0.0000000001% possibility that the altered data are not written back
     # to the disk when the OS dies, unless you wait a little bit.
     sleep 1
 fi
