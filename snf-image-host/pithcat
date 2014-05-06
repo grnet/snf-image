@@ -127,7 +127,7 @@ def main():
     if options.db is None and 'PITHCAT_INPUT_DB' not in environ and \
             type(url) is LocationURL:
         stderr.write(
-            "Pithos database uri is missing.\n"
+            "Pithos database URI is missing.\n"
             "Use the PITHCAT_INPUT_DB environmental variable (recommended) "
             "or the --db command line option to define it.\n")
         exit(1)

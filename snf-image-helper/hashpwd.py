@@ -40,7 +40,7 @@ def random_salt(length=8):
 
 
 METHOD = {
-#   Name:  (algoritm, options)
+#   Name:  (algorithm, options)
     'md5': (passlib.hash.md5_crypt, {}),
     'blowfish': (passlib.hash.bcrypt, {}),
     'sha256': (

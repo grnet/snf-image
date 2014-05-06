@@ -42,7 +42,7 @@ set -o errtrace
 trap report_error ERR
 
 if grep snf_image_activate_helper /proc/cmdline > /dev/null; then
-    # terminate helper vm when the script exits
+    # terminate helper VM when the script exits
     add_cleanup system_poweroff
 else
     log_error "Kernel command line activation flag: " \
