@@ -13,7 +13,7 @@
 # IMAGE_DEBUG=no
 
 # VERSION_CHECK: Check if snf-image and snf-image-helper have the same version.
-# This is usefull if snf-image is installed as debian package and not from
+# This is useful if snf-image is installed as Debian package and not from
 # source.
 # VERSION_CHECK="@VERSION_CHECK@"
 
@@ -23,7 +23,7 @@
 # HELPER_SIZE: Size of the helper VM image in MB
 # HELPER_SIZE="600"
 
-# HELPER_TIMOUT: Soft and hard timeout limits for helper instance. The helper
+# HELPER_TIMEOUT: Soft and hard timeout limits for helper instance. The helper
 # instance will be terminated after a given time if it hasn't exited by itself.
 # A TERM signal will be send if the instance is running after a
 # HELPER_SOFT_TIMEOUT interval. A KILL signal will be sent, if the instance is
@@ -35,17 +35,17 @@
 
 # HELPER_USER: For security reasons, it is recommended that the helper VM
 # runs as an unprivileged user. KVM drops root privileges and runs as
-# HELPER_USER imeddiately before starting execution of the helper VM.
+# HELPER_USER immediately before starting execution of the helper VM.
 # HELPER_USER="nobody"
 
 # HELPER_MEMORY: Virtual RAM size in megabytes to be given to the helper VM.
-# HELPER_MEMORY="256"
+# HELPER_MEMORY="512"
 
 # MULTISTRAP_CONFIG: Configuration file to be used with multistrap to create
 # the rootfs of the helper image.
 # MULTISTRAP_CONFIG="@MULTISTRAP_CONFIG@"
 
-# MULTISTRAP_APTPREFDIR: Directory where apt preference files are hosted. Those
+# MULTISTRAP_APTPREFDIR: Directory where APT preference files are hosted. Those
 # files will be injected to the helper image before multistrap is called.
 # MULTISTRAP_APTPREFDIR="@MULTISTRAP_APTPREFDIR@"
 
@@ -55,7 +55,7 @@
 # PITHOS_DB: Pithos database in SQLAlchemy format
 # PITHOS_DB="sqlite:////@localstatedir@/lib/pithos/backend.db"
 
-# PITHOS_DATA: Directory where pithos data are hosted
+# PITHOS_DATA: Directory where Pithos data are hosted
 # PITHOS_DATA="/@localstatedir@/lib/pithos/data"
 
 # PROGRESS_MONITOR: External program that monitors the progress of the image
@@ -64,17 +64,16 @@
 # PROGRESS_MONITOR="@PROGRESS_MONITOR@"
 
 # UNATTEND: This variables overwrites the unattend.xml file used when deploying
-# a windows image. snf-image-helper will use its own unattend.xml file if this
+# a Windows image. snf-image-helper will use its own unattend.xml file if this
 # variable is empty. Please unless you really know what you are doing, leave
 # this empty.
 # UNATTEND="@UNATTEND@"
 
-# Paths for needed programs. Uncommend and change the variables below if you
+# Paths for needed programs. Uncomment and change the variables below if you
 # don't want to use the default one.
 # LOSETUP="losetup"
 # KPARTX="kpartx"
 # SFDISK="sfdisk"
-# QEMU_IMG="qemu-img"
 # INSTALL_MBR="install-mbr"
 # TIMEOUT="timeout"
 # CURL="curl"

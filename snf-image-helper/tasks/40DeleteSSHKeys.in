@@ -89,7 +89,7 @@ fi
     fi
 
     if [ "x$distro" = "xdebian" ]; then
-        # Most distros recreate missing keys...debian complains
+        # Most distros recreate missing keys but Debian complains
         type=""
         if [ -e "$target/$key" ]; then
             if grep -e "-----BEGIN DSA PRIVATE KEY-----" "$target/$key" > /dev/null; then
