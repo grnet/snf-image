@@ -41,6 +41,14 @@ except ImportError:
 parser = OptionParser(usage='%prog [options] <URL>')
 parser.add_option('--data', dest='data', metavar='DIR',
                   help='path to the directory where data are stored')
+parser.add_option('--backend', dest='backend', metavar='BACKEND',
+                  help='Pithos backend storage type')
+parser.add_option('--rados-conf', dest='rconf', metavar='RCONF',
+                  help='RADOS configuration file to use')
+parser.add_option('--rados-maps', dest='rmaps', metavar='RMAPS',
+                  help='RADOS pool which Pithos maps reside')
+parser.add_option('--rados-blocks', dest='rblocks', metavar='RBLOCKS',
+                  help='RADOS pool which Pithos blocks reside')
 parser.add_option('-s', action='store_true', dest='size', default=False,
                   help='print file size and exit')
 group = OptionGroup(
@@ -133,11 +141,22 @@ def main():
         exit(1)
 
     db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
+    backend_storage = environ['PITHCAT_BACKEND_STORAGE'] if not \
+        options.backend else options.backend
+    rados_ceph_conf = environ['PITHCAT_RADOS_CEPH_CONF'] if not \
+        options.rconf else options.rconf
+    rados_maps = environ['PITHCAT_RADOS_POOL_MAPS'] if not options.rmaps else \
+        options.rmaps
+    rados_blocks = environ['PITHCAT_RADOS_POOL_BLOCKS'] if not \
+        options.rblocks else options.rblocks
 
+    block_params = {'mappool': rados_maps, 'blockpool': rados_blocks}
     backend = ModularBackend(None,
                              db_uri if type(url) is LocationURL else None,
                              None,
-                             data_path)
+                             data_path, block_params=block_params,
+                             backend_storage=backend_storage,
+                             rados_ceph_conf=rados_ceph_conf)
 
     if options.size:
         print_size(backend, url)
