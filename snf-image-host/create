@@ -111,6 +111,10 @@ case $BACKEND_TYPE in
         # environmental variable.
         export PITHCAT_INPUT_DB="$PITHOS_DB"
         export PITHCAT_INPUT_DATA="$PITHOS_DATA"
+        export PITHCAT_BACKEND_STORAGE="$PITHOS_BACKEND_STORAGE"
+        export PITHCAT_RADOS_CEPH_CONF="$PITHOS_RADOS_CEPH_CONF"
+        export PITHCAT_RADOS_POOL_MAPS="$PITHOS_RADOS_POOL_MAPS"
+        export PITHCAT_RADOS_POOL_BLOCKS="$PITHOS_RADOS_POOL_BLOCKS"
         cmd_args="$(printf "%q" "${IMAGE_NAME}")"
         image_cmd="./pithcat $cmd_args"
         image_size=$(./pithcat -s  $cmd_args)
