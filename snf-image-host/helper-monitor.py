@@ -17,6 +17,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+"""Utility for monitoring the helper VM.
+
+This utility translates the monitor commands that get outputted by the helper
+VM into valid snf-image monitoring messages"""
+
 import sys
 import os
 import time
@@ -42,7 +47,7 @@ PROTOCOL = {
 
 
 def parse_options(input_args):
-    usage = "Usage: %prog [options] <file-sescriptor>"
+    usage = "Usage: %prog [options] <file-descriptor>"
     parser = optparse.OptionParser(usage=usage)
 
     parser.add_option("-i", "--interface", type="string", dest="ifname",
@@ -51,13 +56,13 @@ def parse_options(input_args):
 
     parser.add_option(
         "-f", "--filter", type="string", dest="filter",
-        help="add FILTER to incomint traffice when working on an interface",
+        help="add FILTER to incoming traffic when working on an interface",
         default=None, metavar="FILTER")
 
     options, args = parser.parse_args(input_args)
 
     if len(args) != 1:
-        parser.error('Wrong number of argumets')
+        parser.error('Wrong number of arguments')
 
     options.fd = args[0]
 

@@ -21,7 +21,7 @@
 # Provides:		FilesystemResizeUnmounted
 # RunBefore:		MountImage
 # RunAfter:             FixPartitionTable
-# Short-Description:	Resize filesystem to use all the available space
+# Short-Description:	Resize file system to use all the available space
 ### END TASK INFO
 
 set -e
@@ -36,24 +36,19 @@ if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = openbsd ]; then
+if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(open|net)bsd$ ]]; then
     bsd_part="$(@scriptsdir@/disklabel.py --get-last-partition "$SNF_IMAGE_DEV")"
     if [ "$bsd_part" = "b" ]; then
         warn "Last partition is swap space. Resizing ommited"
         exit 0
     fi
 
-    part="${SNF_IMAGE_DEV}$(disklabel2linux "$bsd_part")"
+    part="${SNF_IMAGE_DEV}$(bsd2linux "$bsd_part" "$SNF_IMAGE_DEV")"
 
     $DUMPFS_OPENBSD "$part" > /dev/null ||
         { warn "Filesystem is not UFS. Resizing ommited"; exit 0; }
 
     $GROWFS_OPENBSD -y "$part"
-    exit 0
-fi
-
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = netbsd ]; then
-    warn "File system resizing currently not supported for NetBSD"
     exit 0
 fi
 
@@ -77,7 +72,7 @@ if [[ "$ptype" == ext[234] ]]; then
     state=$($TUNE2FS -l "$device" | grep ^Filesystem\ state: | cut -d: -f2);
     state=$(echo $state) #trim the value
 
-    # We force a filesystem resize here if the file system is clean, even if
+    # We force a file system resize here if the file system is clean, even if
     # resize2fs complains. By default resize2fs will refuse to resize a file
     # system that has been mounted after the last fs check, but since we are
     # sure the file system is clean it's safe enough to bypass this.

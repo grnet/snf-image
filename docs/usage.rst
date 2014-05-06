@@ -23,14 +23,14 @@ that have been tested with snf-image and provided here for testing purposes:
    [`diskdump <http://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump.md5sum>`_]
    [`metadata <http://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump.meta>`_]
- * CentOS 6.0
-   [`diskdump <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump>`_]
-   [`md5sum <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump.md5sum>`_]
-   [`metadata <http://cdn.synnefo.org/centos-6.0-x86_64.diskdump.meta>`_]
- * Fedora Desktop 19
-   [`diskdump <http://cdn.synnefo.org/fedora-19-x86_64.diskdump>`_]
-   [`md5sum <http://cdn.synnefo.org/fedora-19-x86_64.diskdump.md5sum>`_]
-   [`metadata <http://cdn.synnefo.org/fedora-19-x86_64.diskdump.meta>`_]
+ * CentOS 6.x
+   [`diskdump <http://cdn.synnefo.org/centos-6-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/centos-6-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/centos-6-x86_64.diskdump.meta>`_]
+ * Fedora Desktop 20
+   [`diskdump <http://cdn.synnefo.org/fedora-20-x86_64.diskdump>`_]
+   [`md5sum <http://cdn.synnefo.org/fedora-20-x86_64.diskdump.md5sum>`_]
+   [`metadata <http://cdn.synnefo.org/fedora-20-x86_64.diskdump.meta>`_]
  * Ubuntu Desktop LTS 12.04
    [`diskdump <http://cdn.synnefo.org/ubuntu_desktop-12.04-x86_64.diskdump>`_]
    [`md5sum <http://cdn.synnefo.org/ubuntu_desktop-12.04-x86_64.diskdump.md5sum>`_]
@@ -92,7 +92,7 @@ image properties:
 | ROOT_PARTITION=1
 | USERS=root
 
-Hence, the ganeti command for creating a VM from this image file would look
+Hence, the Ganeti command for creating a VM from this image file would look
 like this:
 
 .. code-block:: console
@@ -101,7 +101,7 @@ like this:
     -O img_passwd=1Ki77y,img_format=diskdump,img_id=debian_base-7.0-x86_64,img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"1"\,"USERS":"root"}' \
     -t plain --disk=0:size=10G --no-name-check --no-ip-check --no-nics my_debian_server1
 
-If you don't want to configure the image at all and just copy it to the ganeti
+If you don't want to configure the image at all and just copy it to the Ganeti
 provided disk, use the ``EXCLUDE_ALL_TASKS`` image property, like this:
 
 .. code-block:: console
@@ -112,7 +112,7 @@ provided disk, use the ``EXCLUDE_ALL_TASKS`` image property, like this:
 
 To configure a VM without first copying an image into the hard disk (e.g. if
 the hard disk is a snapshot from an existing VM's hard disk) you may use the
-*null* storage back-end like this:
+*null* storage backend like this:
 
 .. code-block:: console
 
