@@ -1,3 +1,10 @@
+2014-04-11, v0.14
+	* Add support for extending NetBSD partitions
+	* Change the default Virtual RAM size of the helper VM to 512M
+	* Do various improvements in the documentation
+	* Optimize image copying by using fullbock iflag in dd
+	* Fix a kpartx race condition when deploying {ext,ntfs}dump images
+
 2014-02-06, v0.13
 	* Add support for extending OpenBSD partitions
 	* Add a new HELPER_MEMORY option in /etc/default/snf-image. This can be
