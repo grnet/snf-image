@@ -1,3 +1,9 @@
+snf-image (0.14-1~precise) precise; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 06 May 2014 12:05:36 +0300
+
 snf-image (0.13-1~precise) precise; urgency=low
 
   * New upstream version
