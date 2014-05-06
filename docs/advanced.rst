@@ -16,7 +16,7 @@ extdump and ntfsdump image formats
 ++++++++++++++++++++++++++++++++++
 
 Those two formats are dumps (raw copies using dd) of partitions hosting Linux
-systems on ext{2,3,4} and Windows systems on ntfs file systems respectively.
+systems on ext{2,3,4} and Windows systems on NTFS file systems respectively.
 Partitions hosting a Windows or Linux system that are suitable for dumping
 should have the following properties:
 
@@ -30,7 +30,7 @@ should have the following properties:
 Known Issues
 ------------
 
- * For Linux systems, having grub installed in the partition is fragile and
+ * For Linux systems, having GRUB installed on a partition is fragile and
    things can go wrong if you shrink the partition.
  * More complicated partition schemes are not supported.
 
@@ -155,4 +155,4 @@ actual error message or a *stderr* field that hosts the last 10 lines of the
 standard error output stream of *snf-image-helper*. Valid *error* messages look
 like this:
 
-``{"subtype": "error", "type": "image-helper", "messages": ["The image contains a(n) msdos partition table.  For FreeBSD images only GUID Partition Tables are supported."], "timestamp": 1379507910.799365}``
+``{"subtype": "error", "type": "image-helper", "messages": ["The image contains a(n) MSDOS partition table.  For FreeBSD images only GUID Partition Tables are supported."], "timestamp": 1379507910.799365}``

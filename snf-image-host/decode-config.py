@@ -17,11 +17,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-"""Decode a json encoded string with properties
+"""Decode a JSON encoded string with properties
 
-This program decodes a json encoded properties string and outputs it in a
-bash sourcable way. The properties are passed to the program through a JSON
-string either read from a file or from standard input and are outputed to a
+This program decodes a JSON encoded properties string and outputs it in a
+bash sourceable way. The properties are passed to the program through a JSON
+string either read from a file or from standard input and are outputted to a
 target file.
 """
 
