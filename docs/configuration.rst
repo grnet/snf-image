@@ -64,8 +64,24 @@ some external programs in ``/etc/default/snf-image``:
   # PITHOS_DB: Pithos database in SQLAlchemy format
   # PITHOS_DB="sqlite://///var/lib/pithos/backend.db"
 
+  # PITHOS_BACKEND_STORAGE: Select Pithos backend storage. Possible values are
+  # 'nfs' and 'rados'. According to the value you select, you need to set the
+  # corresponding variables that follow.
+  # If you select 'nfs' that's 'PITHOS_DATA'. If you select 'rados' then you
+  # need to set all the "*_RADOS_*" ones.
+  # PITHOS_BACKEND_STORAGE="nfs"
+
   # PITHOS_DATA: Directory where Pithos data are hosted
   # PITHOS_DATA="//var/lib/pithos/data"
+
+  # PITHOS_RADOS_CEPH_CONF: RADOS configuration file
+  # PITHOS_RADOS_CEPH_CONF="@sysconfdir@/ceph/ceph.conf"
+
+  # PITHOS_RADOS_POOL_MAPS: RADOS pool for storing Pithos maps
+  # PITHOS_RADOS_POOL_MAPS="maps"
+
+  # PITHOS_RADOS_POOL_BLOCKS: RADOS pool for storing Pithos blocks
+  # PITHOS_RADOS_POOL_BLOCKS="blocks"
 
   # PROGRESS_MONITOR: External program that monitors the progress of image
   # deployment. Monitoring messages will be redirected to the standard input of
