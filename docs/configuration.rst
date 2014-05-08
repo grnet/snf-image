@@ -64,6 +64,19 @@ some external programs in ``/etc/default/snf-image``:
   # PITHOS_DB: Pithos database in SQLAlchemy format
   # PITHOS_DB="sqlite://///var/lib/pithos/backend.db"
 
+  # PITHOS_BACKEND_STORAGE: Select Pithos backend storage. Possible values are
+  # 'nfs' and 'rados'
+  # PITHOS_BACKEND_STORAGE="nfs"
+
+  # PITHOS_RADOS_CEPH_CONF: RADOS configuration file
+  # PITHOS_RADOS_CEPH_CONF="@sysconfdir@/ceph/ceph.conf"
+
+  # PITHOS_RADOS_POOL_MAPS: RADOS pool for storing Pithos maps
+  # PITHOS_RADOS_POOL_MAPS="maps"
+
+  # PITHOS_RADOS_POOL_BLOCKS: RADOS pool for storing Pithos blocks
+  # PITHOS_RADOS_POOL_BLOCKS="blocks"  
+
   # PITHOS_DATA: Directory where Pithos data are hosted
   # PITHOS_DATA="//var/lib/pithos/data"
 
