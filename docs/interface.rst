@@ -66,10 +66,12 @@ to be used. If no prefix is used, it defaults to the local back-end:
  * **Pithos backend**:
    If the **img_id** is prefixed with ``pithos://`` or ``pithosmap://`` the
    image is considered to reside on a Pithos deployment. For ``pithosmap://``
-   images, the user needs to have set a valid value for the
-   ``PITHOS_DATA`` variable in snf-image's configuration file
-   (``/etc/default/snf-image`` by default). For ``pithos://`` images, in
-   addition to ``PITHOS_DATA``, the user needs to have set a valid value for the
+   images, the user needs to have set a valid value for the ``PITHOS_DATA``
+   variable in snf-image's configuration file (``/etc/default/snf-image`` by
+   default) if the storage backend is ``nfs`` or ``PITHOS_RADOS_POOL_MAPS`` and
+   ``PITHOS_RADOS_POOL_BLOCKS`` if the storage backend is ``rados``.
+   For ``pithos://`` images, in addition to ``PITHOS_DATA`` or
+   ``PITHOS_RADOS_POOL_*``, the user needs to have set a valid value for the
    ``PITHOS_DB`` variable, too.
 
   | For example, if we want to deploy using a full Pithos URI:
