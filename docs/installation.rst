@@ -50,14 +50,14 @@ After you update ``/etc/apt/sources.list`` import the repo's GPG key:
 
 .. code-block:: console
 
-  $ curl https://dev.grnet.gr/files/apt-grnetdev.pub | apt-key add -
+  # curl https://dev.grnet.gr/files/apt-grnetdev.pub | apt-key add -
 
 To install the package use the following commands:
 
 .. code-block:: console
 
-  $ apt-get update
-  $ apt-get install snf-image
+  # apt-get update
+  # apt-get install snf-image
 
 The last command will also download and install the *snf-image-helper* image in
 the post install phase of the package installation.
@@ -108,13 +108,13 @@ Install snf-image:
 
 .. code-block:: console
 
-  $ make install
-  $ install -Dm600 defaults /etc/default/snf-image
-  $ mkdir -p /var/lib/snf-image/helper
+  # make install
+  # install -Dm600 defaults /etc/default/snf-image
+  # mkdir -p /var/lib/snf-image/helper
 
 Finally, install the helper image by executing:
 
 .. code-block:: console
 
-  $ snf-image-update-helper
+  # snf-image-update-helper
 
