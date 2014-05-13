@@ -106,8 +106,12 @@ newly created block device. The following back-ends are supported:
  * **Pithos backend**:
    *snf-image* contains a special command-line tool (*pithcat*) for retrieving
    images residing on a Pithos installation. To set up snf-image's Pithos
-   backend the user needs to setup the ``PITHOS_DATA`` and ``PITHOS_DB``
-   variables inside ``/etc/default/snf-image`` accordingly.
+   backend the user needs to setup the ``PITHOS_BACKEND_STORAGE`` variable
+   inside ``/etc/default/snf-image``.
+   Possible values are ``nfs`` and ``rados``. If ``nfs`` is used the user needs
+   to setup ``PITHOS_DATA`` variable, and when ``rados`` is used the user needs
+   to setup ``PITHOS_RADOS_POOL_MAPS`` and ``PITHOS_RADOS_POOL_BLOCKS``
+   accordingly.
 
  * **Null backend**:
    If the null backend is selected, no image copying is performed. This
