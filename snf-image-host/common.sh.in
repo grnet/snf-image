@@ -454,6 +454,10 @@ fi
 : ${HELPER_MEMORY:="512"}
 : ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
 : ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
+: ${PITHOS_BACKEND_STORAGE:="nfs"}
+: ${PITHOS_RADOS_CEPH_CONF:="@sysconfdir@/ceph/ceph.conf"}
+: ${PITHOS_RADOS_POOL_MAPS:="maps"}
+: ${PITHOS_RADOS_POOL_BLOCKS:="blocks"}
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
 : ${UNATTEND:="@UNATTEND@"}
 : ${XEN_SCRIPTS_DIR="@sysconfdir@/xen/scripts"}
