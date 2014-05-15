@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2011-2013 GRNET S.A.
+# Copyright (C) 2011-2014 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,29 +30,60 @@ from sys import exit, stdout, stderr
 from os import environ
 from binascii import hexlify, unhexlify
 from collections import namedtuple
+from pkg_resources import parse_version
 
 try:
     from pithos.backends.modular import ModularBackend
+    from pithos.backends.version import __version__ as pithos_backend_version
 except ImportError:
     stderr.write("Pithos backend was not found.\n")
     exit(2)
 
+SELECTABLE_BE_VER = "0.15.1"
 
-parser = OptionParser(usage='%prog [options] <URL>')
-parser.add_option('--data', dest='data', metavar='DIR',
-                  help='path to the directory where data are stored')
+note = """
+NOTE: You can pass all arguments through environment variables instead of
+the command line: Setting the environment variable PITHCAT_INPUX_XXX to
+VALUE is equivalent to passing a '--xxx VALUE' argument.
+
+Using the --db argument directly is dangerous, because it may
+expose sensitive information in the output of 'ps'. Consider passing
+the DB URI through the environment variable PITHOS_INPUT_DB instead.\n"""
+
+OptionParser.format_epilog = lambda self, formattxt: self.epilog
+parser = OptionParser(usage='%prog [options] <URL>', epilog=note)
+if parse_version(pithos_backend_version) >= parse_version(SELECTABLE_BE_VER):
+    backend_group = OptionGroup(
+        parser, "Backend-specific Options",
+        "The backend-specific options depend on the specific "
+        "version of Pithos backend (package snf-pithos-backend) installed.\n"
+        "(Currently-installed version: Pithos backend '%s')" %
+        pithos_backend_version)
+    backend_group.add_option('--backend', dest='backend', metavar='BACKEND',
+                             help='Pithos backend storage type', default='nfs')
+    backend_group.add_option('--rados-conf', dest='rconf', metavar='RCONF',
+                             help='RADOS configuration file to use',
+                             default=None)
+    backend_group.add_option('--rados-maps', dest='rmaps', metavar='RMAPS',
+                             help='RADOS pool which Pithos maps reside',
+                             default='maps')
+    backend_group.add_option('--rados-blocks', dest='rblocks',
+                             metavar='RBLOCKS',
+                             help='RADOS pool which Pithos blocks reside',
+                             default='blocks')
+    backend_group.add_option('--data', dest='data', metavar='DIR',
+                             help='path to the directory where data are stored'
+                             )
+    parser.add_option_group(backend_group)
+else:
+    parser.add_option('--data', dest='data', metavar='DIR',
+                      help='path to the directory where data are stored')
+
 parser.add_option('-s', action='store_true', dest='size', default=False,
                   help='print file size and exit')
-group = OptionGroup(
-    parser, "Dangerous Options",
-    "Caution: If the <URL> is a LocationURL (pithos://...), then you'll also "
-    "need to define a database URI. You can use the `--db' option to do so, "
-    "but this raises security concerns. For database URI's and pithos data "
-    "paths, the recommended way to define them is to use the PITHCAT_INPUT_DB "
-    "and PITHCAT_INPUT_DATA environmental variables respectfully.")
-group.add_option('--db', dest='db', metavar='URI',
-                 help='SQLAlchemy URI of the database', default=None)
-parser.add_option_group(group)
+parser.add_option('--db', dest='db', metavar='URI',
+                  help='SQLAlchemy URI of the database [DANGEROUS: Do not use,'
+                  'see NOTE below]', default=None)
 
 LocationURL = namedtuple('LocationURL', ['account', 'container', 'object'])
 HashmapURL = namedtuple('HashmapURL', ['hash', 'size'])
@@ -132,12 +163,43 @@ def main():
             "or the --db command line option to define it.\n")
         exit(1)
 
-    db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
+    if type(url) is HashmapURL:
+        db_uri = None
+    else:
+        db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
 
-    backend = ModularBackend(None,
-                             db_uri if type(url) is LocationURL else None,
-                             None,
-                             data_path)
+    if parse_version(pithos_backend_version) >= \
+       parse_version(SELECTABLE_BE_VER):
+        backend_storage = environ['PITHCAT_BACKEND_STORAGE'] if not \
+            options.backend else options.backend
+
+        if options.rconf is None and 'PITHCAT_RADOS_CEPH_CONF' not in environ:
+            stderr.write(
+                "RADOS storage backend is selected but "
+                "RADOS conf file is missing.\n"
+                "Use the PITHCAT_RADOS_CEPH_CONF environmental variable "
+                "or the --rados-conf command line option to define it.\n")
+            exit(1)
+
+        rados_ceph_conf = environ['PITHCAT_RADOS_CEPH_CONF'] if not \
+            options.rconf else options.rconf
+        rados_maps = environ['PITHCAT_RADOS_POOL_MAPS'] if not \
+            options.rmaps else options.rmaps
+        rados_blocks = environ['PITHCAT_RADOS_POOL_BLOCKS'] if not \
+            options.rblocks else options.rblocks
+        block_params = {'mappool': rados_maps, 'blockpool': rados_blocks}
+
+        backend = ModularBackend(None,
+                                 db_uri if type(url) is LocationURL else None,
+                                 None,
+                                 data_path, block_params=block_params,
+                                 backend_storage=backend_storage,
+                                 rados_ceph_conf=rados_ceph_conf)
+    else:
+        backend = ModularBackend(None,
+                                 db_uri if type(url) is LocationURL else None,
+                                 None,
+                                 data_path)
 
     if options.size:
         print_size(backend, url)
