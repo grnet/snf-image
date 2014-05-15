@@ -1,7 +1,4 @@
-2014-15-05, v0.15rc2
-	* Add pithos backend version check in pithcat.
-
-2014-13-05, v0.15rc1
+2014-15-05, v0.15
 	* Add support for selectable pithos storage backend. Possible storage
 	  backends for pithos are `nfs' or `rados'
 	* Fix bugs and update the documentation
