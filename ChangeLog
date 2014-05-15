@@ -1,3 +1,8 @@
+2014-15-05, v0.15
+	* Add support for selectable pithos storage backend. Possible storage
+	  backends for pithos are `nfs' or `rados'
+	* Fix bugs and update the documentation
+
 2014-04-11, v0.14
 	* Add support for extending NetBSD partitions
 	* Change the default Virtual RAM size of the helper VM to 512M
