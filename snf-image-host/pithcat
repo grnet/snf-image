@@ -60,17 +60,17 @@ if parse_version(pithos_backend_version) >= parse_version(SELECTABLE_BE_VER):
         "(Currently-installed version: Pithos backend '%s')" %
         pithos_backend_version)
     backend_group.add_option('--backend', dest='backend', metavar='BACKEND',
-                             help='Pithos backend storage type', default='nfs')
+                             help='Pithos backend storage type', default=None)
     backend_group.add_option('--rados-conf', dest='rconf', metavar='RCONF',
                              help='RADOS configuration file to use',
                              default=None)
     backend_group.add_option('--rados-maps', dest='rmaps', metavar='RMAPS',
                              help='RADOS pool which Pithos maps reside',
-                             default='maps')
+                             default=None)
     backend_group.add_option('--rados-blocks', dest='rblocks',
                              metavar='RBLOCKS',
                              help='RADOS pool which Pithos blocks reside',
-                             default='blocks')
+                             default=None)
     backend_group.add_option('--data', dest='data', metavar='DIR',
                              help='path to the directory where data are stored'
                              )
@@ -145,15 +145,43 @@ def main():
 
     url = parse_url(args[0])
 
-    if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
-        stderr.write(
-            "Pithos data directory path is missing.\n"
-            "Use the PITHCAT_INPUT_DATA environmental variable (recommended) "
-            "or the --data command line option to define it.\n")
-        exit(1)
+    data_path = None
 
-    data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
-        options.data
+    if parse_version(pithos_backend_version) >= \
+       parse_version(SELECTABLE_BE_VER):
+
+        if not options.backend and 'PITHCAT_BACKEND_STORAGE' not in environ:
+            stderr.write(
+                "Pithos backend storage is missing.\n"
+                "Use the PITHCAT_BACKEND_STORAGE environmental variable "
+                "(recommended) "
+                "or the --backend command line option to define it.\n")
+            exit(1)
+
+        if options.backend == 'nfs' or \
+           environ.get('PITHCAT_BACKEND_STORAGE') == 'nfs':
+
+            if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
+                stderr.write(
+                    "Pithos data directory path is missing.\n"
+                    "Use the PITHCAT_INPUT_DATA environmental variable "
+                    "(recommended) "
+                    "or the --data command line option to define it.\n")
+                exit(1)
+
+            data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
+                options.data
+    else:
+        if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
+            stderr.write(
+                "Pithos data directory path is missing.\n"
+                "Use the PITHCAT_INPUT_DATA environmental variable "
+                "(recommended) "
+                "or the --data command line option to define it.\n")
+            exit(1)
+
+        data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
+            options.data
 
     if options.db is None and 'PITHCAT_INPUT_DB' not in environ and \
             type(url) is LocationURL:
@@ -170,10 +198,15 @@ def main():
 
     if parse_version(pithos_backend_version) >= \
        parse_version(SELECTABLE_BE_VER):
+
+        block_params = {'mappool': None, 'blockpool': None}
+        rados_ceph_conf = None
+
         backend_storage = environ['PITHCAT_BACKEND_STORAGE'] if not \
             options.backend else options.backend
 
-        if options.rconf is None and 'PITHCAT_RADOS_CEPH_CONF' not in environ:
+        if backend_storage == 'rados' and options.rconf is None and \
+           'PITHCAT_RADOS_CEPH_CONF' not in environ:
             stderr.write(
                 "RADOS storage backend is selected but "
                 "RADOS conf file is missing.\n"
@@ -181,13 +214,37 @@ def main():
                 "or the --rados-conf command line option to define it.\n")
             exit(1)
 
-        rados_ceph_conf = environ['PITHCAT_RADOS_CEPH_CONF'] if not \
-            options.rconf else options.rconf
-        rados_maps = environ['PITHCAT_RADOS_POOL_MAPS'] if not \
-            options.rmaps else options.rmaps
-        rados_blocks = environ['PITHCAT_RADOS_POOL_BLOCKS'] if not \
-            options.rblocks else options.rblocks
-        block_params = {'mappool': rados_maps, 'blockpool': rados_blocks}
+        if backend_storage == 'rados':
+            rados_ceph_conf = environ['PITHCAT_RADOS_CEPH_CONF'] if not \
+                options.rconf else options.rconf
+
+            if options.rmaps is None and 'PITHCAT_RADOS_POOL_MAPS' not in \
+               environ:
+                stderr.write(
+                    "RADOS storage backend is selected but "
+                    "RADOS pool for Pithos maps is missing.\n"
+                    "Use the PITHCAT_RADOS_POOL_MAPS environmental variable "
+                    "or the --rados-maps command line option to define it.\n")
+                exit(1)
+
+            rados_maps = environ['PITHCAT_RADOS_POOL_MAPS'] if not \
+                options.rmaps else options.rmaps
+
+            if options.rblocks is None and 'PITHCAT_RADOS_POOL_BLOCKS' not in \
+               environ:
+                stderr.write(
+                    "RADOS storage backend is selected but "
+                    "RADOS pool for Pithos blocks is missing.\n"
+                    "Use the PITHCAT_RADOS_POOL_BLOCKS environmental variable "
+                    "or the --rados-blocks command line option to define it.\n"
+                )
+                exit(1)
+
+            rados_blocks = environ['PITHCAT_RADOS_POOL_BLOCKS'] if not \
+                options.rblocks else options.rblocks
+
+            block_params['blockpool'] = rados_blocks
+            block_params['mappool'] = rados_maps
 
         backend = ModularBackend(None,
                                  db_uri if type(url) is LocationURL else None,
