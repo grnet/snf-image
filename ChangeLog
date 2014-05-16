@@ -1,3 +1,8 @@
+2014-16-05, v0.15
+	* Add support for selectable pithos storage backend. Possible storage
+	  backends for pithos are `nfs' or `rados'
+	* Fix bugs, typos and update the documentation
+
 2014-04-11, v0.14
 	* Add support for extending NetBSD partitions
 	* Change the default Virtual RAM size of the helper VM to 512M
@@ -151,9 +156,9 @@
 	* Use Coordinated Universal Time when logging.
 	* Fix a bug in the way snf-image-update-helper reads the links of the
 	  kernel and the initrd in the helper VM.
-	* Use environmental variables instead of input options to pass
-	  sensitive data to pithcat. This is needed because when pithcat is
-	  running, every user can see the program's command line by using ps.
+	* Use environment variables instead of input options to pass sensitive
+	  data to pithcat. This is needed because when pithcat is running,
+	  every user can see the program's command line by using ps.
 
 2012-09-15, v0.6
 	* Fix import and export scripts
