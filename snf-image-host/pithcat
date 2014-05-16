@@ -153,7 +153,7 @@ def main():
         if not options.backend and 'PITHCAT_BACKEND_STORAGE' not in environ:
             stderr.write(
                 "Pithos backend storage is missing.\n"
-                "Use the PITHCAT_BACKEND_STORAGE environmental variable "
+                "Use the PITHCAT_BACKEND_STORAGE environment variable "
                 "(recommended) "
                 "or the --backend command line option to define it.\n")
             exit(1)
@@ -164,7 +164,7 @@ def main():
             if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
                 stderr.write(
                     "Pithos data directory path is missing.\n"
-                    "Use the PITHCAT_INPUT_DATA environmental variable "
+                    "Use the PITHCAT_INPUT_DATA environment variable "
                     "(recommended) "
                     "or the --data command line option to define it.\n")
                 exit(1)
@@ -175,7 +175,7 @@ def main():
         if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
             stderr.write(
                 "Pithos data directory path is missing.\n"
-                "Use the PITHCAT_INPUT_DATA environmental variable "
+                "Use the PITHCAT_INPUT_DATA environment variable "
                 "(recommended) "
                 "or the --data command line option to define it.\n")
             exit(1)
@@ -187,7 +187,7 @@ def main():
             type(url) is LocationURL:
         stderr.write(
             "Pithos database URI is missing.\n"
-            "Use the PITHCAT_INPUT_DB environmental variable (recommended) "
+            "Use the PITHCAT_INPUT_DB environment variable (recommended) "
             "or the --db command line option to define it.\n")
         exit(1)
 
@@ -210,8 +210,8 @@ def main():
             stderr.write(
                 "RADOS storage backend is selected but "
                 "RADOS conf file is missing.\n"
-                "Use the PITHCAT_RADOS_CEPH_CONF environmental variable "
-                "or the --rados-conf command line option to define it.\n")
+                "Use the PITHCAT_RADOS_CEPH_CONF environment variable or the "
+                "--rados-conf command line option to define it.\n")
             exit(1)
 
         if backend_storage == 'rados':
@@ -223,8 +223,8 @@ def main():
                 stderr.write(
                     "RADOS storage backend is selected but "
                     "RADOS pool for Pithos maps is missing.\n"
-                    "Use the PITHCAT_RADOS_POOL_MAPS environmental variable "
-                    "or the --rados-maps command line option to define it.\n")
+                    "Use the PITHCAT_RADOS_POOL_MAPS environment variable or "
+                    "the --rados-maps command line option to define it.\n")
                 exit(1)
 
             rados_maps = environ['PITHCAT_RADOS_POOL_MAPS'] if not \
@@ -235,7 +235,7 @@ def main():
                 stderr.write(
                     "RADOS storage backend is selected but "
                     "RADOS pool for Pithos blocks is missing.\n"
-                    "Use the PITHCAT_RADOS_POOL_BLOCKS environmental variable "
+                    "Use the PITHCAT_RADOS_POOL_BLOCKS environment variable "
                     "or the --rados-blocks command line option to define it.\n"
                 )
                 exit(1)
