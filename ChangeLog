@@ -1,3 +1,6 @@
+2014-16-05, v0.15rc3
+	* Fix bugs in pithcat introduced in rc2
+
 2014-15-05, v0.15rc2
 	* Add pithos backend version check in pithcat.
 
@@ -159,9 +162,9 @@
 	* Use Coordinated Universal Time when logging.
 	* Fix a bug in the way snf-image-update-helper reads the links of the
 	  kernel and the initrd in the helper VM.
-	* Use environmental variables instead of input options to pass
-	  sensitive data to pithcat. This is needed because when pithcat is
-	  running, every user can see the program's command line by using ps.
+	* Use environment variables instead of input options to pass sensitive
+	  data to pithcat. This is needed because when pithcat is running,
+	  every user can see the program's command line by using ps.
 
 2012-09-15, v0.6
 	* Fix import and export scripts
