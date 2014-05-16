@@ -131,20 +131,20 @@ below for a description of each one of them:
 
 **FixPartitionTable**: Enlarges the last partition in the partition table of
 the instance, to consume all the available space and optionally adds a swap
-partition in the end. The task will fail if the environmental variable
+partition in the end. The task will fail if the environment variable
 *SNF_IMAGE_DEV*, which specifies the device file of the instance's hard disk,
 is missing.
 
 **FilesystemResizeUnmounted**: Extends the file system of the last partition to
 cover up the whole partition. This only works for ext{2,3,4}, FFS and UFS2 file
 systems. Any other file system type is ignored and a warning is triggered. The
-task will fail if *SNF_IMAGE_DEV* environmental variable is missing.
+task will fail if *SNF_IMAGE_DEV* environment variable is missing.
 
 **MountImage**: Mounts the root partition of the instance, specified by the
 *SNF_IMAGE_PROPERTY_ROOT_PARTITION* variable. On Linux systems after the root
 fs is mounted, the instance's ``/etc/fstab`` file is examined and the rest of
 the disk file systems are mounted too, in a correct order. The script will fail
-if any of the environmental variables *SNF_IMAGE_DEV*,
+if any of the environment variables *SNF_IMAGE_DEV*,
 *SNF_IMAGE_PROPERTY_ROOT_PARTITION* or *SNF_IMAGE_TARGET* is unset or has a
 non-sane value.
 
@@ -171,7 +171,7 @@ is needed by Windows in order to perform an unattended setup. The
 
 **SELinuxAutorelabel**: Creates *.autorelabel* file in Red Hat images. This is
 needed if SELinux is enabled to enforce an automatic file system relabeling
-during the first boot. The only environmental variable required by this task is
+during the first boot. The only environment variable required by this task is
 *SNF_IMAGE_TARGET*.
 
 **AssignHostname**: Assigns or changes the hostname of the instance. The task
@@ -204,7 +204,7 @@ missing a warning is produced. Only *SNF_IMAGE_TARGET* is required for this
 task to run.
 
 **UmountImage**: Umounts the file systems previously mounted by MountImage. The
-only environmental variable required is *SNF_IMAGE_TARGET*.
+only environment variable required is *SNF_IMAGE_TARGET*.
 
 
 +-------------------------------+---+--------------------------------------------+--------------------------------------------------+
@@ -245,4 +245,4 @@ only environmental variable required is *SNF_IMAGE_TARGET*.
 |UmountImage                    |80 |MountImage        |                         |TARGET                   |                        |
 +-------------------------------+---+------------------+-------------------------+-------------------------+------------------------+
 
-.. [#] all environmental variables are prefixed with *SNF_IMAGE_*
+.. [#] all environment variables are prefixed with *SNF_IMAGE_*
