@@ -1,13 +1,7 @@
-2014-16-05, v0.15rc3
-	* Fix bugs in pithcat introduced in rc2
-
-2014-15-05, v0.15rc2
-	* Add pithos backend version check in pithcat.
-
-2014-13-05, v0.15rc1
+2014-16-05, v0.15
 	* Add support for selectable pithos storage backend. Possible storage
 	  backends for pithos are `nfs' or `rados'
-	* Fix bugs and update the documentation
+	* Fix bugs, typos and update the documentation
 
 2014-04-11, v0.14
 	* Add support for extending NetBSD partitions
