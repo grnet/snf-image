@@ -315,7 +315,7 @@ ganeti_os_main() {
             . "$VARIANT_CONFIG"
         else
             if grep -qxF "$OS_VARIANT" variants.list; then
-                log_error "ERROR: instance-image configuration error"
+                log_error "ERROR: snf-image configuration error"
                 log_error "  Published variant $OS_VARIANT is missing its" \
                     "config file"
                 log_error "  Please create $VARIANT_CONFIG or unpublish the" \
