@@ -31,6 +31,8 @@ check_required() {
         eval $param=\"\$OSP_$param\"
     done
 
+    source_variant
+
     for var in $required_params; do
         if [ -z "${!var}" ]; then
              log_error "Missing OS API Parameter: ${var}"

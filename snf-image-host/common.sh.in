@@ -265,7 +265,10 @@ ganeti_os_main() {
     fi
 
     get_api20_arguments
+    source_variant
+}
 
+source_variant() {
     if [ -n "$OS_VARIANT" ]; then
         if [ ! -d "$VARIANTS_DIR" ]; then
             log_error "OS Variants directory $VARIANTS_DIR doesn't exist"
