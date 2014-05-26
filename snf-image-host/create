@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011 GRNET S.A.
+# Copyright (C) 2011-2014 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,12 @@ set -o pipefail
 . common.sh
 
 ganeti_os_main
+
+parameter_check
+
+IMAGE_NAME="$IMG_ID"
+IMAGE_TYPE="$IMG_FORMAT"
+BACKEND_TYPE=$(get_backend_type $IMG_ID)
 
 if [ "$IMAGE_DEBUG" = "yes" ]; then
     PS4='$(date "+%s.%N ($LINENO) + ")'
