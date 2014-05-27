@@ -14,6 +14,7 @@ override_dh_auto_clean:
 	rm -f Makefile.in aclocal.m4 configure config.status config.log tasks/Makefile.in
 	rm -f debian/version_pinning.pref
 	rm -f debian/snf-image.templates
+	rm -f debian/snf-image.postinst
 
 override_dh_auto_build:
 	dh_auto_build -Dsnf-image-host
@@ -22,6 +23,9 @@ override_dh_auto_build:
 		debian/version_pinning.pref.in > debian/version_pinning.pref
 	sed -e 's|@VERSION[@]|$(VERSION)|g' \
 		debian/snf-image.templates.in > debian/snf-image.templates
+	sed -e 's|@VERSION[@]|$(VERSION)|g' \
+		debian/snf-image.postinst.in > debian/snf-image.postinst
+	chmod +x debian/snf-image.postinst
 
 override_dh_auto_configure:
 	cd snf-image-host; ./autogen.sh

@@ -44,8 +44,8 @@ case "$1" in
    configure)
 	. /usr/share/debconf/confmodule
 	db_get snf-image/dlurl
-	HELPER_URL="$RET"
-        if [ -n "$HELPER_URL" ]; then
+	HELPER_URL="$RET/snf_image_helper_image-@VERSION@.tar.xz"
+        if [ -n "$RET" ]; then
 		if [ ! -e "$CONFFILE" ]; then
 		    create_conffile "$CONFFILE"
         	elif head -1 "$CONFFILE" | grep -q '^###DEBCONF###' > /dev/null; then
