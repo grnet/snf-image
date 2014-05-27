@@ -23,8 +23,8 @@ set -e
 
 
 check_required() {
-    local required_params="IMG_ID IMG_FORMAT IMG_PASSWD"
-    local osparams="$required_params IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+    local required_params="IMG_ID IMG_FORMAT"
+    local osparams="$required_params IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
 
     # Store OSP_VAR in VAR
     for param in $osparams; do

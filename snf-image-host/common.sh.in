@@ -133,7 +133,13 @@ get_api20_arguments() {
 
         # Store OSP_VAR in VAR
         for param in $osparams; do
-            eval $param=\"\$OSP_$param\"
+            # This is black magic. Only execute the eval command if the "param"
+            # variable is set. This way we can distinguish between variables
+            # with value "" and variables that have not been set at all
+            osp="OSP_$param"
+            if [ -n "${!osp+dummy}" ]; then
+                eval $param=\"\$$osp\"
+            fi
         done
 
         if [ -n "$CONFIG_URL" ]; then
@@ -147,7 +153,7 @@ get_api20_arguments() {
 }
 
 parameter_check() {
-    local required_osparams="IMG_ID IMG_FORMAT IMG_PASSWD"
+    local required_osparams="IMG_ID IMG_FORMAT"
 
     for var in $required_osparams; do
         if [ -z "${!var}" ]; then
