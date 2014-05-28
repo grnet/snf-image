@@ -1,16 +1,17 @@
 #!/bin/bash -e
 
-
+DEFAULT_URL=http://cdn.synnefo.org
 CONFFILE=/etc/default/snf-image-update-helper
 
 update_helper_msg()
 {
-    echo "This package will not work until a working snf-image-helper images is"
-    echo "installed under: \`/var/lib/snf-image/helper'. You can later download and"
-    echo "install the snf-image-helper image using the command:"
+    echo "Warning: This package will not work until a suitable snf-image-helper image"
+    echo "is installed under: \`/var/lib/snf-image/helper'. You can do this at any time"
+    echo "using the command:"
     echo
     echo "    snf-image-update-helper"
     echo
+    echo "Depending on the URL you have specified, Internet access may be needed."
 }
 
 create_conffile()
@@ -20,8 +21,7 @@ create_conffile()
 # the configuration of this file will be done by debconf as long as the
 # first line of the file says '###DEBCONF###'
 #
-# you should use dpkg-reconfigure snf-image to configure this file and
-# install the snf-image-helper image
+# you should use dpkg-reconfigure snf-image to configure this file
 #
 # HELPER_URL: URL to use to download the snf-image-helper image
 $(set | grep ^HELPER_URL=)
@@ -41,23 +41,33 @@ EOF
 }
 
 case "$1" in
-   configure)
-	. /usr/share/debconf/confmodule
-	db_get snf-image/dlurl
-	HELPER_URL="$RET/snf_image_helper_image-@VERSION@.tar.xz"
-        if [ -n "$RET" ]; then
-		if [ ! -e "$CONFFILE" ]; then
-		    create_conffile "$CONFFILE"
-        	elif head -1 "$CONFFILE" | grep -q '^###DEBCONF###' > /dev/null; then
-		    create_conffile "$CONFFILE"
-        	else
-		    add_debconf_signature "$CONFFILE"
-		fi
-		snf-image-update-helper -y
-	else
-		update_helper_msg
-	fi
-	;;
+    configure)
+        . /usr/share/debconf/confmodule
+
+        db_get snf-image/dlurl
+        BASE_URL="$RET"
+
+        if [ -z "$BASE_URL" ]; then
+            BASE_URL="$DEFAULT_URL"
+        fi
+
+	HELPER_URL="$BASE_URL/snf_image_helper_image-@VERSION@.tar.xz"
+
+        if [ ! -e "$CONFFILE" ]; then
+            create_conffile "$CONFFILE"
+        elif head -1 "$CONFFILE" | grep -q '^###DEBCONF###' > /dev/null; then
+            create_conffile "$CONFFILE"
+        else
+            add_debconf_signature "$CONFFILE"
+        fi
+
+	db_get snf-image/update-helper
+        if [ "$RET" = true ]; then
+	    snf-image-update-helper -y
+        else
+	    update_helper_msg
+        fi
+    ;;
     abort-upgrade|abort-remove|abort-deconfigure)
 	exit 0
 	;;
