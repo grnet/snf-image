@@ -167,7 +167,7 @@ get_api20_arguments() {
 
         # Store OSP_VAR in VAR
         for param in $osparams; do
-            eval $param=\"\$OSP_$param\"
+            eval $param=\"\${OSP_$param:-\$$param}\"
         done
 
         if [ -n "$CONFIG_URL" ]; then
@@ -288,6 +288,8 @@ canonicalize() {
 
 # this one is only to be called by create
 ganeti_os_main() {
+    ganeti_os_variant
+
     if [ -z "$OS_API_VERSION" -o "$OS_API_VERSION" = "5" ]; then
         OS_API_VERSION=5
         GETOPT_RESULT=`getopt -o o:n:i:b:s: -n '$0' -- "$@"`
@@ -304,7 +306,9 @@ ganeti_os_main() {
         log_error "Unknown OS API VERSION $OS_API_VERSION"
         exit 1
     fi
-    
+}
+
+ganeti_os_variant() {
     if [ -n "$OS_VARIANT" ]; then
         if [ ! -d "$VARIANTS_DIR" ]; then
             log_error "OS Variants directory $VARIANTS_DIR doesn't exist"
