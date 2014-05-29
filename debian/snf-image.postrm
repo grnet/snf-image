@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+    purge)
+        rm -f \
+            /var/lib/snf-image/helper/image \
+            /var/lib/snf-image/helper/version \
+            /var/lib/snf-image/helper/initrd \
+            /var/lib/snf-image/helper/initrd.img-* \
+            /var/lib/snf-image/helper/kernel \
+            /var/lib/snf-image/helper/packages \
+            /var/lib/snf-image/helper/version \
+            /var/lib/snf-image/helper/vmlinuz-*
+    ;;
+
+    remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    ;;
+
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
+
