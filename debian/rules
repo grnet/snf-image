@@ -1,7 +1,5 @@
 #!/usr/bin/make -f
 
-VERSION := $(shell cat version)
-
 %:
 	dh $@
 
@@ -21,9 +19,9 @@ override_dh_auto_build:
 	dh_auto_build -Dsnf-image-helper
 	sed -e 's|@DEBIAN_VERSION[@]|$(DEB_DEVFLOW_DEBIAN_VERSION)|g' \
 		debian/version_pinning.pref.in > debian/version_pinning.pref
-	sed -e 's|@VERSION[@]|$(VERSION)|g' \
+	sed -e 's|@VERSION[@]|$(DEB_DEVFLOW_VERSION)|g' \
 		debian/snf-image.templates.in > debian/snf-image.templates
-	sed -e 's|@VERSION[@]|$(VERSION)|g' \
+	sed -e 's|@VERSION[@]|$(DEB_DEVFLOW_VERSION)|g' \
 		debian/snf-image.postinst.in > debian/snf-image.postinst
 	chmod +x debian/snf-image.postinst
 
