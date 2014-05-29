@@ -21,6 +21,7 @@ set -e
 
 . common.sh
 
+ganeti_os_variant
 
 check_required() {
     local required_params="IMG_ID IMG_FORMAT IMG_PASSWD"
@@ -28,7 +29,7 @@ check_required() {
 
     # Store OSP_VAR in VAR
     for param in $osparams; do
-        eval $param=\"\$OSP_$param\"
+        eval $param=\"\${OSP_$param:-\$$param}\"
     done
 
     for var in $required_params; do
