@@ -95,7 +95,7 @@ get_api10_arguments() {
     case $HYPERVISOR in
         xen-hvm|xen-pvm) . xen-common.sh ;;
         kvm) . kvm-common.sh ;;
-        *) log_error "Unsupported hypervisor: \`$HYPERVISTOR'"; exit 1;;
+        *) log_error "Unsupported hypervisor: \`$HYPERVISOR'"; exit 1;;
     esac
 
     instance=$INSTANCE_NAME
