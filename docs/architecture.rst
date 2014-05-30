@@ -235,7 +235,8 @@ only environment variable required is *SNF_IMAGE_TARGET*.
 |                               |   |                  |                         |HOSTNAME                 |PROPERTY_OSFAMILY       |
 +-------------------------------+---+------------------+-------------------------+-------------------------+------------------------+
 |ChangePassword                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_USERS          |
-|                               |   |                  |                         |PASSWORD                 |PROPERTY_OSFAMILY       |
+|                               |   |                  |                         |                         |PROPERTY_OSFAMILY       |
+|                               |   |                  |                         |                         |PASSWORD                |
 +-------------------------------+---+------------------+-------------------------+-------------------------+------------------------+
 |FilesystemResizeMounted        |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY       |
 +-------------------------------+---+------------------+-------------------------+-------------------------+------------------------+
