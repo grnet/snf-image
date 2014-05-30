@@ -130,6 +130,7 @@ get_api20_arguments() {
 
     if [ "$SCRIPT_NAME" = "create" ]; then
         local osparams="IMG_ID IMG_FORMAT IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+        local osp
 
         # Store OSP_VAR in VAR
         for param in $osparams; do
@@ -270,8 +271,8 @@ ganeti_os_main() {
         exit 1
     fi
 
-    get_api20_arguments
     source_variant
+    get_api20_arguments
 }
 
 source_variant() {
