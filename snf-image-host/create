@@ -76,6 +76,7 @@ case $BACKEND_TYPE in
         if [ ! -d "$canonical_image_dir" ]; then
             log_error "The IMAGE_DIR directory: \`$IMAGE_DIR' does not exist."
             report_error "Unable to retrieve image file."
+            exit 1
         fi
 
         image_file="$IMAGE_DIR/$IMAGE_NAME"
