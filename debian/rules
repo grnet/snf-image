@@ -1,7 +1,5 @@
 #!/usr/bin/make -f
 
-VERSION := $(shell cat version)
-
 %:
 	dh $@
 
@@ -14,14 +12,18 @@ override_dh_auto_clean:
 	rm -f Makefile.in aclocal.m4 configure config.status config.log tasks/Makefile.in
 	rm -f debian/version_pinning.pref
 	rm -f debian/snf-image.templates
+	rm -f debian/snf-image.postinst
 
 override_dh_auto_build:
 	dh_auto_build -Dsnf-image-host
 	dh_auto_build -Dsnf-image-helper
 	sed -e 's|@DEBIAN_VERSION[@]|$(DEB_DEVFLOW_DEBIAN_VERSION)|g' \
 		debian/version_pinning.pref.in > debian/version_pinning.pref
-	sed -e 's|@VERSION[@]|$(VERSION)|g' \
+	sed -e 's|@VERSION[@]|$(DEB_DEVFLOW_VERSION)|g' \
 		debian/snf-image.templates.in > debian/snf-image.templates
+	sed -e 's|@VERSION[@]|$(DEB_DEVFLOW_VERSION)|g' \
+		debian/snf-image.postinst.in > debian/snf-image.postinst
+	chmod +x debian/snf-image.postinst
 
 override_dh_auto_configure:
 	cd snf-image-host; ./autogen.sh
@@ -37,6 +39,8 @@ override_dh_install:
 	dh_install
 	install -D -m 0600 snf-image-host/defaults $(CURDIR)/debian/snf-image/etc/default/snf-image
 	rm -f $(CURDIR)/debian/snf-image-helper/usr/share/doc/snf-image-helper/COPYING
+	mv $(CURDIR)/debian/snf-image/usr/share/ganeti/os/snf-image/variants.list \
+	 $(CURDIR)/debian/snf-image/etc/ganeti/snf-image/variants.list
 
 override_dh_fixperms:
 	dh_fixperms --exclude debian/snf-image/etc/default/snf-image
