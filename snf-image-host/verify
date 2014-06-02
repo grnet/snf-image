@@ -23,13 +23,21 @@ set -e
 
 
 check_required() {
-    local required_params="IMG_ID IMG_FORMAT IMG_PASSWD"
-    local osparams="$required_params IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+    local required_params="IMG_ID IMG_FORMAT"
+    local osparams="$required_params IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+    local osp
+
+    source_variant
 
     # Store OSP_VAR in VAR
     for param in $osparams; do
-        eval $param=\"\$OSP_$param\"
+        # Only do the evaluation if OSP_$param is defined
+        osp="OSP_$param"
+        if [ -n "${!osp+dummy}" ]; then
+            eval $param=\"\$$osp\"
+        fi
     done
+
 
     for var in $required_params; do
         if [ -z "${!var}" ]; then

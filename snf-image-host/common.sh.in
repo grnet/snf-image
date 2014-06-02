@@ -1,4 +1,4 @@
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011-2014 GRNET S.A.
 # Copyright (C) 2007, 2008, 2009 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -85,39 +85,6 @@ send_errors() {
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
 }
 
-get_api5_arguments() {
-    GETOPT_RESULT=$*
-    # Note the quotes around `$TEMP': they are essential!
-    eval set -- "$GETOPT_RESULT"
-    while true; do
-        case "$1" in
-            -i|-n) instance=$2; shift 2;;
-
-            -o) old_name=$2; shift 2;;
-
-            -b) blockdev=$2; shift 2;;
-
-            -s) swapdev=$2; shift 2;;
-
-            --) shift; break;;
-
-            *)  log_error "Internal error!" >&2; exit 1;;
-        esac
-    done
-    if [ -z "$instance" -o -z "$blockdev" ]; then
-        log_error "Missing OS API Argument (-i, -n, or -b)"
-        exit 1
-    fi
-    if [ "$SCRIPT_NAME" != "export" -a -z "$swapdev"  ]; then
-        log_error "Missing OS API Argument -s (swapdev)"
-        exit 1
-    fi
-    if [ "$SCRIPT_NAME" = "rename" -a -z "$old_name"  ]; then
-        log_error "Missing OS API Argument -o (old_name)"
-        exit 1
-    fi
-}
-
 get_api10_arguments() {
     if [ -z "$INSTANCE_NAME" -o -z "$HYPERVISOR" -o -z "$DISK_COUNT" ]; then
         log_error "Missing OS API Variable:"
@@ -128,7 +95,7 @@ get_api10_arguments() {
     case $HYPERVISOR in
         xen-hvm|xen-pvm) . xen-common.sh ;;
         kvm) . kvm-common.sh ;;
-        *) log_error "Unsupported hypervisor: \`$HYPERVISTOR'"; exit 1;;
+        *) log_error "Unsupported hypervisor: \`$HYPERVISOR'"; exit 1;;
     esac
 
     instance=$INSTANCE_NAME
@@ -162,12 +129,18 @@ get_api20_arguments() {
     get_api10_arguments
 
     if [ "$SCRIPT_NAME" = "create" ]; then
-        local required_osparams="IMG_ID IMG_FORMAT IMG_PASSWD"
-        local osparams="$required_osparams IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+        local osparams="IMG_ID IMG_FORMAT IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+        local osp
 
         # Store OSP_VAR in VAR
         for param in $osparams; do
-            eval $param=\"\$OSP_$param\"
+            # This is black magic. Only execute the eval command if the "param"
+            # variable is set. This way we can distinguish between variables
+            # with value "" and variables that have not been set at all
+            osp="OSP_$param"
+            if [ -n "${!osp+dummy}" ]; then
+                eval $param=\"\$$osp\"
+            fi
         done
 
         if [ -n "$CONFIG_URL" ]; then
@@ -177,14 +150,18 @@ get_api20_arguments() {
             config_params=$(./decode-config.py $osparams <<< "$config")
             eval "$config_params"
         fi
-
-        for var in $required_osparams; do
-            if [ -z "${!var}" ]; then
-                 log_error "Missing OS API Parameter: ${var}"
-                 exit 1
-            fi
-        done
     fi
+}
+
+parameter_check() {
+    local required_osparams="IMG_ID IMG_FORMAT"
+
+    for var in $required_osparams; do
+        if [ -z "${!var}" ]; then
+             log_error "Missing OS API Parameter: ${var}"
+             exit 1
+        fi
+    done
 }
 
 map_disk0() {
@@ -286,25 +263,19 @@ canonicalize() {
     fi
 }
 
-# this one is only to be called by create
+# this one is only to be called by ganeti OS interface scripts
 ganeti_os_main() {
-    if [ -z "$OS_API_VERSION" -o "$OS_API_VERSION" = "5" ]; then
-        OS_API_VERSION=5
-        GETOPT_RESULT=`getopt -o o:n:i:b:s: -n '$0' -- "$@"`
-        if [ $? != 0 ] ; then log_error "Terminating..."; exit 1 ; fi
-        get_api5_arguments $GETOPT_RESULT
-    elif [ "$OS_API_VERSION" = "10" -o "$OS_API_VERSION" = "15" ]; then
-        get_api10_arguments
-    elif [ "$OS_API_VERSION" = "20" ]; then
-        get_api20_arguments
-        IMAGE_NAME="$IMG_ID"
-        IMAGE_TYPE="$IMG_FORMAT"
-        BACKEND_TYPE=$(get_backend_type $IMG_ID)
-    else
-        log_error "Unknown OS API VERSION $OS_API_VERSION"
+
+    if [ "$OS_API_VERSION" != "20" ]; then
+        log_error "Unknown OS API VERSION $OS_API_VERSION. Only OS API VERSION 20 is supported"
         exit 1
     fi
-    
+
+    source_variant
+    get_api20_arguments
+}
+
+source_variant() {
     if [ -n "$OS_VARIANT" ]; then
         if [ ! -d "$VARIANTS_DIR" ]; then
             log_error "OS Variants directory $VARIANTS_DIR doesn't exist"
@@ -315,7 +286,7 @@ ganeti_os_main() {
             . "$VARIANT_CONFIG"
         else
             if grep -qxF "$OS_VARIANT" variants.list; then
-                log_error "ERROR: instance-image configuration error"
+                log_error "ERROR: snf-image configuration error"
                 log_error "  Published variant $OS_VARIANT is missing its" \
                     "config file"
                 log_error "  Please create $VARIANT_CONFIG or unpublish the" \

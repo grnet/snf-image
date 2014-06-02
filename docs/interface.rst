@@ -11,8 +11,8 @@ following OS Parameters:
    (:ref:`details <image-format>`)
  * **img_id** (required if *config_url* is missing): the URI used to identify
    the image (:ref:`details <image-id>`)
- * **img_passwd** (required if *config_url* is missing): the password to be
-   injected to the image
+ * **img_passwd** (optional): the password to be injected into the image
+   (:ref:`details <image-passwd>`)
  * **img_properties** (optional): additional image properties used to customize
    the image (:ref:`details <image-properties>`)
  * **img_personality** (optional): files to be injected into the image's file
@@ -33,7 +33,7 @@ snf-image supports 3 different types of image formats:
 These are also the only valid values for the **img_format** OS parameter.
 The **diskdump** type is the newest and recommended type. Thus, all sample
 images we provide are of this type. For more details about the internals of
-image formats please see the :ref:`corresponding advanced section
+image formats please see the corresponding :ref:`advanced section
 <image-format-advanced>`.
 
 .. _image-id:
@@ -82,6 +82,15 @@ to be used. If no prefix is used, it defaults to the local back-end:
  * **Null backend**:
    To select the Null back-end and skip the fetching and extraction step, we set
    ``img_id=null``.
+
+.. _image-passwd:
+
+Image Password (img_passwd)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The value of this parameter is the password to be injected into the image. If
+this parameter is not set at all, then the *ChangePassword* task (see
+:ref:`Image Configuration Tasks <image-configuration-tasks>`) will not run.
 
 .. _image-properties:
 
