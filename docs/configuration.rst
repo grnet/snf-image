@@ -9,12 +9,6 @@ some external programs in ``/etc/default/snf-image``:
 
   # snf-image defaults file
 
-  # IMAGE_NAME: Name of the image to use
-  # Generally you use the name of the image with the version of the OS included.
-  # Examples include:
-  #   centos-5.4 debian-4.0 fedora-12
-  # IMAGE_NAME=""
-
   # IMAGE_DIR: directory location for disk images
   # IMAGE_DIR="/var/lib/snf-image"
 

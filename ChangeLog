@@ -1,4 +1,11 @@
-2014-16-05, v0.15
+2014-06-02, v0.15.1
+	* Remove support for OS API version 5, 10, 15
+	* Make img_passwd an optional parameter
+	* Allow OS parameters to be defined in /etc/default/snf-image and the
+	  variants files.
+	* Fix bugs, typos and update the documentation
+
+2014-05-16, v0.15
 	* Add support for selectable pithos storage backend. Possible storage
 	  backends for pithos are `nfs' or `rados'
 	* Fix bugs, typos and update the documentation
