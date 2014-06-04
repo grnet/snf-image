@@ -138,7 +138,7 @@ Optional properties
  * **DO_SYNC=yes**
    By default in ResizeUnmounted task, when ``resize2fs`` is executed to
    enlarge a ext[234] file system, ``fsync()`` is disabled to speed up the
-   whole process. I for some reason you need to disable this behavior, use the
+   whole process. If for some reason you need to disable this behavior, use the
    *DO_SYNC* image property.
 
  * **PASSWORD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
