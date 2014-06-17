@@ -73,7 +73,7 @@ def parse_arguments(input_args):
 def main():
     (input_file, target, decode) = parse_arguments(sys.argv[1:])
 
-    files = json.load(input_file)
+    files = json.load(input_file, strict=False)
 
     if decode:
         manifest = open(target + '/manifest', 'w')
