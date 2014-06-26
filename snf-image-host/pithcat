@@ -40,10 +40,11 @@ except ImportError:
     exit(2)
 
 SELECTABLE_BE_VER = "0.15.1"
+ARCHIPELAGO_BE_VER = "0.16.0"
 
 note = """
 NOTE: You can pass all arguments through environment variables instead of
-the command line: Setting the environment variable PITHCAT_INPUX_XXX to
+the command line: Setting the environment variable PITHCAT_INPUT_XXX to
 VALUE is equivalent to passing a '--xxx VALUE' argument.
 
 Using the --db argument directly is dangerous, because it may
@@ -52,7 +53,9 @@ the DB URI through the environment variable PITHOS_INPUT_DB instead.\n"""
 
 OptionParser.format_epilog = lambda self, formattxt: self.epilog
 parser = OptionParser(usage='%prog [options] <URL>', epilog=note)
-if parse_version(pithos_backend_version) >= parse_version(SELECTABLE_BE_VER):
+if parse_version(pithos_backend_version) >= parse_version(SELECTABLE_BE_VER) \
+    and parse_version(pithos_backend_version) < \
+        parse_version(ARCHIPELAGO_BE_VER):
     backend_group = OptionGroup(
         parser, "Backend-specific Options",
         "The backend-specific options depend on the specific "
@@ -75,7 +78,7 @@ if parse_version(pithos_backend_version) >= parse_version(SELECTABLE_BE_VER):
                              help='path to the directory where data are stored'
                              )
     parser.add_option_group(backend_group)
-else:
+elif parse_version(pithos_backend_version) < parse_version(SELECTABLE_BE_VER):
     parser.add_option('--data', dest='data', metavar='DIR',
                       help='path to the directory where data are stored')
 
@@ -120,12 +123,23 @@ def print_data(backend, url):
 
     if type(url) is LocationURL:
         account, container, object = url
-        size, hashmap = backend.get_object_hashmap(account, account, container,
-                                                   object)
+        if parse_version(pithos_backend_version) < \
+                parse_version(ARCHIPELAGO_BE_VER):
+            size, hashmap = backend.get_object_hashmap(account, account,
+                                                       container,
+                                                       object)
+        else:
+            _, size, hashmap = backend.get_object_hashmap(account, account,
+                                                          container,
+                                                          object)
     elif type(url) is HashmapURL:
-        hashmap = [hexlify(x)
-                   for x in backend.store.map_get(unhexlify(url.hash))]
         size = int(url.size)
+        if parse_version(pithos_backend_version) < \
+                parse_version(ARCHIPELAGO_BE_VER):
+            hashmap = [hexlify(x)
+                       for x in backend.store.map_get(unhexlify(url.hash))]
+        else:
+            hashmap = [x for x in backend.store.map_get(url.hash, size)]
     else:
         raise Exception("Invalid URL")
 
@@ -148,7 +162,9 @@ def main():
     data_path = None
 
     if parse_version(pithos_backend_version) >= \
-       parse_version(SELECTABLE_BE_VER):
+        parse_version(SELECTABLE_BE_VER) and \
+        parse_version(pithos_backend_version) < \
+            parse_version(ARCHIPELAGO_BE_VER):
 
         if not options.backend and 'PITHCAT_BACKEND_STORAGE' not in environ:
             stderr.write(
@@ -197,7 +213,9 @@ def main():
         db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
 
     if parse_version(pithos_backend_version) >= \
-       parse_version(SELECTABLE_BE_VER):
+       parse_version(SELECTABLE_BE_VER) and \
+       parse_version(pithos_backend_version) < \
+       parse_version(ARCHIPELAGO_BE_VER):
 
         block_params = {'mappool': None, 'blockpool': None}
         rados_ceph_conf = None
@@ -252,16 +270,29 @@ def main():
                                  data_path, block_params=block_params,
                                  backend_storage=backend_storage,
                                  rados_ceph_conf=rados_ceph_conf)
+    elif parse_version(pithos_backend_version) >= \
+            parse_version(ARCHIPELAGO_BE_VER):
+        backend = ModularBackend(None,
+                                 db_uri if type(url) is LocationURL else None,
+                                 None)
     else:
         backend = ModularBackend(None,
                                  db_uri if type(url) is LocationURL else None,
                                  None,
                                  data_path)
 
-    if options.size:
-        print_size(backend, url)
-    else:
-        print_data(backend, url)
+    try:
+        if options.size:
+            print_size(backend, url)
+        else:
+            print_data(backend, url)
+    finally:
+        if parse_version(pithos_backend_version) >= \
+                parse_version(ARCHIPELAGO_BE_VER):
+            if backend.ioctx_pool:
+                backend.ioctx_pool._shutdown_pool()
+        else:
+            pass
 
 if __name__ == '__main__':
     main()
