@@ -187,7 +187,8 @@ def main():
 
             data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
                 options.data
-    else:
+    elif parse_version(pithos_backend_version) < \
+            parse_version(SELECTABLE_BE_VER):
         if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
             stderr.write(
                 "Pithos data directory path is missing.\n"
