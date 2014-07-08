@@ -22,9 +22,9 @@ fi
 # --with-helper-url
 AC_ARG_WITH([helper-url],
   [AS_HELP_STRING([--with-helper-url=URL],
-      [URL to download the helper image from [http://cdn.synnefo.org/snf_image_helper_image-PROG_VERSION.tar.xz]])],
+      [URL to download the helper image from [https://cdn.synnefo.org/snf_image_helper_image-PROG_VERSION.tar.xz]])],
   [helper_url="$withval"],
-  [helper_url="http://cdn.synnefo.org/snf_image_helper_image-$VERSION.tar.xz"]
+  [helper_url="https://cdn.synnefo.org/snf_image_helper_image-$VERSION.tar.xz"]
 )
 
 AC_SUBST(HELPER_URL, $helper_url)
