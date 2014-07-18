@@ -39,12 +39,12 @@ the post install phase of the package installation.
 Ubuntu
 ^^^^^^
 
-For Ubuntu 12.04 LTS we provide packages in our APT repository. To use our
+For Ubuntu 14.04 LTS we provide packages in our APT repository. To use our
 repository add the following lines to file ``/etc/apt/sources.list``:
 
-``deb http://apt.dev.grnet.gr precise/``
+``deb http://apt.dev.grnet.gr trusty/``
 
-``deb-src http://apt.dev.grnet.gr precise/``
+``deb-src http://apt.dev.grnet.gr trusty/``
 
 After you update ``/etc/apt/sources.list`` import the repo's GPG key:
 
