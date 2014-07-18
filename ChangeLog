@@ -1,3 +1,6 @@
+2014-07-18, v0.15.2
+	* Fix configure.ac to work with newer versions of automake
+
 2014-06-02, v0.15.1
 	* Remove support for OS API version 5, 10, 15
 	* Make img_passwd an optional parameter
