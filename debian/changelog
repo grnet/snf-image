@@ -1,105 +1,62 @@
-snf-image (0.15.1-1~wheezy) wheezy; urgency=low
-
-  * New upstream version
-  * Rewrite the package configuration system
-
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 02 Jun 2014 13:55:49 +0300
-
-snf-image (0.15-1~wheezy) wheezy; urgency=low
+snf-image (0.14-1~precise) precise; urgency=low
 
   * New upstream version
 
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 16 May 2014 12:54:29 +0300
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 06 May 2014 12:05:36 +0300
 
-snf-image (0.15~rc3-1~wheezy) wheezy; urgency=low
-
-  * New upstream version
-
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 16 May 2014 11:22:20 +0300
-
-snf-image (0.15~rc2-1~wheezy) wheezy; urgency=low
+snf-image (0.13-1~precise) precise; urgency=low
 
   * New upstream version
 
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Thu, 15 May 2014 12:31:32 +0300
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Wed, 12 Mar 2014 14:55:27 +0200
 
-snf-image (0.15~rc1-1~wheezy) wheezy; urgency=low
-
-  * New upstream version
-
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 13 May 2014 16:46:42 +0300
-
-snf-image (0.14-1~wheezy) wheezy; urgency=low
+snf-image (0.12-1~precise) precise; urgency=low
 
   * New upstream version
 
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 11 Apr 2014 10:40:08 +0300
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Wed, 06 Nov 2013 12:10:14 +0200
 
-snf-image (0.14~rc1-1~wheezy) wheezy; urgency=low
+snf-image (0.11.1-2~precise) precise; urgency=low
 
-  * New upstream version
+  * Corrupted deb file
 
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Wed, 09 Apr 2014 11:37:50 +0300
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 22 Oct 2013 12:14:50 +0300
 
-snf-image (0.13-1~wheezy) wheezy; urgency=low
-
-  * New upstream version
-
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Thu, 06 Feb 2014 12:58:37 +0200
-
-snf-image (0.12.1-1~wheezy) wheezy; urgency=low
+snf-image (0.11.1-1~precise) precise; urgency=low
 
   * New upstream version
 
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 24 Jan 2014 18:12:54 +0200
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 22 Oct 2013 12:10:11 +0300
 
-snf-image (0.12-1~wheezy) wheezy; urgency=low
-
-  * New upstream version
-
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 05 Nov 2013 15:53:14 +0200
-
-snf-image (0.11.1-1~wheezy) wheezy; urgency=low
+snf-image (0.11-1~precise) precise; urgency=low
 
   * New upstream version
 
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 21 Oct 2013 13:27:51 +0300
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 18 Oct 2013 13:59:50 +0300
 
-snf-image (0.11-1~wheezy) wheezy; urgency=low
-
-  * New upstream version
-
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 18 Oct 2013 11:38:03 +0300
-
-snf-image (0.10.1-1~wheezy) wheezy; urgency=low
+snf-image (0.10.1-1~precise) precise; urgency=low
 
   * New upstream version
 
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 23 Sep 2013 18:45:44 +0300
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 24 Sep 2013 15:11:09 +0300
 
-snf-image (0.10-1~wheezy) wheezy; urgency=low
-
-  * New upstream version
-
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 20 Sep 2013 11:34:44 +0300
-
-snf-image (0.9.3-2~wheezy) wheezy; urgency=low
-
-  * Restore the missing helper image creation scripts
-
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 02 Sep 2013 18:56:35 +0300
-
-snf-image (0.9.3-1~wheezy) wheezy; urgency=low
+snf-image (0.9.3-1~squeeze) squeeze; urgency=low
 
   * New upstream version
 
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 02 Sep 2013 18:38:01 +0300
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 02 Sep 2013 17:31:45 +0300
 
-snf-image (0.9.2-1~wheezy) wheezy; urgency=low
+snf-image (0.9.2-2~squeeze) squeeze; urgency=low
+
+  * Fix debian branch
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 27 Aug 2013 12:43:34 +0300
+
+snf-image (0.9.2-1~squeeze) stable; urgency=low
 
   * New upstream version
 
- -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 27 Aug 2013 16:06:41 +0300
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 27 Aug 2013 12:33:18 +0300
 
 snf-image (0.9.1-1) stable; urgency=low
 
@@ -304,20 +261,3 @@ snf-image-host (0.1-1) UNRELEASED; urgency=low
   * Initial release
 
  -- Constantinos Venetsanopoulos <cven@grnet.gr>  Tue, 04 Oct 2011 13:04:28 +0300
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
