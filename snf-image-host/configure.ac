@@ -6,8 +6,7 @@ AC_DEFINE_UNQUOTED(VERSION, "$devflow_version")
 AC_CONFIG_AUX_DIR(autotools)
 AC_CONFIG_SRCDIR(configure)
 
-AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability])
-AM_INIT_AUTOMAKE([subdir-objects])
+AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability subdir-objects])
 
 
 # --enable-version-consistency-ckeck
