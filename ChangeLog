@@ -1,3 +1,7 @@
+2014-08-04, v0.16rc1
+	* Add support for archipelago images
+	* Update the documentation
+
 2014-07-18, v0.15.2
 	* Fix configure.ac to work with newer versions of automake
 
