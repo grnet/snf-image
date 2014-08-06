@@ -44,12 +44,12 @@ ARCHIPELAGO_BE_VER = "0.16.0"
 
 note = """
 NOTE: You can pass all arguments through environment variables instead of
-the command line: Setting the environment variable PITHCAT_INPUT_XXX to
+the command line: Setting the environment variable PITHCAT_XXX to
 VALUE is equivalent to passing a '--xxx VALUE' argument.
 
 Using the --db argument directly is dangerous, because it may
 expose sensitive information in the output of 'ps'. Consider passing
-the DB URI through the environment variable PITHOS_INPUT_DB instead.\n"""
+the DB URI through the environment variable PITHCAT_DB instead.\n"""
 
 OptionParser.format_epilog = lambda self, formattxt: self.epilog
 parser = OptionParser(usage='%prog [options] <URL>', epilog=note)
@@ -78,6 +78,10 @@ if parse_version(pithos_backend_version) >= parse_version(SELECTABLE_BE_VER) \
                              help='path to the directory where data are stored'
                              )
     parser.add_option_group(backend_group)
+elif parse_version(pithos_backend_version) >= \
+        parse_version(ARCHIPELAGO_BE_VER):
+    parser.add_option('--archipelago-conf', dest='archipconf', metavar='ACONF',
+                      help='Archipelago configuration file to use')
 elif parse_version(pithos_backend_version) < parse_version(SELECTABLE_BE_VER):
     parser.add_option('--data', dest='data', metavar='DIR',
                       help='path to the directory where data are stored')
@@ -177,41 +181,40 @@ def main():
         if options.backend == 'nfs' or \
            environ.get('PITHCAT_BACKEND_STORAGE') == 'nfs':
 
-            if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
+            if not options.data and 'PITHCAT_DATA' not in environ:
                 stderr.write(
                     "Pithos data directory path is missing.\n"
-                    "Use the PITHCAT_INPUT_DATA environment variable "
+                    "Use the PITHCAT_DATA environment variable "
                     "(recommended) "
                     "or the --data command line option to define it.\n")
                 exit(1)
 
-            data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
+            data_path = environ['PITHCAT_DATA'] if not options.data else \
                 options.data
     elif parse_version(pithos_backend_version) < \
             parse_version(SELECTABLE_BE_VER):
-        if not options.data and 'PITHCAT_INPUT_DATA' not in environ:
+        if not options.data and 'PITHCAT_DATA' not in environ:
             stderr.write(
                 "Pithos data directory path is missing.\n"
-                "Use the PITHCAT_INPUT_DATA environment variable "
+                "Use the PITHCAT_DATA environment variable "
                 "(recommended) "
                 "or the --data command line option to define it.\n")
             exit(1)
-
-        data_path = environ['PITHCAT_INPUT_DATA'] if not options.data else \
+        data_path = environ['PITHCAT_DATA'] if not options.data else \
             options.data
 
-    if options.db is None and 'PITHCAT_INPUT_DB' not in environ and \
+    if options.db is None and 'PITHCAT_DB' not in environ and \
             type(url) is LocationURL:
         stderr.write(
             "Pithos database URI is missing.\n"
-            "Use the PITHCAT_INPUT_DB environment variable (recommended) "
+            "Use the PITHCAT_DB environment variable (recommended) "
             "or the --db command line option to define it.\n")
         exit(1)
 
     if type(url) is HashmapURL:
         db_uri = None
     else:
-        db_uri = environ['PITHCAT_INPUT_DB'] if not options.db else options.db
+        db_uri = environ['PITHCAT_DB'] if not options.db else options.db
 
     if parse_version(pithos_backend_version) >= \
        parse_version(SELECTABLE_BE_VER) and \
@@ -273,9 +276,24 @@ def main():
                                  rados_ceph_conf=rados_ceph_conf)
     elif parse_version(pithos_backend_version) >= \
             parse_version(ARCHIPELAGO_BE_VER):
+
+        if not options.archipconf and 'PITHCAT_ARCHIPELAGO_CONF' not \
+                in environ:
+            stderr.write(
+                "Archipelago configuration file is missing.\n"
+                "Use the PITHCAT_ARCHIPELAGO_CONF environment variable "
+                "(recommended) "
+                "or the --archipelago-conf command line option to define it.\n"
+            )
+            exit(1)
+
+        archipelago_conf_file = environ['PITHCAT_ARCHIPELAGO_CONF'] if not \
+            options.archipconf else options.archipconf
+
         backend = ModularBackend(None,
                                  db_uri if type(url) is LocationURL else None,
-                                 None)
+                                 None,
+                                 archipelago_conf_file=archipelago_conf_file)
     else:
         backend = ModularBackend(None,
                                  db_uri if type(url) is LocationURL else None,

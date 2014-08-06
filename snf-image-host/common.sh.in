@@ -429,6 +429,7 @@ fi
 : ${PITHOS_RADOS_CEPH_CONF:="@sysconfdir@/ceph/ceph.conf"}
 : ${PITHOS_RADOS_POOL_MAPS:="maps"}
 : ${PITHOS_RADOS_POOL_BLOCKS:="blocks"}
+: ${PITHOS_ARCHIPELAGO_CONF:="@sysconfdir@/archipelago/archipelago.conf"}
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
 : ${UNATTEND:="@UNATTEND@"}
 : ${XEN_SCRIPTS_DIR="@sysconfdir@/xen/scripts"}
