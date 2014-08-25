@@ -106,7 +106,32 @@ IMAGE=$(basename "$HELPER_URL")
 echo >&2
 echo "Downloading helper image from $HELPER_URL ..." >&2
 add_cleanup rm -f "$IMAGE_DIR/$IMAGE"
+set +e
 $CURL -O -L -f "$HELPER_URL"
+RET=$?
+set -e
+
+# Treat SIGPIPE as SUCCESS. There is a cURL bug that may trigger SIGPIPE even
+# if the download was successful:
+# http://sourceforge.net/p/curl/bugs/1180/
+if [ $RET -ne 0 -a $RET -ne 141 ]; then
+    log_error "Downloading "$IMAGE" from "$HELPER_URL" failed"
+    exit 1
+fi
+
+add_cleanup rm -f "$IMAGE_DIR/$IMAGE.md5sum"
+set +e
+$CURL -O -L -f "$HELPER_URL.md5sum"
+RET=$?
+set -e
+
+# See above for an explaination
+if [ $RET -ne 0 -a $RET -ne 141 ]; then
+    log_error "Downloading "$IMAGE.md5sum" from "$HELPER_URL.md5sum" failed"
+    exit 1
+fi
+
+$MD5SUM -c "$IMAGE_DIR/$IMAGE.md5sum"
 
 cd "$HELPER_DIR"
 

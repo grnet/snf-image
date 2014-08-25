@@ -28,6 +28,7 @@ CURL="curl"
 TAR="tar"
 DATE="date -u" # Time in UTC
 KVM="kvm"
+MD5SUM="md5sum"
 
 # Temporary use stderr as monitoring file descriptor.
 # `create' will overwrite this
