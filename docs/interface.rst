@@ -151,7 +151,7 @@ Optional properties
    exists in the above-mentioned location. For more information on "answer
    files" please refer to :ref:`windows-deployment`.
 
- * **PASSWORD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
+ * **PASSWD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
    This property can be used on Unix instances to specify the method to be used
    to hash the users password. By default this is determined by the type of the
    instance. For Linux and FreeBSD instances ``sha512`` is used, for OpenBSD
