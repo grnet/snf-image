@@ -188,6 +188,10 @@ if [ -n "${IMG_PASSWD+dummy}" ]; then
     snf_export_PASSWD="$IMG_PASSWD"
 fi
 
+if [ -n "${IMG_PASSWD_HASH+dummy}" ]; then
+    snf_export_PASSWD_HASH="$IMG_PASSWD_HASH"
+fi
+
 if [ -n "$IMG_PROPERTIES" ]; then
     snf_export_PROPERTIES="$IMG_PROPERTIES"
 fi

@@ -131,7 +131,7 @@ get_api20_arguments() {
     get_api10_arguments
 
     if [ "$SCRIPT_NAME" = "create" ]; then
-        local osparams="IMG_ID IMG_FORMAT IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+        local osparams="IMG_ID IMG_FORMAT IMG_PASSWD IMG_PASSWD_HASH IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
         local osp
 
         # Store OSP_VAR in VAR
@@ -164,6 +164,11 @@ parameter_check() {
              exit 1
         fi
     done
+
+    if [ -n "${IMG_PASSWD+dummy}" -a -n "${IMG_PASSWD_HASH+dummy}" ]; then
+        log_error "Conflicting OS API Parameters IMG_PASSWD and IMG_PASSWD_HASH both defined."
+        exit 1
+    fi
 }
 
 map_disk0() {
