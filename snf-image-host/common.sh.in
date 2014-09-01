@@ -27,6 +27,7 @@ TIMEOUT="timeout"
 CURL="curl"
 TAR="tar"
 DATE="date -u" # Time in UTC
+KVM="kvm"
 
 # Temporary use stderr as monitoring file descriptor.
 # `create' will overwrite this
