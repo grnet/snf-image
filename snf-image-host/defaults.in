@@ -68,6 +68,9 @@
 # PITHOS_RADOS_POOL_BLOCKS: RADOS pool for storing Pithos blocks
 # PITHOS_RADOS_POOL_BLOCKS="blocks"
 
+# PITHOS_ARCHIPELAGO_CONF: Archipelago configuration file
+# PITHOS_ARCHIPELAGO_CONF="@sysconfdir@/archipelago/archipelago.conf"
+#
 # PROGRESS_MONITOR: External program that monitors the progress of the image
 # deployment. The snf-image monitor messages will be redirected to the standard
 # input of this program.
@@ -81,6 +84,7 @@
 
 # Paths for needed programs. Uncomment and change the variables below if you
 # don't want to use the default one.
+# KVM="kvm"
 # LOSETUP="losetup"
 # KPARTX="kpartx"
 # SFDISK="sfdisk"
