@@ -143,12 +143,13 @@ Optional properties
 
  * **IGNORE_UNATTEND=yes**
    When deploying a Windows image, the InstallUnattend configuration task will
-   put its own copy of the Unattend.xml file in the hard disk of the VM that
-   gets deployed, only if such a file is not already present at the root
-   directory of the %SystemDrive%. If this property is defined, the behavior of
-   the aforementioned configuration task will change and the installation of
-   the Unattend.xml is always performed even if such a file already exists
-   inside the image.
+   install an Answer File for Unattended Installation (the one shipped with
+   snf-image or the one pointed out by the UNATTEND configuration parameter)
+   only if such a file is not already present in the root directory of the
+   image's %SystemDrive%. By defining this property, the installation of the
+   external answer file is always performed, even if such a file already exists
+   in the above-mentioned location. For more information on "answer files"
+   please refer to :ref:`windows-deployment`.
 
  * **PASSWORD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
    This property can be used on Unix instances to specify the method to be used
