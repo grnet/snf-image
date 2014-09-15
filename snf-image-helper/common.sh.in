@@ -479,7 +479,7 @@ get_unattend() {
     target="$1"
 
     # Workaround to search for $target/Unattend.xml in an case insensitive way.
-    exists=$(find "$target"/ -maxdepth 1 -iname unattend.xml)
+    exists=$(find "$target"/ -maxdepth 1 -iregex ".*/\(auto\)?unattend\.xml" )
     if [ $(wc -l <<< "$exists") -gt 1 ]; then
         log_error "Found multiple Unattend.xml files in the image:" $exists
     fi
