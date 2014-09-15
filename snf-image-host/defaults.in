@@ -76,10 +76,10 @@
 # input of this program.
 # PROGRESS_MONITOR="@PROGRESS_MONITOR@"
 
-# UNATTEND: This variables overwrites the unattend.xml file used when deploying
+# UNATTEND: This variable overwrites the unattend.xml file used when deploying
 # a Windows image. snf-image-helper will use its own unattend.xml file if this
-# variable is empty. Please unless you really know what you are doing, leave
-# this empty.
+# variable is empty. Please leave this empty, unless you really know what you
+# are doing.
 # UNATTEND="@UNATTEND@"
 
 # Paths for needed programs. Uncomment and change the variables below if you
