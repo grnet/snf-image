@@ -141,6 +141,15 @@ Optional properties
    whole process. If for some reason you need to disable this behavior, use the
    *DO_SYNC* image property.
 
+ * **IGNORE_UNATTEND=yes**
+   When deploying a Windows image, the InstallUnattend configuration task will
+   put its own copy of the Unattend.xml file in the hard disk of the VM that
+   gets deployed, only if such a file is not already present at the root
+   directory of the %SystemDrive%. If this property is defined, the behavior of
+   the aforementioned configuration task will change and the installation of
+   the Unattend.xml is always performed even if such a file already exists
+   inside the image.
+
  * **PASSWORD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
    This property can be used on Unix instances to specify the method to be used
    to hash the users password. By default this is determined by the type of the
