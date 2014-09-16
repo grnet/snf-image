@@ -237,14 +237,21 @@ array supports the following keys:
  * **mode**: The permission mode of the file (number)
 
 The first two (path, contents) are mandatory. The others (owner, group, mode)
-are optional and their default value is root, root and 0440 respectively.
+are optional and their default value is root, root and 288 (0440) respectively.
+
+.. warning::
+  The mode field expects is a decimal number. ``chmod`` and the other similar
+  Unix tools expect octal numbers. The ``-r--r-----`` mode which is written as
+  440 is in fact the octal number 0440 which equals to 288. Since the JSON
+  standard does not support octal number formats, the user needs to do the
+  translation himself.
 
 Example
 +++++++
 
 The JSON string below defines two files (*/tmp/test1*, */tmp/test2*) whose
 content is ``test1\n`` and ``test2\n``, they are both owned by *root:root* and
-their permissions are ``-rw-r--r--`` [#]_
+their permissions are ``-rw-r--r--`` (0644):
 
 | [
 |     {
@@ -252,7 +259,7 @@ their permissions are ``-rw-r--r--`` [#]_
 |         "contents": "dGVzdDENCg==",
 |         "owner": "root",
 |         "group": "root",
-|         "mode": 0644
+|         "mode": 420
 |     },
 |     {
 |         "path": "/tmp/test2",
@@ -263,4 +270,3 @@ their permissions are ``-rw-r--r--`` [#]_
 |     }
 | ]
 
-.. [#] The first mode is in octal representation and the second in decimal.
