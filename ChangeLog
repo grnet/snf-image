@@ -1,4 +1,5 @@
-2014-09-01, v0.16rc1
+2014-09-17, v0.16rc2
+	* Add support for Desktop variants of Windows
 	* Add support for archipelago images
 	* Update the documentation
 
