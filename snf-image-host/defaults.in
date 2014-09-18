@@ -58,7 +58,7 @@
 
 # PITHOS_DATA: Directory where Pithos data are hosted
 # PITHOS_DATA="/@localstatedir@/lib/pithos/data"
-#
+
 # PITHOS_RADOS_CEPH_CONF: RADOS configuration file
 # PITHOS_RADOS_CEPH_CONF="@sysconfdir@/ceph/ceph.conf"
 
@@ -70,7 +70,7 @@
 
 # PITHOS_ARCHIPELAGO_CONF: Archipelago configuration file
 # PITHOS_ARCHIPELAGO_CONF="@sysconfdir@/archipelago/archipelago.conf"
-#
+
 # PROGRESS_MONITOR: External program that monitors the progress of the image
 # deployment. The snf-image monitor messages will be redirected to the standard
 # input of this program.
