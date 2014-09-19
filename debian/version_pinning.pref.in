@@ -17,3 +17,7 @@ Pin-Priority: 1001
 Package: xen-linux-system-3.2.0-4-amd64
 Pin: version 3.2.60-1+deb7u3+ufs.rw
 Pin-Priority: 1001
+
+Package: openbsd-utils
+Pin: version 5.4.3-1
+Pin-Priority: 1001
