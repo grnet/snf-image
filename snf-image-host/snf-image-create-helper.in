@@ -160,8 +160,8 @@ echo "done"
 # Make sure extended globbing is enabled
 shopt -s extglob
 
-kernel=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9])-amd64)
-initrd=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9])-amd64)
+kernel=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9.])-amd64)
+initrd=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9.])-amd64)
 
 echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
 cp "$kernel" "$initrd" "$HELPER_DIR"
