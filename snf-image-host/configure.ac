@@ -116,6 +116,15 @@ AC_ARG_WITH([default-dir],
     [default_dir="$sysconfdir/default"])
 AC_SUBST(DEFAULT_DIR, $default_dir)
 
+# --with-helper-package-version=
+AC_ARG_WITH([helper-package-version],
+    [AS_HELP_STRING([--with-helper-package-version=VERSION],
+                    [snf-image-helper package version to use for the helper image (default autodetect)])],
+    [helper_package_version="$withval"],
+    [helper_package_version="$VERSION*"])
+AC_SUBST(HELPER_PACKAGE_VERSION, $helper_package_version)
+
+
 # Check common programs
 AC_PROG_INSTALL
 AC_PROG_LN_S
