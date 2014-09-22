@@ -8,7 +8,7 @@ Sample Images
 
 While developing *snf-image*, we created and tested a number of images. The
 following images are basic installations of some popular Linux distributions,
-that have been tested with snf-image and provided here for testing purposes:
+that have been tested with *snf-image* and provided here for testing purposes:
 
 
  * Debian Wheezy Base System
@@ -66,19 +66,19 @@ Sample Usage
 Download an Image
 +++++++++++++++++
 
-Download a :ref:`Sample Image <sample-images>` and store it under IMAGE_DIR.
+Download a :ref:`Sample Image <sample-images>` and store it under *IMAGE_DIR*.
 Make sure you also have its corresponding metadata file.
 
 Spawn a diskdump image
 ++++++++++++++++++++++
 
-If you want to deploy an image of type diskdump, you
-need to provide the corresponding *img_properties* as described in the
-:ref:`Image Format<image-format>` section. If using a diskdump found in the
-:ref:`sample-images` list, use the *img_properties* described in the image's
+To deploy an image of type *diskdump*, you need to provide the corresponding
+**img_properties** as described in the
+:ref:`Image Properties<image-properties>` section. If you want to use one of
+the :ref:`sample-images`, use the **img_properties** described in the image's
 metadata file. For example, to successfully deploy the
-*debian_base-7.0-x86_64.diskdump* image file, you need to provide the following
-image properties:
+``debian_base-7.0-x86_64.diskdump`` image file, you need to provide the
+following image properties:
 
 | OSFAMILY=linux
 | ROOT_PARTITION=1
@@ -94,7 +94,7 @@ like this:
     -t plain --disk=0:size=10G --no-name-check --no-ip-check --no-nics my_debian_server1
 
 If you don't want to configure the image at all and just copy it to the Ganeti
-provided disk, use the ``EXCLUDE_ALL_TASKS`` image property, like this:
+provided disk, use the *EXCLUDE_ALL_TASKS* image property, like this:
 
 .. code-block:: console
 
