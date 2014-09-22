@@ -1,7 +1,7 @@
 Installation
 ============
 
-Before installing snf-image be sure to have a working Ganeti installation in
+Before installing *snf-image* be sure to have a working Ganeti installation in
 your cluster. The installation process should take place in **all** Ganeti
 nodes. Here we will describe the installation in a single node. The process is
 identical for all nodes and should be repeated manually or automatically, e.g.,
@@ -76,7 +76,7 @@ To add the GRNET repository in your system, run:
 You can verify the authenticity of the package using our public key found
 `here <https://dev.grnet.gr/files/apt-grnetdev.pub>`_.
 
-To install snf-image run:
+To install *snf-image* run:
 
 .. code-block:: console
 
@@ -104,7 +104,7 @@ Untar, configure and build the source:
   $ ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
   $ make
 
-Install snf-image:
+Install *snf-image*:
 
 .. code-block:: console
 

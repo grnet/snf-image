@@ -34,11 +34,11 @@ launch_helper() {
     set +e
 
     $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
-      kvm -runas "$HELPER_USER" -drive file="$HELPER_DIR/image",format=raw,if=virtio,readonly \
+      $KVM -runas "$HELPER_USER" -drive file="$HELPER_DIR/image",format=raw,if=virtio,readonly \
       -drive file="$blockdev",format=raw,if=virtio,cache=none -m "$HELPER_MEMORY" \
       -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
       -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
-      -fda "$floppy" -vga none -nographic -parallel none -monitor null \
+      -drive file="$floppy",if=floppy -vga none -nographic -parallel none -monitor null \
       -kernel "$HELPER_DIR/kernel" -initrd "$HELPER_DIR/initrd" \
       -append "quiet ro root=/dev/vda1 console=ttyS0,9600n8 \
              hypervisor=$HYPERVISOR snf_image_activate_helper \
