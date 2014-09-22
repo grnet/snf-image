@@ -10,15 +10,12 @@ override_dh_auto_clean:
 	dh_auto_clean -Dsnf-image-helper
 	cd snf-image-helper ; rm -rf autotools; \
 	rm -f Makefile.in aclocal.m4 configure config.status config.log tasks/Makefile.in
-	rm -f debian/version_pinning.pref
 	rm -f debian/snf-image.templates
 	rm -f debian/snf-image.postinst
 
 override_dh_auto_build:
 	dh_auto_build -Dsnf-image-host
 	dh_auto_build -Dsnf-image-helper
-	sed -e 's|@DEBIAN_VERSION[@]|$(DEB_DEVFLOW_DEBIAN_VERSION)|g' \
-		debian/version_pinning.pref.in > debian/version_pinning.pref
 	sed -e 's|@VERSION[@]|$(DEB_DEVFLOW_VERSION)|g' \
 		debian/snf-image.templates.in > debian/snf-image.templates
 	sed -e 's|@VERSION[@]|$(DEB_DEVFLOW_VERSION)|g' \
@@ -27,7 +24,9 @@ override_dh_auto_build:
 
 override_dh_auto_configure:
 	cd snf-image-host; ./autogen.sh
-	dh_auto_configure -Dsnf-image-host -- --enable-version-consistency-check
+	dh_auto_configure -Dsnf-image-host -- \
+		--enable-version-consistency-check \
+		--with-helper-package-version=$(DEB_DEVFLOW_DEBIAN_VERSION)
 	cd snf-image-helper; ./autogen.sh
 	dh_auto_configure -Dsnf-image-helper
 
