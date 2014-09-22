@@ -1,7 +1,7 @@
 Configuration
 =============
 
-The user may configure the behavior of snf-image by uncommenting and
+The user may configure the behavior of *snf-image* by uncommenting and
 overwriting the default value for some configuration parameters and the path of
 some external programs in ``/etc/default/snf-image``:
 
@@ -110,18 +110,18 @@ The most common configuration parameters the user may need to overwrite are:
  * **IMAGE_DIR**: To specify the directory where the local images are hosted
  * **HELPER_SOFT_TIMEOUT**: To increase the allowed deployment time
  * **PITHOS_DB**: To specify the Pithos database and credentials, in case the
-   user is accessing pithos-hosted images
- * **PITHOS_DATA**: To specify the directory where the pithos data blocks are
-   hosted, in case the user is accessing pithos-hosted images
+   user is accessing Pithos-hosted images
+ * **PITHOS_DATA**: To specify the directory where the Pithos data blocks are
+   hosted, in case the user is accessing Pithos-hosted images
  * **PROGRESS_MONITOR**: To specify an executable that will handle the
-   monitoring messages exported by snf-image
+   monitoring messages exported by *snf-image*
 
 Paths of external programs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In ``/etc/default/snf-image`` the user may also overwrite the path of some
-external programs snf-image uses, or add default options to them. For example,
-if the user wants to access network based images via insecure SSL connections,
-he/she will need to overwrite the value of the *CURL* variable like this:
-``CURL="curl -k"``
+external programs *snf-image* uses, or add default options to them. For
+example, if the user wants to access network based images via insecure SSL
+connections, he/she will need to overwrite the value of the *CURL* variable
+like this: ``CURL="curl -k"``
 

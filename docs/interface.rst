@@ -24,7 +24,7 @@ following OS Parameters:
 Image Format (img_format)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-snf-image supports 3 different types of image formats:
+*snf-image* supports 3 different types of image formats:
 
  * **diskdump** (recommended): a raw dump of a disk
  * **extdump**: a raw dump of an ext{2,3,4} file system
@@ -57,8 +57,8 @@ to be used. If no prefix is used, it defaults to the local back-end:
 
  * **Network backend**:
    If the **imd_id** starts with ``http:``, ``https:``, ``ftp:`` or ``ftps:``,
-   snf-image will treat the **img_id** as a remote URL and will try to fetch the
-   image using `cURL <http://curl.haxx.se/>`_.
+   *snf-image* will treat the **img_id** as a remote URL and will try to fetch
+   the image using `cURL <http://curl.haxx.se/>`_.
 
   | For example, if we want to deploy an image from an http location:
   | ``img_id=http://www.synnefo.org/path/to/image/slackware-image``
@@ -66,13 +66,13 @@ to be used. If no prefix is used, it defaults to the local back-end:
  * **Pithos backend**:
    If the **img_id** is prefixed with ``pithos://`` or ``pithosmap://`` the
    image is considered to reside on a Pithos deployment. For ``pithosmap://``
-   images, the user needs to have set a valid value for the ``PITHOS_DATA``
-   variable in snf-image's configuration file (``/etc/default/snf-image`` by
-   default) if the storage backend is ``nfs`` or ``PITHOS_RADOS_POOL_MAPS`` and
-   ``PITHOS_RADOS_POOL_BLOCKS`` if the storage backend is ``rados``.
-   For ``pithos://`` images, in addition to ``PITHOS_DATA`` or
-   ``PITHOS_RADOS_POOL_*``, the user needs to have set a valid value for the
-   ``PITHOS_DB`` variable, too.
+   images, the user needs to have set a valid value for the *PITHOS_DATA*
+   variable in *snf-image*'s configuration file (``/etc/default/snf-image`` by
+   default) if the storage backend is ``nfs`` or *PITHOS_RADOS_POOL_MAPS* and
+   *PITHOS_RADOS_POOL_BLOCKS* if the storage backend is ``rados``.
+   For ``pithos://`` images, in addition to *PITHOS_DATA* or
+   *PITHOS_RADOS_POOL_**, the user needs to have set a valid value for the
+   *PITHOS_DB* variable, too.
 
   | For example, if we want to deploy using a full Pithos URI:
   | ``img_id=pithos://<user-uuid>/<container>/<slackware-image>``
@@ -98,10 +98,10 @@ Image Properties (img_properties)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *snf-image* may use a number of properties to properly configure the image.
-Those image properties are passed to snf-image by Ganeti through the
-*img_poroperties* OS parameter (see Ganeti OS Interface). The name of all image
-properties is case-insensitive. For the diskdump format some properties are
-mandatory. For {ext,ntfs}dump formats all image properties are optional.
+Those image properties are passed to *snf-image* by Ganeti through the
+**img_poroperties** OS parameter (see Ganeti OS Interface). The name of all
+image properties is case-insensitive. For the *diskdump* format some properties
+are mandatory. For *{ext,ntfs}dump* formats all image properties are optional.
 
 We can group image properties in two categories:
 
@@ -116,11 +116,11 @@ Mandatory properties (for diskdump only)
 
  * **OSFAMILY=linux|windows|freebsd|netbsd|openbsd**
    This specifies whether the image is a Linux, a Windows or a \*BSD Image.
-   {ext,ntfs}dump formats are self descriptive regarding this property.
+   *{ext,ntfs}dump* formats are self descriptive regarding this property.
  * **ROOT_PARTITION=n**
    This specifies the partition number of the root partition. As mentioned
    earlier, for now, only primary partitions are supported. This property is
-   trivial for {ext,ntfs}dump formats (they only host one partition).
+   trivial for *{ext,ntfs}dump* formats (they only host one partition).
 
 Optional properties
 +++++++++++++++++++
@@ -144,12 +144,12 @@ Optional properties
  * **IGNORE_UNATTEND=yes**
    When deploying a Windows image, the InstallUnattend configuration task will
    install an Answer File for Unattended Installation (the one shipped with
-   snf-image or the one pointed out by the UNATTEND configuration parameter)
-   only if such a file is not already present in the root directory of the
-   image's %SystemDrive%. By defining this property, the installation of the
-   external answer file is always performed, even if such a file already exists
-   in the above-mentioned location. For more information on "answer files"
-   please refer to :ref:`windows-deployment`.
+   *snf-image* or the one pointed out by the *UNATTEND* configuration
+   parameter) only if such a file is not already present in the root directory
+   of the image's %SystemDrive%. By defining this property, the installation of
+   the external answer file is always performed, even if such a file already
+   exists in the above-mentioned location. For more information on "answer
+   files" please refer to :ref:`windows-deployment`.
 
  * **PASSWORD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
    This property can be used on Unix instances to specify the method to be used
@@ -166,7 +166,7 @@ Optional properties
    kernel will assign to this partition. For example, if you have a disk with
    an MSDOS  partition table on it and one primary partition, the image
    property *SWAP=2:512* would instruct *snf-image* to create a 512MB long
-   primary partition for swap with id=2. On the other hand, if the SWAP
+   primary partition for swap with id=2. On the other hand, if the *SWAP*
    property had this form: *SWAP=5:512*, since primary partitions may have an
    id from 1 to 4, *snf-image* would create a 512MB extended partition with
    id=2 and a logical swap partition with id=5 in it with the same size. This
@@ -176,7 +176,7 @@ Optional properties
    If this property is defined with a value other than null, then during the
    deployment, the image will not be configured at all. This is really handy
    because it gives the ability to deploy images hosting operating systems
-   whose configuration is not supported by snf-image.
+   whose configuration is not supported by *snf-image*.
 
  * **EXCLUDE_TASK_<task_name>=yes**
    This family of properties gives the ability to exclude individual
@@ -194,7 +194,7 @@ Optional properties
 img_properties OS parameter
 +++++++++++++++++++++++++++
 
-Image properties are passed to snf_image through the img_properties OS
+Image properties are passed to *snf-image* through the **img_properties** OS
 parameter as a simple JSON string like the one below:
 
 | {
@@ -209,7 +209,7 @@ parameter as a simple JSON string like the one below:
 
 
 A real life example for creating a new Ganeti instance and passing image
-properties to snf-image looks like this:
+properties to *snf-image* looks like this:
 
 .. code-block:: console
 
