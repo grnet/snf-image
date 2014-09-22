@@ -58,7 +58,7 @@
 
 # PITHOS_DATA: Directory where Pithos data are hosted
 # PITHOS_DATA="/@localstatedir@/lib/pithos/data"
-#
+
 # PITHOS_RADOS_CEPH_CONF: RADOS configuration file
 # PITHOS_RADOS_CEPH_CONF="@sysconfdir@/ceph/ceph.conf"
 
@@ -68,19 +68,23 @@
 # PITHOS_RADOS_POOL_BLOCKS: RADOS pool for storing Pithos blocks
 # PITHOS_RADOS_POOL_BLOCKS="blocks"
 
+# PITHOS_ARCHIPELAGO_CONF: Archipelago configuration file
+# PITHOS_ARCHIPELAGO_CONF="@sysconfdir@/archipelago/archipelago.conf"
+
 # PROGRESS_MONITOR: External program that monitors the progress of the image
 # deployment. The snf-image monitor messages will be redirected to the standard
 # input of this program.
 # PROGRESS_MONITOR="@PROGRESS_MONITOR@"
 
-# UNATTEND: This variables overwrites the unattend.xml file used when deploying
+# UNATTEND: This variable overwrites the unattend.xml file used when deploying
 # a Windows image. snf-image-helper will use its own unattend.xml file if this
-# variable is empty. Please unless you really know what you are doing, leave
-# this empty.
+# variable is empty. Please leave this empty, unless you really know what you
+# are doing.
 # UNATTEND="@UNATTEND@"
 
 # Paths for needed programs. Uncomment and change the variables below if you
 # don't want to use the default one.
+# KVM="kvm"
 # LOSETUP="losetup"
 # KPARTX="kpartx"
 # SFDISK="sfdisk"

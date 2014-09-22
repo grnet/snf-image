@@ -1,7 +1,7 @@
 Configuration
 =============
 
-The user may configure the behavior of snf-image by uncommenting and
+The user may configure the behavior of *snf-image* by uncommenting and
 overwriting the default value for some configuration parameters and the path of
 some external programs in ``/etc/default/snf-image``:
 
@@ -42,7 +42,7 @@ some external programs in ``/etc/default/snf-image``:
   # HELPER_USER="nobody"
 
   # HELPER_MEMORY: Virtual RAM size in megabytes to be given to the helper VM.
-  # HELPER_MEMORY="500"
+  # HELPER_MEMORY="512"
 
   # MULTISTRAP_CONFIG: Configuration file to be used with multistrap to create
   # the rootfs of the helper image.
@@ -53,7 +53,7 @@ some external programs in ``/etc/default/snf-image``:
   # MULTISTRAP_APTPREFDIR="/etc/snf-image/apt.pref.d"
 
   # XEN_SCRIPTS_DIR: Directory where the Xen scripts are stored
-  # XEN_SCRIPTS_DIR=="/etc/xen/scripts"
+  # XEN_SCRIPTS_DIR="/etc/xen/scripts"
 
   # PITHOS_DB: Pithos database in SQLAlchemy format
   # PITHOS_DB="sqlite://///var/lib/pithos/backend.db"
@@ -61,15 +61,15 @@ some external programs in ``/etc/default/snf-image``:
   # PITHOS_BACKEND_STORAGE: Select Pithos backend storage. Possible values are
   # 'nfs' and 'rados'. According to the value you select, you need to set the
   # corresponding variables that follow.
-  # If you select 'nfs' that's 'PITHOS_DATA'. If you select 'rados' then you
-  # need to set all the "*_RADOS_*" ones.
+  # If you select 'nfs' that's 'PITHOS_DATA'. If you select 'rados' then you need
+  # to set all the "*_RADOS_*" ones.
   # PITHOS_BACKEND_STORAGE="nfs"
 
   # PITHOS_DATA: Directory where Pithos data are hosted
   # PITHOS_DATA="//var/lib/pithos/data"
 
   # PITHOS_RADOS_CEPH_CONF: RADOS configuration file
-  # PITHOS_RADOS_CEPH_CONF="@sysconfdir@/ceph/ceph.conf"
+  # PITHOS_RADOS_CEPH_CONF="/etc/ceph/ceph.conf"
 
   # PITHOS_RADOS_POOL_MAPS: RADOS pool for storing Pithos maps
   # PITHOS_RADOS_POOL_MAPS="maps"
@@ -77,12 +77,15 @@ some external programs in ``/etc/default/snf-image``:
   # PITHOS_RADOS_POOL_BLOCKS: RADOS pool for storing Pithos blocks
   # PITHOS_RADOS_POOL_BLOCKS="blocks"
 
-  # PROGRESS_MONITOR: External program that monitors the progress of image
-  # deployment. Monitoring messages will be redirected to the standard input of
-  # this program.
+  # PITHOS_ARCHIPELAGO_CONF: Archipelago configuration file
+  # PITHOS_ARCHIPELAGO_CONF="/etc/archipelago/archipelago.conf"
+
+  # PROGRESS_MONITOR: External program that monitors the progress of the image
+  # deployment. The snf-image monitor messages will be redirected to the standard
+  # input of this program.
   # PROGRESS_MONITOR=""
 
-  # UNATTEND: This variables overwrites the unattend.xml file used when deploying
+  # UNATTEND: This variable overwrites the unattend.xml file used when deploying
   # a Windows image. snf-image-helper will use its own unattend.xml file if this
   # variable is empty. Please leave this empty, unless you really know what you
   # are doing.
@@ -90,6 +93,7 @@ some external programs in ``/etc/default/snf-image``:
 
   # Paths for needed programs. Uncomment and change the variables below if you
   # don't want to use the default one.
+  # KVM="kvm"
   # LOSETUP="losetup"
   # KPARTX="kpartx"
   # SFDISK="sfdisk"
@@ -106,18 +110,18 @@ The most common configuration parameters the user may need to overwrite are:
  * **IMAGE_DIR**: To specify the directory where the local images are hosted
  * **HELPER_SOFT_TIMEOUT**: To increase the allowed deployment time
  * **PITHOS_DB**: To specify the Pithos database and credentials, in case the
-   user is accessing pithos-hosted images
- * **PITHOS_DATA**: To specify the directory where the pithos data blocks are
-   hosted, in case the user is accessing pithos-hosted images
+   user is accessing Pithos-hosted images
+ * **PITHOS_DATA**: To specify the directory where the Pithos data blocks are
+   hosted, in case the user is accessing Pithos-hosted images
  * **PROGRESS_MONITOR**: To specify an executable that will handle the
-   monitoring messages exported by snf-image
+   monitoring messages exported by *snf-image*
 
 Paths of external programs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In ``/etc/default/snf-image`` the user may also overwrite the path of some
-external programs snf-image uses, or add default options to them. For example,
-if the user wants to access network based images via insecure SSL connections,
-he/she will need to overwrite the value of the *CURL* variable like this:
-``CURL="curl -k"``
+external programs *snf-image* uses, or add default options to them. For
+example, if the user wants to access network based images via insecure SSL
+connections, he/she will need to overwrite the value of the *CURL* variable
+like this: ``CURL="curl -k"``
 

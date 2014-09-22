@@ -60,7 +60,7 @@ def main():
     infh = sys.stdin if input_file is None else open(input_file, 'r')
     outfh = open(output_file, 'w')
 
-    properties = json.load(infh)
+    properties = json.load(infh, strict=False)
     for key, value in properties.items():
         os.environ['SNF_IMAGE_PROPERTY_' + str(key).upper()] = value
 

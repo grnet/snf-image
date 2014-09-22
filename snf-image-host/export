@@ -34,8 +34,8 @@ fi
 
 # Export disk's predicted size to Ganeti.
 # Used to provide a time estimate of the export process to the user.
-if [ -z "$EXP_SIZE_FD" ]; then
-    blockdev --getsize64 $blockdev >&$EXP_SIZE_FD
+if [ -n "$EXP_SIZE_FD" ]; then
+    blockdev --getsize64 "$blockdev" >&$EXP_SIZE_FD
 fi
 
 dd if="$blockdev" bs=4M
