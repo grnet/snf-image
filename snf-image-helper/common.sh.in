@@ -512,7 +512,7 @@ mount_all() {
 
     case "$osfamily" in
     linux)
-        fs="ext[234]|msdos|vfat|ntfs"
+        fs="ext[234]|msdos|vfat|ntfs|btrfs"
         ;;
     freebsd)
         fs="ufs|msdosfs|ntfs"
