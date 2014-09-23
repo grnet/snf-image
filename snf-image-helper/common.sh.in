@@ -181,7 +181,9 @@ system_poweroff() {
 get_base_distro() {
     local root_dir=$1
 
-    if [ -e "$root_dir/etc/debian_version" ]; then
+    if [ -d "$root_dir/etc/coreos" ]; then
+        echo "coreos"
+    elif [ -e "$root_dir/etc/debian_version" ]; then
         echo "debian"
     elif [ -e "$root_dir/etc/redhat-release" ]; then
         echo "redhat"
