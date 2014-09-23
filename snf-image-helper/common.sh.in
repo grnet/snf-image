@@ -413,7 +413,7 @@ create_partition() {
         # For GPT
         start=${start:0:${#start}-1} # remove the s at the end
         end=${end:0:${#end}-1} # remove the s at the end
-        $SGDISK -a 1 -n "$id":"$start":"$end" -t "$id":"$ptype" "$device"
+        $SGDISK -a 1 -n "$id":"$start":"$end" -t "$id":"$ptype" -c "$id":"$name" "$device"
     fi
 }
 
