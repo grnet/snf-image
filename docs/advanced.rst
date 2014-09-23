@@ -6,7 +6,7 @@ Advanced Topics
 Image Format
 ^^^^^^^^^^^^
 
-snf-image supports 3 types of image formats:
+*snf-image* supports 3 types of image formats:
 
  * **extdump**: a raw dump of an ext{2,3,4} file system
  * **ntfsdump**: a raw dump of an NTFS file system
@@ -24,8 +24,8 @@ should have the following properties:
  * The OS they host should not depend on any other partitions
  * Start at sector 2048
  * Have a boot loader installed in the boot sector of the partition (not MBR)
- * Have the root device in */etc/fstab* specified in a persistent way, using
-   UUID or LABEL (for extdump only)
+ * Have the root device in ``/etc/fstab`` specified in a persistent way, using
+   UUID or LABEL (for *extdump* only)
 
 Known Issues
 ------------
@@ -37,7 +37,7 @@ Known Issues
 diskdump image format (recommended)
 +++++++++++++++++++++++++++++++++++
 
-Diskdump is a newer format that overcomes most of the aforementioned issues.
+*diskdump* is a newer format that overcomes most of the aforementioned issues.
 This format is a dump (raw copy using dd) of a whole disk.
 
 This design decision has the following benefits:
@@ -48,20 +48,77 @@ This design decision has the following benefits:
     * Separate system and boot partition in Windows
  * There are no restrictions on starting sectors of partitions
 
-Although diskdump is a lot more flexible than the older formats, there are
+Although *diskdump* is a lot more flexible than the older formats, there are
 still some rules to follow:
 
  * For Linux:
-   * All block devices in */etc/fstab* should be specified using persistent
-     names (UUID or LABEL)
+   * All block devices in ``/etc/fstab`` should be specified using persistent names (UUID or LABEL)
    * LVM partitions are not supported
    * Only ext{2,3,4} file systems are supported
  * For FreeBSD:
    * GUID Partition Tables (GPT) should be used
    * Only UFS2 file systems are supported
-   * Labels should be omitted in */etc/fstab* entries
+   * Labels should be omitted in ``/etc/fstab`` entries
  * For {Open,Net}BSD:
    * Only FFS file systems should be used
+
+.. _windows-deployment:
+
+Windows Deployment
+^^^^^^^^^^^^^^^^^^
+
+*snf-image* performs Windows customization by installing an Answer File for
+Unattended Installation (typically named Unattend.xml) into the VM's hard
+disk and customizing the file accordingly. The VM will auto-configure itself
+the first time it boots. For this to work, the used Windows image must have
+previously been generalized [#f1]_ with a command like this:
+
+.. code-block:: console
+
+  Sysprep /generalize /shutdown /oobe
+
+The pre-included Unattend.xml file that *snf-image* will by default install on
+the VM's hard disk is this one:
+
+.. literalinclude:: ../snf-image-helper/unattend.xml
+   :language: xml
+   :emphasize-lines: 7,21-30
+   :linenos:
+
+The file above is expected to work with all AMD64 releases (Server or Desktop)
+of Microsoft Windows starting from version 6.1. The table below lists the
+releases the developers have confirmed it to work with:
+
++-------+----------------------+----------------------+
+|Version|Marketing name        | Editions             |
++=======+======================+======================+
+|6.1    |Windows 7             |Professional, Ultimate|
+|       +----------------------+----------------------+
+|       |Windows Server 2008 R2|Datacenter            |
++-------+----------------------+----------------------+
+|6.2    |Windows 8             |Professional          |
+|       +----------------------+----------------------+
+|       |Windows Server 2012   |Datacenter            |
++-------+----------------------+----------------------+
+|6.3    |Windows 8.1           |Professional          |
+|       +----------------------+----------------------+
+|       |Windows Server 2012 R2|Datacenter            |
++-------+----------------------+----------------------+
+
+Nevertheless, the user may want to use a custom Unattend.xml file that better
+fits his needs. To do so, he can either update the *UNATTEND* configuration
+parameter in ``/etc/default/snf-image`` to point to such a file in the host
+system or put his copy of the file in the root directory of the image's
+%SystemDrive% (*snf-image* will not install an Unattend.xml file if it is
+already present in the image, unless *IGNORE_UNATTEND* image property is
+defined). The latter is the recommended way to do it since it allows to provide
+answer files in a per-image basis.
+
+.. warning::
+  When using custom Unattend.xml files, keep in mind that the highlighted
+  entries (lines 7 & 21-30) are crucial for *snf-image* to work. You may remove
+  or add settings in the file but the highlighted entries must be present.
+
 
 Progress Monitoring Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -156,3 +213,7 @@ standard error output stream of *snf-image-helper*. Valid *error* messages look
 like this:
 
 ``{"subtype": "error", "type": "image-helper", "messages": ["The image contains a(n) MSDOS partition table.  For FreeBSD images only GUID Partition Tables are supported."], "timestamp": 1379507910.799365}``
+
+.. rubric:: Footnotes
+
+.. [#f1] http://technet.microsoft.com/en-us/library/hh824938.aspx

@@ -4,27 +4,27 @@ Architecture
 Overview
 ^^^^^^^^
 
-snf-image is a Ganeti OS definition. This means that Ganeti provisions a new
-disk (block device) and passes it to snf-image. Then, snf-image is responsible
-to deploy an Image on that disk. If snf-image returns successfully, Ganeti will
-then spawn a VM with that disk as its primary disk.
+*snf-image* is a Ganeti OS definition. This means that Ganeti provisions a new
+disk (block device) and passes it to *snf-image*. Then, *snf-image* is
+responsible to deploy an Image on that disk. If *snf-image* returns
+successfully, Ganeti will then spawn a VM with that disk as its primary disk.
 
-Thus, snf-image is responsible for two (2) things, which are executed in two
+Thus, *snf-image* is responsible for two (2) things, which are executed in two
 separate steps:
 
 | 1. Fill the newly provisioned disk with Image data
 | 2. Customize the Image accordingly
 
-For (1), snf-image can fetch the Image from a number of backends, as we
-describe later. For (2) snf-image spawns a helper VM and runs a number of
+For (1), *snf-image* can fetch the Image from a number of backends, as we
+describe later. For (2) *snf-image* spawns a helper VM and runs a number of
 configuration tasks inside the isolated environment. Once the last task returns
-successfully, the helper VM ceases and snf-image returns the newly configured
+successfully, the helper VM ceases and *snf-image* returns the newly configured
 disk to Ganeti.
 
 The whole procedure is configurable via OS interface parameters, that can be
-passed to snf-image from the Ganeti command line or RAPI.
+passed to *snf-image* from the Ganeti command line or RAPI.
 
-snf-image is split in two components: The main program running on the Ganeti
+*snf-image* is split in two components: The main program running on the Ganeti
 host with full root privilege (*snf-image*, previously *snf-image-host*) and a
 part running inside an unprivileged helper VM (*snf-image-helper*).
 
@@ -35,18 +35,19 @@ snf-image
 
 This part implements the Ganeti OS interface. It extracts the Image onto the
 Ganeti-provided block device, using streaming block I/O (dd with oflag=direct),
-then spawns a helper VM, and passes control to snf-image-helper running inside
-that helper VM. The helper VM is created using either KVM or XEN depending on
-the supported hypervisor as dictated by Ganeti. It runs as an unprivileged
-user.
+then spawns a helper VM, and passes control to *snf-image-helper* running
+inside that helper VM. The helper VM is created using either KVM or XEN
+depending on the supported hypervisor as dictated by Ganeti. It runs as an
+unprivileged user.
 
 There is no restriction on the distribution running inside the helper VM, as
-long as it executes the snf-image-helper component automatically upon boot-up.
-The snf-image-update-helper script is provided with snf-image to automate the
-creation of a helper VM image based on Debian Stable, using multistrap.
+long as it executes the *snf-image-helper* component automatically upon
+boot-up.  The ``snf-image-update-helper`` script is provided with *snf-image*
+to automate the creation of a helper VM image based on Debian Stable, using
+``multistrap``.
 
-The snf-image-helper component runs inside a specific environment, which is
-created and ensured by snf-image:
+The *snf-image-helper* component runs inside a specific environment, which is
+created and ensured by *snf-image*:
 
  * The VM features a virtual floppy, containing an ext2 file system with all
    parameters needed for image customization.
@@ -57,11 +58,11 @@ created and ensured by snf-image:
    maintains.
  * The helper VM is expected to output "SUCCESS" to its second serial port if
    image customization was successful inside the VM.
- * If "SUCCESS" is not returned, snf-image assumes that, execution of the
-   helper VM or snf-image-helper has failed.
+ * If "SUCCESS" is not returned, *snf-image* assumes that, execution of the
+   helper VM or *snf-image-helper* has failed.
  * The helper VM is expected to shutdown automatically once it is done. Its
    execution is time-limited; if it has not terminated after a number of
-   seconds, configurable via ``/etc/default/snf-image``, snf-image sends a
+   seconds, configurable via ``/etc/default/snf-image``, *snf-image* sends a
    SIGTERM and/or a SIGKILL to it.
 
 snf-image-helper
@@ -105,12 +106,12 @@ newly created block device. The following back-ends are supported:
 
  * **Pithos backend**:
    *snf-image* contains a special command-line tool (*pithcat*) for retrieving
-   images residing on a Pithos installation. To set up snf-image's Pithos
+   images residing on a Pithos installation. To set up *snf-image*'s Pithos
    backend the user needs to setup the ``PITHOS_BACKEND_STORAGE`` variable
    inside ``/etc/default/snf-image``.
    Possible values are ``nfs`` and ``rados``. If ``nfs`` is used the user needs
-   to setup ``PITHOS_DATA`` variable, and when ``rados`` is used the user needs
-   to setup ``PITHOS_RADOS_POOL_MAPS`` and ``PITHOS_RADOS_POOL_BLOCKS``
+   to setup *PITHOS_DATA* variable, and when ``rados`` is used the user needs
+   to setup *PITHOS_RADOS_POOL_MAPS* and *PITHOS_RADOS_POOL_BLOCKS*
    accordingly.
 
  * **Null backend**:
@@ -125,8 +126,8 @@ newly created block device. The following back-ends are supported:
 Image Configuration Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Configuration tasks are scripts called by snf-image-helper inside the helper VM
-to accomplish various configuration steps on the newly created instance. See
+Configuration tasks are scripts called by *snf-image-helper* inside the helper
+VM to accomplish various configuration steps on the newly created instance. See
 below for a description of each one of them:
 
 **FixPartitionTable**: Enlarges the last partition in the partition table of
