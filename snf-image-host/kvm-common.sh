@@ -40,7 +40,7 @@ launch_helper() {
       -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
       -drive file="$floppy",if=floppy -vga none -nographic -parallel none -monitor null \
       -kernel "$HELPER_DIR/kernel" -initrd "$HELPER_DIR/initrd" \
-      -append "quiet ro root=/dev/vda1 console=ttyS0,9600n8 \
+      -append "quiet ro root=/dev/vda console=ttyS0,9600n8 \
              hypervisor=$HYPERVISOR snf_image_activate_helper \
 	     rules_dev=/dev/fd0 init=/usr/bin/snf-image-helper" \
       2>&1 | sed -u 's|^|HELPER: |g'

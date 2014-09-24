@@ -114,29 +114,18 @@ add_cleanup rm -f "$helper_img"
 dd if=/dev/zero of="$helper_img" bs=1M count="$HELPER_SIZE" &> /dev/null
 echo "done"
 
-echo "Creating partitions..."
-blockdev=$("$LOSETUP" -sf $helper_img)
-add_cleanup "$LOSETUP" -d "$blockdev"
-
-sleep 1 # sometimes losetup returns and the device is still busy..
-
-format_disk0 "$blockdev" "extdump"  2>&1 | sed -e 's/^/CFDISK: /g'
-
-root_dev=$(map_disk0 "$blockdev")-1
-add_cleanup unmap_disk0 "$blockdev"
-
 echo Creating and configuring filesystem...
-mkfs.ext3 "$root_dev" 2>&1 | sed -e 's/^/MKFS.EXT3: /g'
+mkfs.ext2 -F "$helper_img" 2>&1 | sed -e 's/^/MKFS.EXT2: /g'
 # The helper vm should never do file system checks...
-tune2fs -i 0 -c 0 "$root_dev" 2>&1 | sed -e 's/^/TUNE2FS: /g'
+tune2fs -i 0 -c 0 "$helper_img" 2>&1 | sed -e 's/^/TUNE2FS: /g'
 
-root_uuid=$(blkid -s UUID -o value "$root_dev")
+root_uuid=$(blkid -s UUID -o value "$helper_img")
 
 target=$(mktemp -d)
 add_cleanup rmdir "$target"
 
-mount "$root_dev" "$target"
-add_cleanup umount "$root_dev"
+mount "$helper_img" "$target"
+add_cleanup umount "$target"
 
 do_multistrap "$target"
 
