@@ -39,6 +39,7 @@ EATMYDATA=eatmydata
 MOUNT="mount -n"
 HIVEXGET="hivexget"
 HIVEXREGEDIT="hivexregedit"
+BTRFS="btrfs"
 
 CLEANUP=( )
 ERRORS=( )
@@ -502,6 +503,19 @@ bsd2linux() {
     fi
 
     log_error "Couldn't find out mapping for BSD partition: \`$partition' in \`$device'"
+}
+
+find_mount_target() {
+    local device
+    device="$1"
+
+    while read entry; do
+        set $entry
+        if [ "$device" = "$1" -o "$device" = "$(readlink -f "$1")" ]; then
+            echo "$2"
+            break
+        fi
+    done <<< "$(cat /proc/mounts)"
 }
 
 mount_all() {
