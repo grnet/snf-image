@@ -380,6 +380,10 @@ check_helper_result() {
     fi
 }
 
+ignore_failure() {
+    "$@" &> /dev/null || true
+}
+
 cleanup() {
     # if something fails here, it shouldn't call cleanup again...
     trap - EXIT
@@ -425,7 +429,6 @@ fi
 : ${IMAGE_DEBUG:="no"}
 : ${VERSION_CHECK:="@VERSION_CHECK@"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
-: ${HELPER_SIZE:="600"}
 : ${HELPER_SOFT_TIMEOUT:=120}
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
