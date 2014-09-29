@@ -38,7 +38,7 @@ usage() {
 Usage: $0 [options]
 
 This script will download a suitable fixed snf-image-helper image and will
-install it under $IMAGE_DIR.
+install it under $HELPER_DIR.
 
 OPTIONS:
     -h Print this message
