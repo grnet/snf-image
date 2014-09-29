@@ -89,8 +89,7 @@ send_errors() {
 
 get_api10_arguments() {
     if [ -z "$INSTANCE_NAME" -o -z "$HYPERVISOR" -o -z "$DISK_COUNT" ]; then
-        log_error "Missing OS API Variable:"
-        log_error "(INSTANCE_NAME HYPERVISOR or DISK_COUNT)"
+        log_error "Missing OS API Variable: (INSTANCE_NAME HYPERVISOR or DISK_COUNT)"
         exit 1
     fi
 
@@ -107,13 +106,13 @@ get_api10_arguments() {
     fi
     if [ "$SCRIPT_NAME" = "export" ]; then
         if [ -z "$EXPORT_DEVICE" ]; then
-            log_error "Missing OS API Variable EXPORT_DEVICE"
+            log_error "Missing OS API Variable: \`EXPORT_DEVICE'"
             exit 1
         fi
         blockdev=$EXPORT_DEVICE
     elif [ "$SCRIPT_NAME" = "import" ]; then
         if [ -z "$IMPORT_DEVICE" ]; then
-            log_error "Missing OS API Variable IMPORT_DEVICE"
+            log_error "Missing OS API Variable: \`IMPORT_DEVICE'"
             exit 1
         fi
         blockdev=$IMPORT_DEVICE
@@ -121,7 +120,7 @@ get_api10_arguments() {
         blockdev=$DISK_0_PATH
     fi
     if [ "$SCRIPT_NAME" = "rename" -a -z "$OLD_INSTANCE_NAME" ]; then
-        log_error "Missing OS API Variable OLD_INSTANCE_NAME"
+        log_error "Missing OS API Variable: \`OLD_INSTANCE_NAME'"
         exit 1
     fi
     old_name=$OLD_INSTANCE_NAME
@@ -166,7 +165,8 @@ parameter_check() {
     done
 
     if [ -n "${IMG_PASSWD+dummy}" -a -n "${IMG_PASSWD_HASH+dummy}" ]; then
-        log_error "Conflicting OS API Parameters IMG_PASSWD and IMG_PASSWD_HASH both defined."
+        log_error "Conflicting OS API Parameters \`IMG_PASSWD' and " \
+            "\`IMG_PASSWD_HASH' both defined."
         exit 1
     fi
 }
@@ -184,7 +184,7 @@ map_disk0() {
     filesystem_dev="/dev/mapper/${filesystem_dev_base/%-1/}"
     if [ ! -b "/dev/mapper/$filesystem_dev_base" ]; then
         log_error "Can't find kpartx mapped partition:" \
-                                            "/dev/mapper/$filesystem_dev_base"
+            "/dev/mapper/$filesystem_dev_base"
         exit 1
     fi
     echo "$filesystem_dev"
@@ -274,7 +274,8 @@ canonicalize() {
 ganeti_os_main() {
 
     if [ "$OS_API_VERSION" != "20" ]; then
-        log_error "Unknown OS API VERSION $OS_API_VERSION. Only OS API VERSION 20 is supported"
+        log_error "Unsupported OS API VERSION: \`$OS_API_VERSION'." \
+            "Only OS API VERSION 20 is supported"
         exit 1
     fi
 
@@ -293,18 +294,15 @@ source_variant() {
             . "$VARIANT_CONFIG"
         else
             if grep -qxF "$OS_VARIANT" variants.list; then
-                log_error "ERROR: snf-image configuration error"
-                log_error "  Published variant $OS_VARIANT is missing its" \
-                    "config file"
-                log_error "  Please create $VARIANT_CONFIG or unpublish the" \
-                    "variant"
-                log_error "  (by removing $OS_VARIANT from variants.list)"
+                log_error "ERROR: snf-image configuration error. Published" \
+                    "variant $OS_VARIANT is missing its config file. Please" \
+                    "create $VARIANT_CONFIG or unpublish the variant (by" \
+                    "removing $OS_VARIANT from variants.list). "
             else
-                log_error "Unofficial variant $OS_VARIANT is unsupported"
-                log_error "Most probably this is a user error, forcing a" \
-                    "wrong name"
-                log_error "To support this variant please create file" \
-                    "$VARIANT_CONFIG"
+                log_error "Unofficial variant $OS_VARIANT is unsupported." \
+                    "Most probably this is a user error, forcing a wrong" \
+                    "name. To support this variant please create file" \
+                    "$VARIANT_CONFIG."
             fi
             exit 1
         fi
@@ -356,11 +354,11 @@ check_helper_rc() {
             log_error "Customization VM was killed. Did not finish on time."
             report_error "Image customization failed. Did not finish on time."
         elif [ $rc -eq 141 ]; then # (128 + SIGPIPE)
-            log_error "Customization VM was terminated by a SIGPIPE."
-            log_error "Maybe progress monitor has died unexpectedly."
+            log_error "Customization VM was terminated by a SIGPIPE." \
+                "Maybe progress monitor has died unexpectedly."
         elif [ $rc -eq 125 ]; then
-            log_error "Internal Error. Image customization could not start."
-            log_error "timeout did not manage to run."
+            log_error "Internal Error. Image customization could not start." \
+                "timeout did not manage to run."
         else
             log_error "Customization VM died unexpectedly (return code $rc)."
         fi
