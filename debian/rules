@@ -12,8 +12,10 @@ override_dh_auto_clean:
 	rm -f Makefile.in aclocal.m4 configure config.status config.log tasks/Makefile.in
 	rm -f debian/snf-image.templates
 	rm -f debian/snf-image.postinst
+	rm -rf docs/_build
 
 override_dh_auto_build:
+	cd docs && make man
 	dh_auto_build -Dsnf-image-host
 	dh_auto_build -Dsnf-image-helper
 	sed -e 's|@VERSION[@]|$(DEB_DEVFLOW_VERSION)|g' \
@@ -33,6 +35,9 @@ override_dh_auto_configure:
 override_dh_auto_install:
 	dh_auto_install -Dsnf-image-host --destdir=debian/snf-image
 	dh_auto_install -Dsnf-image-helper --destdir=debian/snf-image-helper
+
+override_dh_installman:
+	dh_installman docs/_build/man/*.1
 
 override_dh_install:
 	dh_install
