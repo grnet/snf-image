@@ -12,8 +12,7 @@ Vcs-Browser: https://code.grnet.gr/git/snf-image
 
 Package: snf-image
 Architecture: all
-Depends: ${misc:Depends}, kpartx, multistrap, curl,
- mbr, python, python-prctl, python-scapy
+Depends: ${misc:Depends}, kpartx, curl, mbr, python, python-prctl, python-scapy
 Breaks: snf-image-host (<< 0.8)
 Replaces: snf-image-host
 Conflicts: snf-image-host
@@ -28,6 +27,13 @@ Description: Image Based Ganeti OS Provider
  installation of predefined or custom Images. It is the main provider
  of the Synnefo Cloud Management Software.
 
+Package: snf-image-tools
+Architecture: all
+Depends: ${misc:Depends}, snf-image, multistrap
+Description: Some tools that came with snf-image
+ This package provides the snf-image-create-helper tool that creates the helper
+ appliance.
+
 Package: snf-image-helper
 Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}, xmlstarlet, libwin-hivex-perl,
@@ -35,10 +41,10 @@ Depends: ${python:Depends}, ${misc:Depends}, xmlstarlet, libwin-hivex-perl,
  eatmydata, socat, iproute, xenstore-utils, gdisk, ufsutils, python
 Description: Requisite for the snf-image Ganeti OS Provider
  This package needs to be installed in the Helper VM that is
- used by the snf-image-host Ganeti OS Provider. It implements the
+ used by the snf-image Ganeti OS Provider. It implements the
  communication between the OS Provider and the VM that customizes
  the newly created Image.
  .
- The snf-image-host package should be installed on the host machine.
+ The snf-image package should be installed on the host machine.
  The snf-image-helper package should be installed inside the VM,
- which is used by the snf-image-host package to customize the Image.
+ which is used by the snf-image package to customize the Image.
