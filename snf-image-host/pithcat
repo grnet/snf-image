@@ -27,7 +27,7 @@ the URL as the user when connecting to the backend.
 
 from optparse import OptionParser, OptionGroup
 from sys import exit, stdout, stderr
-from os import environ
+from os import environ, umask
 from binascii import hexlify, unhexlify
 from collections import namedtuple
 from pkg_resources import parse_version
@@ -96,6 +96,9 @@ parser.add_option('-s', action='store_true', dest='size', default=False,
 parser.add_option('--db', dest='db', metavar='URI',
                   help='SQLAlchemy URI of the database [DANGEROUS: Do not use,'
                   'see NOTE below]', default=None)
+parser.add_option('--umask', dest='umask', metavar='UMASK', type='int',
+                  default=None,
+                  help='change the process\' file mode mask to UMASK')
 
 LocationURL = namedtuple('LocationURL', ['account', 'container', 'object'])
 HashmapURL = namedtuple('HashmapURL', ['hash', 'size'])
@@ -163,6 +166,9 @@ def main():
     if len(args) != 1:
         parser.print_help()
         exit(1)
+
+    if options.umask is not None:
+        umask(options.umask)
 
     url = parse_url(args[0])
 

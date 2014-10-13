@@ -122,6 +122,11 @@ Mandatory properties (for diskdump only)
    earlier, for now, only primary partitions are supported. This property is
    trivial for *{ext,ntfs}dump* formats (they only host one partition).
 
+.. note:: On a diskdump image if no image property is defined, the deployment
+   will not fail. This situation is treated as a special case. All
+   configuration tasks will be prevented from running and the helper VM will
+   report SUCCESS after creating a warning about this.
+
 Optional properties
 +++++++++++++++++++
 
