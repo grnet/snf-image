@@ -123,7 +123,11 @@ case $BACKEND_TYPE in
         export PITHCAT_RADOS_POOL_MAPS="$PITHOS_RADOS_POOL_MAPS"
         export PITHCAT_RADOS_POOL_BLOCKS="$PITHOS_RADOS_POOL_BLOCKS"
         export PITHCAT_ARCHIPELAGO_CONF="$PITHOS_ARCHIPELAGO_CONF"
-        cmd_args="$(printf "%q" "${IMAGE_NAME}")"
+        cmd_args=""
+        if [ -n "${PITHCAT_UMASK+dummy}" ]; then
+            cmd_args="--umask=$PITHCAT_UMASK"
+        fi
+        cmd_args+=" $(printf "%q" "${IMAGE_NAME}")"
         image_cmd="./pithcat $cmd_args"
         image_size=$(./pithcat -s  $cmd_args)
         ;;
