@@ -45,22 +45,6 @@ check_required() {
              exit 1
         fi
     done
-
-    case $IMG_FORMAT in
-        extdump|ntfsdump)
-        ;;
-	diskdump)
-        if [ -z "$IMG_PROPERTIES" ]; then
-            log_error "\`img_properties' parameter must be present when"
-            log_error "using \`diskdump' format."
-            exit 1
-        fi
-        ;;
-    *)
-        log_error "Unknown Image format: \`$IMAGE_TYPE'"
-        exit 1
-        ;;
-esac
 }
 
 if [ -z "$OSP_CONFIG_URL" ]; then
