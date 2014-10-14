@@ -71,6 +71,10 @@
 # PITHOS_ARCHIPELAGO_CONF: Archipelago configuration file
 # PITHOS_ARCHIPELAGO_CONF="@sysconfdir@/archipelago/archipelago.conf"
 
+# PITHCAT_UMASK: If set, it will change the file mode mask of the pithcat
+# process to the specified one.
+# PITHCAT_UMASK=<not set>
+
 # PROGRESS_MONITOR: External program that monitors the progress of the image
 # deployment. The snf-image monitor messages will be redirected to the standard
 # input of this program.

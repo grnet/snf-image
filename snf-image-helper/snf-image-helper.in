@@ -98,6 +98,10 @@ if [ -z "$RUN_PARTS" ]; then
     log_error "run-parts program is missing from the system"
 fi
 
+if [ $(set | { grep ^SNF_IMAGE_PROPERTY_ || true; } | wc -l) -eq 0 ]; then
+    warn "No image properties are defined. VM configuration will not be performed."
+    export SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS=yes
+fi
 
 if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
 
@@ -134,6 +138,8 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
 
     # Reset the handler to its original value
     trap report_error ERR
+else
+    warn "EXCLUDE_ALL_TASKS: All configuration tasks were prevented from running."
 fi
 
 
