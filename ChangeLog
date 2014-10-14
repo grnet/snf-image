@@ -1,3 +1,7 @@
+2014-10-14, v0.16.2
+	* Fix a bug in img_properties handling introduced in v0.16.1
+	* Update the documentation
+
 2014-10-13, v0.16.1
 	* Add an option for controlling pithcat's umask
 	* HELPER: prevent configuration tasks from running if no image property
