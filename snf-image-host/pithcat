@@ -275,12 +275,12 @@ def main():
             block_params['blockpool'] = rados_blocks
             block_params['mappool'] = rados_maps
 
-        backend = ModularBackend(None,
-                                 db_uri if type(url) is LocationURL else None,
-                                 None,
-                                 data_path, block_params=block_params,
-                                 backend_storage=backend_storage,
-                                 rados_ceph_conf=rados_ceph_conf)
+        backend_kwargs = {
+            "block_path": data_path,
+            "block_params": block_params,
+            "backend_storage": backend_storage,
+            "rados_ceph_conf": rados_ceph_conf
+        }
     elif mb_version >= MB_ARCHIPELAGO_VER:
 
         if not options.archipconf and 'PITHCAT_ARCHIPELAGO_CONF' not \
@@ -296,15 +296,16 @@ def main():
         archipelago_conf_file = environ['PITHCAT_ARCHIPELAGO_CONF'] if not \
             options.archipconf else options.archipconf
 
-        backend = ModularBackend(None,
-                                 db_uri if type(url) is LocationURL else None,
-                                 None,
-                                 archipelago_conf_file=archipelago_conf_file)
+        backend_kwargs = {"archipelago_conf_file": archipelago_conf_file}
     else:
-        backend = ModularBackend(None,
-                                 db_uri if type(url) is LocationURL else None,
-                                 None,
-                                 data_path)
+        backend_kwargs = {"block_path": data_path}
+
+    if type(url) is LocationURL:
+        # Used only for 'pithos://' URLs
+        backend_kwargs["db_connection"] = db_uri
+
+    # Initialize Pithos Backend
+    backend = ModularBackend(**backend_kwargs)
 
     try:
         if options.size:
