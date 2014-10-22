@@ -96,9 +96,9 @@ parser.add_option('-s', action='store_true', dest='size', default=False,
 parser.add_option('--db', dest='db', metavar='URI',
                   help='SQLAlchemy URI of the database [DANGEROUS: Do not use,'
                   'see NOTE below]', default=None)
-parser.add_option('--umask', dest='umask', metavar='UMASK', type='int',
-                  default=None,
-                  help='change the process\' file mode mask to UMASK')
+parser.add_option(
+    '--umask', dest='umask', metavar='UMASK', type='int', default=0o7,
+    help='change the process\' file mode mask to UMASK (default: 007)')
 
 LocationURL = namedtuple('LocationURL', ['account', 'container', 'object'])
 HashmapURL = namedtuple('HashmapURL', ['hash', 'size'])
