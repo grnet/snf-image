@@ -1,3 +1,7 @@
+2014-10-30, v0.16.3
+	* pithcat: Set the default umask to 007 and fix the initialization of
+	  the backend
+
 2014-10-14, v0.16.2
 	* Fix a bug in img_properties handling introduced in v0.16.1
 	* Update the documentation
