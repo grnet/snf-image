@@ -61,19 +61,23 @@ select volume $id
 extend filesystem
 exit
 EOF
-elif [ "$ptype" = "btrfs" ]; then
+elif [[ "$ptype" =~ ^(btrfs|xfs)$ ]]; then
     target=$(find_mount_target "$device")
 
     if [ -z "$target" ]; then
-        warn "Can't enlarge btrfs file system in device: \`$device'. File system not mounted"
+        warn "Can't enlarge $ptype file system in device: \`$device'. File system not mounted."
         exit 0
     fi
 
-    set $($BTRFS filesystem show "$device" | grep "$device")
+    if [ "$ptype" = btrfs ]; then
+        set $($BTRFS filesystem show "$device" | grep "$device")
 
-    $BTRFS filesystem resize "$2":max "$target"
+        $BTRFS filesystem resize "$2":max "$target"
+    else # "$ptype" = xfs
+        $XFS_GROWFS "$target"
+    fi
 else
-    warn "Don't know how to resize \`$device'"
+    warn "Don't know how to resize mounted device: \`$device'"
 fi
 
 exit 0
