@@ -85,7 +85,7 @@ if [[ "$ptype" == ext[234] ]]; then
 elif [[ "$ptype" == "freebsd-ufs" ]]; then
     $GROWFS_UFS -y "$device"
 else
-    warn "Don't know how to resize partition \`$id' with file system \`$ptype'."
+    warn "Don't know how to resize unmounted partition \`$id' with file system \`$ptype'."
 fi
 
 exit 0

@@ -37,9 +37,10 @@ DUMPFS_OPENBSD=dumpfs.openbsd
 DATE="date -u" # Time in UTC
 EATMYDATA=eatmydata
 MOUNT="mount -n"
-HIVEXGET="hivexget"
-HIVEXREGEDIT="hivexregedit"
-BTRFS="btrfs"
+HIVEXGET=hivexget
+HIVEXREGEDIT=hivexregedit
+BTRFS=btrfs
+XFS_GROWFS=xfs_growfs
 
 CLEANUP=( )
 ERRORS=( )
@@ -526,7 +527,7 @@ mount_all() {
 
     case "$osfamily" in
     linux)
-        fs="ext[234]|msdos|vfat|ntfs|btrfs"
+        fs="ext[234]|msdos|vfat|ntfs|btrfs|xfs"
         ;;
     freebsd)
         fs="ufs|msdosfs|ntfs"
