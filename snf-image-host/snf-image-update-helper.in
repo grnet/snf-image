@@ -38,17 +38,19 @@ usage() {
 Usage: $0 [options]
 
 This script will download a suitable fixed snf-image-helper image and will
-install it under $IMAGE_DIR.
+install it under $HELPER_DIR.
 
 OPTIONS:
+    -c Don't check the checksum of the helper image
+
+    -f Force the installation even if the snf-image and helper versions don't match
+
     -h Print this message
 
     -u URL
        Download URL to use for the helper image instead of $HELPER_URL
 
     -y Assume Yes to all queries and do not prompt
-
-    -f Force the installation even if the snf-image and helper versions don't match
 
 EOF
 
@@ -57,13 +59,15 @@ EOF
 
 while getopts "hu:yf" opt; do
     case $opt in
+        c) NO_CHECKSUM="yes"
+            ;;
+        f) FORCE="yes"
+            ;;
         h) usage 0
             ;;
         u) HELPER_URL="$OPTARG"
             ;;
         y) NO_PROMPT="yes"
-            ;;
-        f) FORCE="yes"
             ;;
         ?) log_error "User \`-h' for help"; exit 1
             ;;
@@ -105,8 +109,36 @@ cd "$IMAGE_DIR"
 IMAGE=$(basename "$HELPER_URL")
 echo >&2
 echo "Downloading helper image from $HELPER_URL ..." >&2
-$CURL -O -L -f "$HELPER_URL"
 add_cleanup rm -f "$IMAGE_DIR/$IMAGE"
+set +e
+$CURL -O -L -f "$HELPER_URL"
+RET=$?
+set -e
+
+# Treat SIGPIPE as SUCCESS. There is a cURL bug that may trigger SIGPIPE even
+# if the download was successful:
+# http://sourceforge.net/p/curl/bugs/1180/
+if [ $RET -ne 0 -a $RET -ne 141 ]; then
+    log_error "Downloading "$IMAGE" from "$HELPER_URL" failed"
+    exit 1
+fi
+
+if [ "x$NO_CHECKSUM" != "xyes" ]; then
+    echo "Checking the helper image checksum ..." >&2
+    add_cleanup rm -f "$IMAGE_DIR/$IMAGE.md5sum"
+    set +e
+    $CURL -O -L -f "$HELPER_URL.md5sum"
+    RET=$?
+    set -e
+
+    # See above for an explanation
+    if [ $RET -ne 0 -a $RET -ne 141 ]; then
+        log_error "Downloading "$IMAGE.md5sum" from "$HELPER_URL.md5sum" failed"
+        exit 1
+    fi
+
+    $MD5SUM -c "$IMAGE_DIR/$IMAGE.md5sum"
+fi
 
 cd "$HELPER_DIR"
 
