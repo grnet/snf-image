@@ -111,32 +111,21 @@ rm -f "$HELPER_DIR/initrd" "$HELPER_DIR/kernel" "$HELPER_DIR/image"
 echo -n "Allocating space for helper disk image..."
 helper_img=$(mktemp "$HELPER_DIR/image.XXXXXX")
 add_cleanup rm -f "$helper_img"
-dd if=/dev/zero of="$helper_img" bs=1M count="$HELPER_SIZE" &> /dev/null
+truncate -s 2G "$helper_img"
 echo "done"
 
-echo "Creating partitions..."
-blockdev=$("$LOSETUP" -sf $helper_img)
-add_cleanup "$LOSETUP" -d "$blockdev"
-
-sleep 1 # sometimes losetup returns and the device is still busy..
-
-format_disk0 "$blockdev" "extdump"  2>&1 | sed -e 's/^/CFDISK: /g'
-
-root_dev=$(map_disk0 "$blockdev")-1
-add_cleanup unmap_disk0 "$blockdev"
-
 echo Creating and configuring filesystem...
-mkfs.ext3 "$root_dev" 2>&1 | sed -e 's/^/MKFS.EXT3: /g'
+mkfs.ext2 -F "$helper_img" 2>&1 | sed -e 's/^/MKFS.EXT2: /g'
 # The helper vm should never do file system checks...
-tune2fs -i 0 -c 0 "$root_dev" 2>&1 | sed -e 's/^/TUNE2FS: /g'
+tune2fs -i 0 -c 0 "$helper_img" 2>&1 | sed -e 's/^/TUNE2FS: /g'
 
-root_uuid=$(blkid -s UUID -o value "$root_dev")
+root_uuid=$(blkid -s UUID -o value "$helper_img")
 
 target=$(mktemp -d)
 add_cleanup rmdir "$target"
 
-mount "$root_dev" "$target"
-add_cleanup umount "$root_dev"
+mount "$helper_img" "$target"
+add_cleanup ignore_failure umount "$target"
 
 do_multistrap "$target"
 
@@ -171,8 +160,8 @@ echo "done"
 # Make sure extended globbing is enabled
 shopt -s extglob
 
-kernel=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9])-amd64)
-initrd=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9])-amd64)
+kernel=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9.])-amd64)
+initrd=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9.])-amd64)
 
 echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
 cp "$kernel" "$initrd" "$HELPER_DIR"
@@ -193,8 +182,8 @@ if [ -r "$HELPER_PKG" ]; then
     echo "Installing snf-image-helper pkg in the new image..."
     cp "$HELPER_PKG" "$target/tmp/"
     pkg_name=$(basename "$HELPER_PKG")
-    add_cleanup rm "$target/tmp/$pkg_name"
     chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
+    rm "$target/tmp/$pkg_name"
 
     # Recreate package list
     chroot "$target" dpkg-query -W  > "$HELPER_DIR/packages"
@@ -212,6 +201,31 @@ if [ "$VERSION_CHECK" == yes -a -z "$HELPER_PKG" ]; then
         exit 1
     fi
 fi
+
+umount "$target"
+
+echo "Shrinking the created image:" >&2
+set +e
+e2fsck -y -f "$helper_img" 2>&1 | sed -u -e 's/^/E2FSCK: /g'
+ret=$?
+set -e
+
+if [ $ret -ge 4 ]; then
+    log_error "File system check failed!"
+fi
+
+resize2fs -M "$helper_img" 2>&1 2>&1 | sed -u -e 's/^/RESIZE2FS: /g'
+
+while read line; do
+    value="$(echo $(cut -d: -f2 <<< "$line"))"
+    if grep '^Block size:' <<< "$line" &> /dev/null; then
+        block_size="$value"
+    elif grep '^Block count:' <<< "$line" &> /dev/null; then
+        block_count="$value"
+    fi
+done <<< "$(tune2fs -l "$helper_img")"
+
+truncate -s $((block_size*block_count)) "$helper_img"
 
 mv "$helper_img" "$HELPER_DIR/image"
 

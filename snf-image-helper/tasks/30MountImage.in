@@ -68,13 +68,18 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     exit 0
 fi
 
-if [ ! -f "$SNF_IMAGE_TARGET/etc/fstab" ]; then
-    log_error "\`/etc/fstab' is missing from the root partition." \
+if [ ! -d "$SNF_IMAGE_TARGET/etc" ]; then
+    log_error "\`/etc' is missing from the root partition." \
         "Please check if the value for image property \`ROOT_PARTITION'" \
         "(=$SNF_IMAGE_PROPERTY_ROOT_PARTITION) is valid."
 fi
 
-mount_all "$SNF_IMAGE_PROPERTY_OSFAMILY" "$SNF_IMAGE_DEV" "$SNF_IMAGE_TARGET"
+if [ -f "$SNF_IMAGE_TARGET/etc/fstab" ]; then
+    mount_all "$SNF_IMAGE_PROPERTY_OSFAMILY" "$SNF_IMAGE_DEV" "$SNF_IMAGE_TARGET"
+else
+    warn "\`/etc/fstab' is missing from the root partition." \
+         "Unable to mount any other device."
+fi
 
 exit 0
 

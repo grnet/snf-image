@@ -22,9 +22,9 @@ fi
 # --with-helper-url
 AC_ARG_WITH([helper-url],
   [AS_HELP_STRING([--with-helper-url=URL],
-      [URL to download the helper image from [http://cdn.synnefo.org/snf_image_helper_image-PROG_VERSION.tar.xz]])],
+      [URL to download the helper image from [https://cdn.synnefo.org/snf_image_helper_image-PROG_VERSION.tar.xz]])],
   [helper_url="$withval"],
-  [helper_url="http://cdn.synnefo.org/snf_image_helper_image-$VERSION.tar.xz"]
+  [helper_url="https://cdn.synnefo.org/snf_image_helper_image-$VERSION.tar.xz"]
 )
 
 AC_SUBST(HELPER_URL, $helper_url)
@@ -115,6 +115,15 @@ AC_ARG_WITH([default-dir],
     [default_dir="$withval"],
     [default_dir="$sysconfdir/default"])
 AC_SUBST(DEFAULT_DIR, $default_dir)
+
+# --with-helper-package-version=
+AC_ARG_WITH([helper-package-version],
+    [AS_HELP_STRING([--with-helper-package-version=VERSION],
+                    [snf-image-helper package version to use for the helper image (default autodetect)])],
+    [helper_package_version="$withval"],
+    [helper_package_version="$VERSION*"])
+AC_SUBST(HELPER_PACKAGE_VERSION, $helper_package_version)
+
 
 # Check common programs
 AC_PROG_INSTALL

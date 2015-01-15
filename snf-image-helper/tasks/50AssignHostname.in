@@ -66,6 +66,8 @@ linux_hostname() {
     else
         distro=$(get_base_distro "$target")
         case "$distro" in
+            coreos)
+                echo "$hostname" > "$target/etc/hostname";;
             redhat)
                 sed -i -e "s/HOSTNAME=.*$/HOSTNAME=$hostname/g" "$target/etc/sysconfig/network";;
             slackware|suse)
@@ -95,7 +97,9 @@ linux_hostname() {
 
     # Some Linux distributions assign the hostname to 127.0.1.1 in order to be
     # resolvable to an IP address. Lets replace this if found in /etc/hosts
-    sed -i -e "s/^[[:blank:]]*127\.0\.1\.1[[:blank:]].\+$/127.0.1.1\t$hostname/" "$target/etc/hosts"
+    if [ -f "$target/etc/hosts" ]; then
+        sed -i -e "s/^[[:blank:]]*127\.0\.1\.1[[:blank:]].\+$/127.0.1.1\t$hostname/" "$target/etc/hosts"
+    fi
 }
 
 freebsd_hostname() {

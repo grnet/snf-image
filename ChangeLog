@@ -1,3 +1,13 @@
+2015-01-09, v0.17rc1
+	* Add support for btrfs
+	* Add support for xfs
+	* Add support for CoreOS
+	* Make all errors one line long
+	* Create man pages for snf-image-{update,create}-helper
+	* Shrink the helper VM
+	* Check the md5sum after downloading the helper VM
+	* Fix bugs
+
 2014-10-30, v0.16.3
 	* pithcat: Set the default umask to 007 and fix the initialization of
 	  the backend

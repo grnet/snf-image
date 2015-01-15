@@ -213,3 +213,21 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+# -- Options for manual page output -------------------------------------------
+
+# One entry per manual page. List of tuples
+# (source start file, name, description, authors, manual section).
+man_pages = [
+    ('man/snf-image-update-helper', 'snf-image-update-helper',
+     "Update snf-image's helper files",
+     'Synnefo development team <synnefo-devel@googlegroups.com>', 1),
+    ('man/snf-image-create-helper', 'snf-image-create-helper',
+     'Create a new helper image for snf-image',
+     'Synnefo development team <synnefo-devel@googlegroups.com>', 1)
+]
+
+# If true, show URL addresses after external links.
+#man_show_urls = False
+
+
