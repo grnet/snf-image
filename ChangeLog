@@ -1,4 +1,4 @@
-2015-01-09, v0.17rc1
+2015-01-15, v0.17
 	* Add support for btrfs
 	* Add support for xfs
 	* Add support for CoreOS
@@ -6,6 +6,7 @@
 	* Create man pages for snf-image-{update,create}-helper
 	* Shrink the helper VM
 	* Check the md5sum after downloading the helper VM
+	* Update the documentation
 	* Fix bugs
 
 2014-10-30, v0.16.3
