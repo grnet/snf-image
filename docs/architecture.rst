@@ -194,10 +194,13 @@ users whose passwords will changed is determined by the
 task to run *SNF_IMAGE_TARGET* and *SNF_IMAGE_PASSWD* variables need to be
 present.
 
-**FilesystemResizeMounted**: Injects a script into a Windows image file system
-that will enlarge the last file system to cover up the whole partition. The
-script will run during the specialize pass of the Windows setup. If the
-*SNF_IMAGE_TARGET* variable is missing, the task will fail.
+**FilesystemResizeMounted**: For Windows VMs this task injects a script into
+the VM's file system that will enlarge the last file system to cover up the
+whole partition. The script will run during the specialize pass of the Windows
+setup. For Linux VMs this task is used to extend the last file system in case
+its type is Btrfs or XFS, since those file systems require to be mounted in
+order to resize them. If the *SNF_IMAGE_TARGET* variable is missing, the task
+will fail.
 
 **EnforcePersonality**: Injects the files specified by the
 *SNF_IMAGE_PROPERTY_OSFAMILY* variable into the file system. If the variable is
