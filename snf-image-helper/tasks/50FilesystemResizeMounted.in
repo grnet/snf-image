@@ -21,7 +21,7 @@
 # Provides:		FilesystemResizeMounted
 # RunBefore:            EnforcePersonality
 # RunAfter:		InstallUnattend
-# Short-Description:	Resize filesystem to use all the available space
+# Short-Description:	Resize file system to use all the available space
 ### END TASK INFO
 
 set -e
@@ -33,11 +33,16 @@ report_task_start
 # Check if the task should be prevented from running.
 check_if_excluded
 
+if [ ! -b "$SNF_IMAGE_DEV" ]; then
+    log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
+fi
+
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
 fi
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
+if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then
+    warn "No partition chosen for resize"
     exit 0
 fi
 
@@ -45,8 +50,9 @@ table=$(get_partition_table "$SNF_IMAGE_DEV")
 partition=$(get_partition_by_num "$table" "$SNF_IMAGE_RESIZE_PART")
 id=$(cut -d: -f1 <<< "$partition")
 ptype=$(cut -d: -f5 <<< "$partition")
+device="${SNF_IMAGE_DEV}${id}"
 
-if [ "$ptype" = "ntfs" ]; then
+if [ "$ptype" = "ntfs" -a "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
     # try to execute this script during the specialize pass.
     cat > "$SNF_IMAGE_TARGET/Windows/SnfScripts/ExtendFilesystem" <<EOF
@@ -55,6 +61,23 @@ select volume $id
 extend filesystem
 exit
 EOF
+elif [[ "$ptype" =~ ^(btrfs|xfs)$ ]]; then
+    target=$(find_mount_target "$device")
+
+    if [ -z "$target" ]; then
+        warn "Can't enlarge $ptype file system in device: \`$device'. File system not mounted."
+        exit 0
+    fi
+
+    if [ "$ptype" = btrfs ]; then
+        set $($BTRFS filesystem show "$device" | grep "$device")
+
+        $BTRFS filesystem resize "$2":max "$target"
+    else # "$ptype" = xfs
+        $XFS_GROWFS "$target"
+    fi
+else
+    warn "Don't know how to resize mounted device: \`$device'"
 fi
 
 exit 0

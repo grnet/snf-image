@@ -92,7 +92,7 @@ To install snf-image from source, download the provided source package:
 
 .. code-block:: console
 
-  $ wget http://apt.dev.grnet.gr/wheezy/snf-image_<VERSION>.orig.tar.gz
+  $ wget https://apt.dev.grnet.gr/wheezy/snf-image_<VERSION>.orig.tar.gz
 
 Untar, configure and build the source:
 

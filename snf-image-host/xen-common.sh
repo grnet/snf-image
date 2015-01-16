@@ -32,7 +32,7 @@ launch_helper() {
 
     xm create /dev/null \
       kernel="$HELPER_DIR/kernel" ramdisk="$HELPER_DIR/initrd" \
-      root="/dev/xvda1" memory="$HELPER_MEMORY" boot="c" vcpus=1 name="$name" \
+      root="/dev/xvda" memory="$HELPER_MEMORY" boot="c" vcpus=1 name="$name" \
       extra="console=hvc0 hypervisor=$HYPERVISOR snf_image_activate_helper \
 	  ipv6.disable=1 rules_dev=/dev/xvdc ro boot=local helper_ip=10.0.0.1 \
           monitor_port=48888 init=/usr/bin/snf-image-helper" \

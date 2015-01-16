@@ -29,6 +29,7 @@ edit = sed \
 	   -e 's|@osname[@]|$(osname)|g' \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
 	   -e 's|@VERSION[@]|$(VERSION)|g' \
+	   -e 's|@HELPER_PACKAGE_VERSION[@]|$(HELPER_PACKAGE_VERSION)|g' \
 	   -e 's|@VERSION_CHECK[@]|$(VERSION_CHECK)|g' \
 	   -e 's|@HELPER_DIR[@]|$(HELPER_DIR)|g' \
 	   -e 's|@HELPER_URL[@]|$(HELPER_URL)|g' \
@@ -56,4 +57,4 @@ install-exec-local:
 	touch "$(DESTDIR)$(variantsdir)/default.conf"
 	
 
-CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS) defaults
+CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS) defaults version_pinning.pref
