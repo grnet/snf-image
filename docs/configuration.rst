@@ -23,9 +23,6 @@ some external programs in ``/etc/default/snf-image``:
   # HELPER_DIR: Directory hosting the helper files
   # HELPER_DIR="/var/lib/snf-image/helper/"
 
-  # HELPER_SIZE: Size of the helper VM image in MB
-  # HELPER_SIZE="600"
-
   # HELPER_TIMEOUT: Soft and hard timeout limits for helper instance. The helper
   # instance will be terminated after a given time if it hasn't exited by itself.
   # A TERM signal will be send if the instance is running after a
@@ -97,6 +94,7 @@ some external programs in ``/etc/default/snf-image``:
 
   # Paths for needed programs. Uncomment and change the variables below if you
   # don't want to use the default one.
+  # MD5SUM="md5sum"
   # KVM="kvm"
   # LOSETUP="losetup"
   # KPARTX="kpartx"
