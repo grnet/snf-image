@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012, 2013 GRNET S.A.
+# Copyright (C) 2011-2015 GRNET S.A.
 # Copyright (C) 2007, 2008, 2009 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -635,6 +635,142 @@ get_ufstype() {
             echo ""
             ;;
     esac
+}
+
+check_if_root() {
+    local os fd device is_root args exists windows_fs linux_fs freebsd_fs \
+        netbsd_fs openbsd_fs supported_fs
+
+    osfamily="$1"
+    fs="$2"
+    device="$3"
+
+    windows_fs="(ntfs|ntfs-3g|vfat|msdos|fat|fuse|fuseblk)"
+    linux_fs="(ext[234]|xfs|jfs|zfs|btrfs|reiserfs|reiser4)"
+    freebsd_fs="(ufs|zfs)"
+    netbsd_fs="(ufs|zfs)"
+    openbsd_fs="ufs"
+
+    supported_fs="${osfamily}_fs"
+
+    if [ "$fs" = "" ]; then
+        warn "Can't detect a file system on device: \`$device'"
+        return 0
+    fi
+
+    if [[ ! "$fs" =~ ${!supported_fs} ]]; then
+        warn "Ignoring device: \`$device' with file system: \`$fs' when checking for a $osfamily root"
+        return 0
+    fi
+
+    if [ "$fs" = ufs ]; then
+        args="-t ufs -o ufstype=$(get_ufstype "$device"),ro"
+    else
+        args="-o ro"
+    fi
+
+    is_root=no
+    $MOUNT "$device" "$SNF_IMAGE_TARGET" $args || {
+        warn "Unable to mount: \`$device' with file system: \`$fs'"
+        set -e
+        return 0
+    }
+    case "$osfamily" in
+        freebsd|linux)
+            if [ -f "$SNF_IMAGE_TARGET/etc/fstab" ]; then
+                is_root=yes
+            fi
+            ;;
+        windows)
+            exists=$(find "$SNF_IMAGE_TARGET" -maxdepth 1 -iname windows)
+            if [ -n "$exists" -a -d "$exists" ]; then
+                is_root=yes
+            fi
+            ;;
+    esac
+    umount "$SNF_IMAGE_TARGET"
+
+    if [ "$is_root" = yes ]; then
+        export DETECTED_OSFAMILY="$osfamily"
+    fi
+}
+
+examine_msdos_partition() {
+    local dev part
+    dev="$1"
+    part="$2"
+
+    num=$(cut -f1 -d: <<< "$part")
+    id=$($SFDISK --force --print-id "$dev" "$num") || true
+    fs=$($BLKID -s TYPE -o value "$dev$num") || true
+
+    case "$id" in
+        a5)
+            export DETECTED_OSFAMILY=freebsd
+            ;;
+        a6)
+            export DETECTED_OSFAMILY=openbsd
+            ;;
+        a9)
+            export DETECTED_OSFAMILY=netbsd
+            ;;
+        7) # looks like Windows
+            check_if_root windows "$fs" "$dev$num"
+            ;;
+        83) # looks like Linux
+            check_if_root linux "$fs" "$dev$num"
+            ;;
+    esac
+
+    if [ -n "$DETECTED_OSFAMILY" ]; then
+        export DETECTED_ROOT_PARTITION="$num"
+    fi
+}
+
+examine_gpt_partition() {
+    local dev part ufs_type
+    dev="$1"
+    part="$2"
+
+    # It's OK if some of those fail
+    num=$(cut -f1 -d: <<< "$part")
+    fs=$($BLKID -s TYPE -o value "$dev$num") || true
+    id=$($SGDISK -i "$num" "$dev" | \
+         grep "^Partition GUID code:" | \
+         cut -f2 -d: | \
+         awk '{print $1}') || true
+
+    case "$id" in
+        516E7CB6-6ECF-11D6-8FF8-00022D09712B) # FreeBSD
+            check_if_root freebsd "$fs" "$dev$num"
+            ;;
+        EBD0A0A2-B9E5-4433-87C0-68B6B72699C7) # Windows
+            check_if_root windows "$fs" "$dev$num"
+            ;;
+        *) # Linux does not respect the Partition GUID code at all
+            check_if_root linux "$fs" "$dev$num"
+            ;;
+    esac
+
+    if [ -n "$DETECTED_OSFAMILY" ]; then
+        export DETECTED_ROOT_PARTITION="$num"
+    fi
+}
+
+detect_image_properties() {
+    local dev table
+    dev="$1"
+
+    table=$(get_partition_table "$dev")
+    pttype=$(get_partition_table_type "$table")
+
+    partitions=$(tail -n +3 <<< "$table")
+    for part in $partitions; do
+        "examine_${pttype}_partition" "$dev" "$part"
+        if [ -n "$DETECTED_OSFAMILY" -a -n "$DETECTED_ROOT_PARTITION" ]; then
+            break
+        fi
+    done
 }
 
 cleanup() {
