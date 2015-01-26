@@ -618,10 +618,18 @@ umount_all() {
 }
 
 get_ufstype() {
-    local device ufs
+    local device ufs pipefail
 
     device="$1"
+
+    pipefail=$(set -o | grep pipefail | cut -f2)
+    if [ "$pipefail" = on ]; then
+        set +o pipefail
+    fi
     ufs="$($DUMPFS_UFS "$device" | head -1 | awk -F "[()]" '{ for (i=2; i<NF; i+=2) print $i }')"
+    if [ "$pipefail" = on ]; then
+        set -o pipefail
+    fi
 
     case "$ufs" in
         UFS1)
