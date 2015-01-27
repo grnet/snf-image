@@ -443,6 +443,9 @@ fi
 : ${XEN_SCRIPTS_DIR="@sysconfdir@/xen/scripts"}
 : ${MULTISTRAP_CONFIG:="@MULTISTRAP_CONFIG@"}
 : ${MULTISTRAP_APTPREFDIR:="@MULTISTRAP_APTPREFDIR@"}
+: ${DHCP_TAGS:="auto dhcp nfdhcpd"}
+: ${STATEFUL_DHCPV6_TAGS:="dhcpv6 stateful_dhcpv6"}
+: ${STATELESS_DHCPV6_TAGS:="nfdhcpd stateless_dhcpv6"}
 
 SCRIPT_NAME=$(basename $0)
 
