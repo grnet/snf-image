@@ -1,9 +1,10 @@
 commondir=$(datarootdir)/$(PACKAGE)
+networkingdir=$(libdir)/$(PACKAGE)/networking
 scriptsdir=$(libdir)/$(PACKAGE)
 tasksdir=$(scriptsdir)/tasks
-export commondir scriptsdir tasksdir
+export commondir networkingdir scriptsdir tasksdir
 
-SUBDIRS = tasks
+SUBDIRS = tasks networking
 
 dist_doc_DATA = COPYING AUTHORS
 dist_bin_SCRIPTS = snf-image-helper
@@ -12,6 +13,7 @@ dist_common_DATA = common.sh unattend.xml
 
 edit = sed \
 	-e 's|@commondir[@]|$(commondir)|g' \
+	-e 's|@networkingdir[@]|$(networkingdir)|g' \
 	-e 's|@scriptsdir[@]|$(scriptsdir)|g' \
 	-e 's|@tasksdir[@]|$(tasksdir)|g'
 
