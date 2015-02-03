@@ -1,6 +1,6 @@
 networkingdir=$(libdir)/$(PACKAGE)/networking
 
-dist_networking_SCRIPTS = debian.sh
+dist_networking_SCRIPTS = debian.sh redhat.sh
 
 edit = sed \
            -e 's|@sysconfdir[@]|$(sysconfdir)|g' \

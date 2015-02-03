@@ -1,0 +1,90 @@
+#! /bin/bash
+
+# Copyright (C) 2015 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+
+set -e
+. "@commondir@/common.sh"
+
+networking_opts "$@"
+
+tmp_network=$(mktemp)
+add_cleanup rm -f "$tmp_network"
+
+NETWORK="$SNF_IMAGE_TARGET/etc/sysconfig/network"
+
+if [ "$initialize" = yes ]; then
+    echo -e "# Edited by snf-image" > "$tmp_network"
+    cat "$NETWORK" >> "$tmp_network"
+    cat "$tmp_network" > "$NETWORK"
+    exit 0
+fi
+
+if [ "$finalize" = yes ]; then
+    exit 0
+fi
+
+IFCFG="$SNF_IMAGE_TARGET/etc/sysconfig/network-scripts/ifcfg-eth${index}"
+
+regexp='^NETWORKING='
+new_entries="NETWORKING=yes\n"
+
+if [ "$ipv6" != none ]; then
+    regexp+='|^NETWORKING_IPV6='
+    new_entries+="NETWORKING_IPV6=yes\n"
+fi
+
+if [ "$ipv4" = 'static' -a -n "$GATEWAY" ]; then
+    regexp+='|^GATEWAY=|^GATEWAYDEV='
+    new_entries+="GATEWAY=$GATEWAY\nGATEWAYDEV=eth${index}\n"
+fi
+
+touch "$NETWORK"
+egrep -v $regexp "$NETWORK" > "$tmp_network"
+echo -e "$new_entries" >> "$tmp_network"
+cat "$tmp_network" > "$NETWORK"
+
+
+if [ -f "$IFCFG" ]; then
+    sed 's/^/#/' "$IFCFG" > "$IFCFG.snf_image-$(date +%Y%m%d%H%M%S)-$RANDOM"
+fi
+
+echo -e "DEVICE=eth${index}\nONBOOT=yes\nHWADDR=$MAC" > "$IFCFG"
+
+# If Network Manager is running, let it control the interface
+echo "NM_CONTROLLED=yes" >> "$IFCFG"
+
+if [ "$ipv4" = 'static' ]; then
+    echo -e "BOOTPROTO=static\nIPADDR=$IP\nNETMASK=$(cidr2mask "${SUBNET##*/}")" >> "$IFCFG"
+elif [ "$ipv4" = 'dhcp' ]; then
+    echo -e "BOOTPROTO=dhcp" >> "$IFCFG"
+else
+    echo -e "IPV4_FAILURE_FATAL=no" >> "$IFCFG"
+fi
+
+if [ "$ipv6" = 'dhcp' ]; then
+    echo -e "IPV6INIT=yes\nDHCPV6C=yes" >> "$IFCFG"
+elif [ "$ipv6" = 'slaac' ]; then
+    echo -e "IPV6INIT=yes\nIPV6_AUTOCONF=yes" >> "$IFCFG"
+elif [ "$ipv6" = 'slaac_dhcp' ]; then
+    echo -e "IPV6INIT=yes\nIPV6_AUTOCONF=yes\nDHCPV6C=yes\nDHCPV6C_OPTIONS=\"-S\"" >> "$IFCFG"
+else
+    echo -e "IPV6_FAULURE_FATAL=no" >> "$IFCFG"
+fi
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
