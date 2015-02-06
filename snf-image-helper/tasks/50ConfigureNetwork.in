@@ -69,6 +69,11 @@ for index in $(seq 0 $((NIC_COUNT-1))); do
     eval export SUBNET6=\"\$NIC_${index}_NETWORK_SUBNET6\"
     eval export TAGS=\"\$NIC_${index}_NETWORK_TAGS\"
 
+   # Relative to the card type index
+    : $((${TYPE}_index++))
+    export ${TYPE}_index
+
+
     for tag in ${TAGS}; do
         for dhcp_tag in $SNF_IMAGE_DHCP_TAGS; do
             if [ "$tag" = "$dhcp_tag" ]; then
