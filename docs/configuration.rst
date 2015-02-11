@@ -86,6 +86,23 @@ some external programs in ``/etc/default/snf-image``:
   # input of this program.
   # PROGRESS_MONITOR=""
 
+  # DHCP_TAGS: Space separated list of ganeti network tags. snf-image will
+  # configure a VM's NIC to use DHCP if the card is expected to have an IPv4
+  # address and any of those tags is present in the card's NETWORK_TAGS variable.
+  # DHCP_TAGS="auto dhcp nfdhcpd"
+
+  # STATEFUL_DHCPV6_TAGS: Space separated list of ganeti network tags. snf-image
+  # will configure a VM's NIC to use DHCPv6 if the card is expected to have an
+  # IPv6 address and any of those tags is present in the card's NETWORK_TAGS
+  # variable.
+  # STATEFUL_DHCPV6_TAGS="dhcpv6 stateful_dhcpv6"
+
+  # STATELESS_DHCPV6_TAGS: Space separated list of ganeti network tags. snf-image
+  # will configure a VM's NIC to perform SLAAC and Stateless DHCPv6 if the card
+  # is expected to have an IPv6 address and any of those tags is present in the
+  # card's NETWORK_TAGS variable.
+  # STATELESS_DHCPV6_TAGS="nfdhcpd stateless_dhcpv6
+
   # UNATTEND: This variable overwrites the unattend.xml file used when deploying
   # a Windows image. snf-image-helper will use its own unattend.xml file if this
   # variable is empty. Please leave this empty, unless you really know what you
@@ -117,6 +134,10 @@ The most common configuration parameters the user may need to overwrite are:
    hosted, in case the user is accessing Pithos-hosted images
  * **PROGRESS_MONITOR**: To specify an executable that will handle the
    monitoring messages exported by *snf-image*
+ * **DHCP_TAGS**: To specify which ganeti networks support DHCP
+ * **STATELESS_DHCPV6_TAGS**: To specify which ganeti networks support SLAAC
+   and stateless DHCPv6
+ * **STATEFUL_DHCPV6_TAGS**: To specify which ganeti networks support DHCPv6
 
 Paths of external programs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
