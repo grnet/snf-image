@@ -196,7 +196,7 @@ present.
 
 **ConfigureNetwork**: Edit the OS's native network configuration files to
 configure the instance's NICs. This works for most Linux and all the supported
-\*BSD systems. In order to do this, all the NIC_* ganeti provided environment
+\*BSD systems. In order to do this, all the NIC_* Ganeti provided environment
 variables are exported to the task. The only variable required by this task is
 *SNF_IMAGE_TARGET*. For this task to work correctly, the user may need to
 adjust the *DHCP_TAGS* and the *\*_DHCPV6_TAGS* configuration parameters (see
