@@ -1,0 +1,93 @@
+#! /bin/bash
+
+# Copyright (C) 2015 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+
+set -e
+. "@commondir@/common.sh"
+
+networking_opts "$@"
+
+if [ "$initialize" = yes ]; then
+    exit 0
+fi
+
+if [ "$finalize" = yes ]; then
+    exit 0
+fi
+
+case "$TYPE" in
+    paravirtual)
+        driver=vioif
+        driver_index=$paravirtual_index
+        ;;
+    rtl8139)
+        driver=re
+        driver_index=$rtl8139_index
+        ;;
+    ne2k_isa|ne2k_pci)
+        driver=ne
+        driver_index=$((ne2k_isa_index + ne2k_pci_index))
+        ;;
+    i82551|i82557b|i82559er)
+        driver=fxp
+        driver_index=$((i82551_index + i82557b_index + i82559er_index))
+        ;;
+    pcnet)
+        driver=pcn
+        driver_index=$pcnet_index
+        ;;
+    e1000)
+        driver=wm
+        driver_index=$e1000_index
+        ;;
+    *)
+        log_error "Unknown card type: \`$TYPE'"
+esac
+
+index=$((driver_index - 1))
+
+IFCONFIG="$SNF_IMAGE_TARGET/etc/ifconfig.$driver$index"
+RC_CONF="$SNF_IMAGE_TARGET/etc/rc.conf"
+SYSCTL="$SNF_IMAGE_TARGET/etc/sysctl.conf"
+
+cat /dev/null > "$IFCONFIG"
+
+if [ "$ipv4" != none -o "$ipv6" != none ]; then
+    echo up >> "$IFCONFIG"
+fi
+
+if [ "$ipv4" = 'static' ]; then
+    echo "inet $IP netmask $(cidr2mask "${SUBNET##*/}")" >> "$IFCONFIG"
+    if [ -n "$GATEWAY" ]; then
+        sed -i '/^defaultroute=/d' "$RC_CONF"
+        echo "defaultroute=$GATEWAY" >> "$RC_CONF"
+    fi
+elif [ "$ipv4" = 'dhcp' ]; then
+    echo '!dhclient $int' >> "$IFCONFIG"
+fi
+
+if [ "$ipv6" = 'slaac' -o "$ipv6" = 'slaac_dhcp' ]; then
+    sed -i '/^ip6mode=/d' "$RC_CONF"
+    echo 'ip6mode=autohost' >> "$RC_CONF"
+    echo '!rtsol $int' >> "$IFCONFIG"
+elif [ "$ipv6" = 'dhcp' ]; then
+    warn "DHCPv6 needs packages from Ports. Not implementing it right now."
+fi
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

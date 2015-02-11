@@ -506,6 +506,20 @@ bsd2linux() {
     log_error "Couldn't find out mapping for BSD partition: \`$partition' in \`$device'"
 }
 
+cidr2mask() {
+    local zeroes=$((32-$1))
+    local shifts
+    local IFS=.
+    shift
+
+    for i in 1 2 3 4; do
+        ((shifts = zeroes > 8 ? 8 : zeroes))
+        zeroes=$((zeroes - shifts))
+        set $((255 >> shifts << shifts)) "$@"
+    done
+    echo "$*"
+}
+
 find_mount_target() {
     local device
     device="$1"
@@ -839,6 +853,58 @@ check_if_excluded() {
 
 return_success() {
     send_result_${HYPERVISOR} "SUCCESS"
+}
+
+networking_opts() {
+    local usage="$0 [-i | -f | -n  <index>] [-4 (dhcp|static)] [-6 (dhcp|slaac|slaac_dhcp)]"
+    ipv4=none
+    ipv6=none
+    index=
+    initialize=no
+    finalize=no
+
+    while getopts "h?ifn:4:6:" opt; do
+        case "$opt" in
+        h|\?)
+            echo $usage >&2
+            exit 0
+            ;;
+        i)  initialize=yes
+            ;;
+        f)  finalize=yes
+            ;;
+        n)  index=$OPTARG
+            ;;
+        4)  ipv4=$OPTARG
+            ;;
+        6)  ipv6=$OPTARG
+            ;;
+        esac
+    done
+
+    if [ -z "$index" -a "$initialize" = no -a "$finalize" = no ]; then
+        log_error "Either -i, -f or -n must be specified"
+    fi
+
+    if [ "$initialize" = yes -a "$finalize" = yes ]; then
+        log_error "-i and -f should not be both specified"
+    fi
+
+    if [[ "$index" && ("$initialize" == yes || "$finalize" == yes) ]]; then
+        log_error "-n cannot be combined with -i or -f"
+    fi
+
+    if [[ ! "$ipv4" =~ (dhcp|static|none) ]]; then
+        log_error "invalid ipv4: $ipv4"
+    fi
+
+    if [[ ! "$ipv6" =~ (dhcp|slaac|slaac_dhcp|none) ]]; then
+        log_error "invalid ipv6: $ipv6"
+    fi
+
+    if [[ (! "$index" =~ ^[0-9]+$) && "$prepare" = no ]]; then
+        log_error "invalid index: $index"
+    fi
 }
 
 trap cleanup EXIT
