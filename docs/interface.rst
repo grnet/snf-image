@@ -100,19 +100,18 @@ Image Properties (img_properties)
 *snf-image* may use a number of properties to properly configure the image.
 Those image properties are passed to *snf-image* by Ganeti through the
 **img_poroperties** OS parameter (see Ganeti OS Interface). The name of all
-image properties is case-insensitive. For the *diskdump* format some properties
-are mandatory. For *{ext,ntfs}dump* formats all image properties are optional.
+image properties is case-insensitive. All image properties are optional.
 
 We can group image properties in two categories:
 
-1. Generic properties (*OSFAMILY*, *ROOT_PARTITION*, *USERS*)
+1. Generic properties (*OSFAMILY*, *ROOT_PARTITION*, *USERS*, etc.)
 2. Configuration tasks to run (*EXCLUDE_ALL_TASKS*, *EXCLUDE_TASK_<task_name>*)
    (see here for :ref:`valid configuration tasks <image-configuration-tasks>`)
 
 A list of all properties follows:
 
-Mandatory properties (for diskdump only)
-++++++++++++++++++++++++++++++++++++++++
+Diskdump only properties
+++++++++++++++++++++++++
 
  * **OSFAMILY=linux|windows|freebsd|netbsd|openbsd**
    This specifies whether the image is a Linux, a Windows or a \*BSD Image.
@@ -122,13 +121,12 @@ Mandatory properties (for diskdump only)
    earlier, for now, only primary partitions are supported. This property is
    trivial for *{ext,ntfs}dump* formats (they only host one partition).
 
-.. note:: On a diskdump image if no image property is defined, the deployment
-   will not fail. This situation is treated as a special case. All
-   configuration tasks will be prevented from running and the helper VM will
-   report SUCCESS after creating a warning about this.
+.. note:: Those properties are necessary for the image deployment to work. If
+ any of those properties is missing, *snf-image* will try to auto-detect it's
+ value. The deployment will fail if the auto-detection fails.
 
-Optional properties
-+++++++++++++++++++
+All image formats properties
+++++++++++++++++++++++++++++
 
  * **USERS="username1 username2...."**
    This is a space-separated list of users, whose password will be reset by
