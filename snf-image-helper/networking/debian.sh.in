@@ -1,0 +1,82 @@
+#! /bin/bash
+
+# Copyright (C) 2015 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+
+set -e
+. "@commondir@/common.sh"
+
+INTERFACES="$SNF_IMAGE_TARGET/etc/network/interfaces"
+
+networking_opts "$@"
+
+# initialize
+if [ "$initialize" = yes ]; then
+
+    if [ -f "$INTERFACES" ]; then
+        mv "$INTERFACES" "${INTERFACES}.snf-image-$RANDOM"
+    fi
+
+    cat > "$INTERFACES" <<EOF
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+# Entries were automatically added by snf-image's ConfigureNetwork task.
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+EOF
+
+    exit 0
+fi
+
+# finalize
+if [ "$finalize" = yes ]; then
+    exit 0
+fi
+
+nic="auto eth${index}\n"
+nic+="allow-hotplug eth${index}\n"
+
+if [ "$ipv4" = "dhcp" ]; then
+    nic+="iface eth${index} inet dhcp\n"
+elif [ "$ipv4" = "static" ]; then
+    netmask="$(cidr2mask "${SUBNET##*/}")"
+    nic+="iface eth${index} inet static\n"
+    nic+="    address $IP\n"
+    nic+="    netmask $netmask\n"
+    if [ -n "$GATEWAY" ]; then
+        nic+="    gateway $GATEWAY\n"
+    fi
+fi
+
+if [ "$ipv6" = "dhcp" ]; then
+    nic+="iface eth${index} inet6 dhcp\n"
+elif [ "$ipv6" = "slaac" ]; then
+    nic+="iface eth${index} inet6 auto\n"
+    nic+="    privext 0\n"
+elif [ "$ipv6" = "slaac_dhcp" ]; then
+    nic+="iface eth${index} inet6 auto\n"
+    nic+="    privext 0\n"
+    nic+="    dhcp 1\n"
+fi
+
+echo -e "$nic" >> "$INTERFACES"
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

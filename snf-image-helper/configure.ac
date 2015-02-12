@@ -61,6 +61,7 @@ fi
 AC_CONFIG_FILES([
     Makefile
     tasks/Makefile
+    networking/Makefile
 ])
 AC_OUTPUT
 

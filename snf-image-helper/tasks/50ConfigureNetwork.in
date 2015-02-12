@@ -1,0 +1,132 @@
+#! /bin/bash
+
+# Copyright (C) 2015 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+### BEGIN TASK INFO
+# Provides:             ConfigureNetwork
+# RunBefore:            EnforcePersonality
+# RunAfter:             InstallUnattend
+# Short-Description:    Configure the VM's network interfaces
+### END TASK INFO
+
+set -e
+. "@commondir@/common.sh"
+
+
+trap task_cleanup EXIT
+report_task_start
+
+# Check if the task should be prevented from running.
+check_if_excluded
+
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
+fi
+
+distro=$(get_base_distro "$SNF_IMAGE_TARGET")
+
+if [ ! -f "@networkingdir@/$distro.sh" ]; then
+    warn "Don't know how to configure the network for this OS"
+    exit 0
+fi
+
+export SNF_IMAGE_TARGET
+
+# Initialize the driver
+"@networkingdir@/$distro.sh" -i
+
+for index in $(seq 0 $((NIC_COUNT-1))); do
+    dhcp=no
+    dhcp6=no
+    ipv4=no
+    ipv6=no
+
+    eval export TYPE=\"\$NIC_${index}_FRONTEND_TYPE\"
+    eval export IP=\"\$NIC_${index}_IP\"
+    eval export LINK=\"\$NIC_${index}_LINK\"
+    eval export MAC=\"\$NIC_${index}_MAC\"
+    eval export MODE=\"\$NIC_${index}_MODE\"
+    eval export NAME=\"\$NIC_${index}_NAME\"
+    eval export GATEWAY=\"\$NIC_${index}_NETWORK_GATEWAY\"
+    eval export GATEWAY6=\"\$NIC_${index}_NETWORK_GATEWAY6\"
+    eval export NETWORK_NAME=\"\$NIC_${index}_NETWORK_NAME\"
+    eval export SUBNET=\"\$NIC_${index}_NETWORK_SUBNET\"
+    eval export SUBNET6=\"\$NIC_${index}_NETWORK_SUBNET6\"
+    eval export TAGS=\"\$NIC_${index}_NETWORK_TAGS\"
+
+   # Relative to the card type index
+    : $((${TYPE}_index++))
+    export ${TYPE}_index
+
+
+    for tag in ${TAGS}; do
+        for dhcp_tag in $SNF_IMAGE_DHCP_TAGS; do
+            if [ "$tag" = "$dhcp_tag" ]; then
+                dhcp=yes
+            fi
+        done
+        for dhcp_tag in $SNF_IMAGE_STATEFUL_DHCPV6_TAGS; do
+            if [ "$tag" = "$dhcp_tag" ]; then
+                dhcp6=stateful
+            fi
+        done
+        for dhcp_tag in $SNF_IMAGE_STATELESS_DHCPV6_TAGS; do
+            if [ "$tag" = "$dhcp_tag" ]; then
+                dhcp6=stateless
+            fi
+        done
+    done
+
+    if [ -n "${IP}" ]; then
+        ipv4=yes
+    fi
+
+    if [ -n "${GATEWAY6}" ]; then
+        ipv6=yes
+    fi
+
+    ARGS="-n $index"
+
+    if [ "$ipv4" = yes ]; then
+        if [ "$dhcp" = yes ]; then
+            ARGS+=" -4 dhcp"
+        else
+            ARGS+=" -4 static"
+        fi
+    fi
+
+    if [ "$ipv6" = yes ]; then
+        if [ "$dhcp6" = stateful ]; then
+            ARGS+=" -6 dhcp"
+        elif [ "$dhcp6" = stateless ]; then
+            ARGS+=" -6 slaac_dhcp"
+        else
+            ARGS+=" -6 slaac"
+        fi
+    fi
+
+    "@networkingdir@/$distro.sh" $ARGS
+
+done
+
+# Finalize the driver
+"@networkingdir@/$distro.sh" -f
+
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
+
