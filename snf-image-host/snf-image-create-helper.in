@@ -31,7 +31,7 @@ usage() {
 Usage: $0 [options]
 
 This script runs multistrap and creates a small Debian image populated with
-the snf-image-helper package. This image is needed for ganeti's \`snf-image'
+the snf-image-helper package. This image is needed for Ganeti's \`snf-image'
 guest OS type to work.
 
 OPTIONS:

@@ -11,6 +11,7 @@ dist_tasks_SCRIPTS = \
 		40SELinuxAutorelabel \
 		50AssignHostname \
 		50ChangePassword \
+		50ConfigureNetwork \
 		50FilesystemResizeMounted \
 		60EnforcePersonality \
 		80UmountImage
@@ -20,6 +21,7 @@ edit = sed \
 	   -e 's|@localstatedir[@]|$(localstatedir)|g' \
 	   -e 's|@datarootdir[@]|$(datarootdir)|g' \
 	   -e 's|@commondir[@]|$(commondir)|g' \
+	   -e 's|@networkingdir[@]|$(networkingdir)|g' \
 	   -e 's|@scriptsdir[@]|$(scriptsdir)|g'
 
 
