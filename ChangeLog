@@ -1,3 +1,11 @@
+2015-03-03, v0.18
+	* HELPER: Auto-detect OSFAMILY and ROOT_PARTITION properties if missing
+	* HELPER: Add new CofigureNetwork image configuration task
+	* Add new DCHP_TAGS, STATEFUL_DHCPV6_TAGS and STATELESS_DHCPV6_TAGS
+	  configuration parameters
+	* Update the documentation
+	* Fix small bugs
+
 2015-01-15, v0.17
 	* Add support for btrfs
 	* Add support for xfs

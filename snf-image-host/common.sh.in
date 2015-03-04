@@ -272,7 +272,7 @@ canonicalize() {
     fi
 }
 
-# this one is only to be called by ganeti OS interface scripts
+# this one is only to be called by Ganeti OS interface scripts
 ganeti_os_main() {
 
     if [ "$OS_API_VERSION" != "20" ]; then
