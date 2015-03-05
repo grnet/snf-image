@@ -194,6 +194,14 @@ users whose passwords will changed is determined by the
 task to run *SNF_IMAGE_TARGET* and *SNF_IMAGE_PASSWD* variables need to be
 present.
 
+**ConfigureNetwork**: Edit the OS's native network configuration files to
+configure the instance's NICs. This works for most Linux and all the supported
+\*BSD systems. In order to do this, all the NIC_* Ganeti provided environment
+variables are exported to the task. The only variable required by this task is
+*SNF_IMAGE_TARGET*. For this task to work correctly, the user may need to
+adjust the *DHCP_TAGS* and the *\*_DHCPV6_TAGS* configuration parameters (see
+:doc:`/configuration`).
+
 **FilesystemResizeMounted**: For Windows VMs this task injects a script into
 the VM's file system that will enlarge the last file system to cover up the
 whole partition. The script will run during the specialize pass of the Windows
@@ -241,6 +249,8 @@ only environment variable required is *SNF_IMAGE_TARGET*.
 |ChangePassword                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_USERS   |
 |                               |   |                  |                         |                         |PROPERTY_OSFAMILY|
 |                               |   |                  |                         |                         |PASSWD           |
++-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
+|ConfigureNetwork               |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |NIC_*            |
 +-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
 |FilesystemResizeMounted        |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY|
 +-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+

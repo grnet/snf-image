@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011-2015 GRNET S.A. 
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     exit 0
 else
 
-    tmpdir="$(env TMPDIR="$SNF_IMAGE_TARGET/tmp" mktemp -d)"
+    tmpdir=$(mktemp -d)
     add_cleanup rm -rf "$tmpdir"
     echo "$SNF_IMAGE_PERSONALITY" |
         @scriptsdir@/inject-files.py -d "$tmpdir"

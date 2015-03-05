@@ -1,0 +1,99 @@
+#! /bin/bash
+
+# Copyright (C) 2015 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+
+set -e
+. "@commondir@/common.sh"
+
+networking_opts "$@"
+
+if [ "$initialize" = yes ]; then
+    exit 0
+fi
+
+if [ "$finalize" = yes ]; then
+    exit 0
+fi
+
+case "$TYPE" in
+    paravirtual)
+        driver=vio
+        driver_index=$paravirtual_index
+        ;;
+    rtl8139)
+        driver=rl
+        driver_index=$rtl8139_index
+        ;;
+    ne2k_isa|ne2k_pci)
+        driver=ne
+        driver_index=$((ne2k_isa_index + ne2k_pci_index))
+        ;;
+    i82551|i82557b|i82559er)
+        driver=fxp
+        driver_index=$((i82551_index + i82557b_index + i82559er_index))
+        ;;
+    pcnet)
+        driver=pcn
+        driver_index=$pcnet_index
+        ;;
+    e1000)
+        driver=em
+        driver_index=$e1000_index
+        ;;
+    *)
+        log_error "Unknown card type: \`$TYPE'"
+esac
+
+index=$((driver_index - 1))
+
+HOSTNAME="$SNF_IMAGE_TARGET/etc/hostname.$driver$index"
+MYGATE="$SNF_IMAGE_TARGET/etc/mygate"
+SYSCTL="$SNF_IMAGE_TARGET/etc/sysctl.conf"
+
+cat /dev/null > "$HOSTNAME"
+
+if [ "$ipv4" = 'static' ]; then
+    echo "inet $IP $(cidr2mask "${SUBNET##*/}") NONE" >> "$HOSTNAME"
+    if [ -n "$GATEWAY" ]; then
+        echo "$GATEWAY" > "$MYGATE"
+    fi
+elif [ "$ipv4" = 'dhcp' ]; then
+    echo "dhcp" >> "$HOSTNAME"
+fi
+
+if [ "$ipv6" != 'none' ]; then
+    sed -i '/^net\.inet6\.icmp6\.rediraccept=/d' "$SYSCTL"
+    echo 'net.inet6.icmp6.rediraccept=1' >> "$SYSCTL"
+
+
+    sed -i '/net\.inet6\.ip6\.accept_rtadv=/d' "$SYSCTL"
+    echo 'net.inet6.ip6.accept_rtadv=1' >> "$SYSCTL"
+fi
+
+if [ "$ipv6" = 'dhcp' ]; then
+    warn "DHCPv6 needs packages from Ports. Not implementing it right now."
+elif [ "$ipv6" = 'slaac' -o "$ipv6" = 'slaac_dhcp' ]; then
+    echo "rtsol -autoconfprivacy" >> "$HOSTNAME"
+fi
+
+if [ "$ipv4" != 'none' -o "$ipv6" != 'none' ]; then
+    echo 'up' >> "$HOSTNAME"
+fi
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

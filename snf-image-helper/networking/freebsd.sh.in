@@ -1,0 +1,98 @@
+#! /bin/bash
+
+# Copyright (C) 2015 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+
+set -e
+. "@commondir@/common.sh"
+
+CONF="$SNF_IMAGE_TARGET/etc/rc.conf"
+
+networking_opts "$@"
+
+if [ "$initialize" = yes ]; then
+    cat "$CONF" > "$CONF.snf_image-$(date +%Y%m%d%H%M%S)-$RANDOM"
+    exit 0
+fi
+
+if [ "$finalize" = yes ]; then
+    exit 0
+fi
+
+case "$TYPE" in
+    paravirtual)
+        driver=vtnet
+        driver_index=$paravirtual_index
+        ;;
+    rtl8139)
+        driver=rl
+        driver_index=$rtl8139_index
+        ;;
+    ne2k_isa|ne2k_pci)
+        driver=ed
+        driver_index=$((ne2k_isa_index + ne2k_pci_index))
+        ;;
+    i82551|i82557b|i82559er)
+        driver=fxp
+        driver_index=$((i82551_index + i82557b_index + i82559er_index))
+        ;;
+    pcnet)
+        driver=pcn
+        driver_index=$pcnet_index
+        ;;
+    e1000)
+        driver=em
+        dirver_index=$e1000_index
+        ;;
+    *)
+        log_error "Unknown card type: \`$TYPE'"
+esac
+
+index=$((driver_index - 1))
+
+tmp_config=$(mktemp)
+add_cleanup rm -f "$tmp_config"
+
+grep -v "ifconfig_$driver$index" "$CONF" > "$tmp_config"
+cat "$tmp_config" > "$CONF"
+
+if [ "$ipv4" = 'static' ]; then
+    echo "ifconfig_$driver$index=\"inet $IP netmask $(cidr2mask "${SUBNET##*/}")\"" >> "$CONF"
+    if [ -n "$GATEWAY" ]; then
+        sed -i '/^defaultrouter=/d' "$CONF"
+        echo "defaultrouter=\"$GATEWAY\"" >> "$CONF"
+    fi
+elif [ "$ipv4" = 'dhcp' ]; then
+    echo "ifconfig_$driver$index=\"DHCP\"" >> "$CONF"
+fi
+
+if [ "$ipv6" != 'none' ]; then
+    sed -i '/^ipv6_enable=/d' "$CONF"
+    echo 'ipv6_enable="YES"' >> "$CONF"
+fi
+
+if [ "$ipv6" = 'dhcp' ]; then
+    echo "ifconfig_$driver${index}_ipv6=\"inet6 -ifdisabled accept_rtadv\"" >> $CONF
+    echo -e "dhcp6c_enable=\"YES\"\ndhcp6c_interfaces=\"$driver$index\"" >> $CONF
+elif [ "$ipv6" = 'slaac' -o "$ipv6" = 'slaac_dhcp' ]; then
+    echo "ifconfig_$driver${index}_ipv6=\"inet6 accept_rtadv\"" >> $CONF
+    sed -i '/^rtsold_enable=/d' "$CONF"
+    echo 'rtsold_enable="YES"' >> "$CONF"
+fi
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

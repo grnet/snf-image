@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012, 2013 GRNET S.A.
+# Copyright (C) 2011-2015 GRNET S.A.
 # Copyright (C) 2007, 2008, 2009 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -506,6 +506,20 @@ bsd2linux() {
     log_error "Couldn't find out mapping for BSD partition: \`$partition' in \`$device'"
 }
 
+cidr2mask() {
+    local zeroes=$((32-$1))
+    local shifts
+    local IFS=.
+    shift
+
+    for i in 1 2 3 4; do
+        ((shifts = zeroes > 8 ? 8 : zeroes))
+        zeroes=$((zeroes - shifts))
+        set $((255 >> shifts << shifts)) "$@"
+    done
+    echo "$*"
+}
+
 find_mount_target() {
     local device
     device="$1"
@@ -618,10 +632,18 @@ umount_all() {
 }
 
 get_ufstype() {
-    local device ufs
+    local device ufs pipefail
 
     device="$1"
+
+    pipefail=$(set -o | grep pipefail | cut -f2)
+    if [ "$pipefail" = on ]; then
+        set +o pipefail
+    fi
     ufs="$($DUMPFS_UFS "$device" | head -1 | awk -F "[()]" '{ for (i=2; i<NF; i+=2) print $i }')"
+    if [ "$pipefail" = on ]; then
+        set -o pipefail
+    fi
 
     case "$ufs" in
         UFS1)
@@ -635,6 +657,142 @@ get_ufstype() {
             echo ""
             ;;
     esac
+}
+
+check_if_root() {
+    local os fd device is_root args exists windows_fs linux_fs freebsd_fs \
+        netbsd_fs openbsd_fs supported_fs
+
+    osfamily="$1"
+    fs="$2"
+    device="$3"
+
+    windows_fs="(ntfs|ntfs-3g|vfat|msdos|fat|fuse|fuseblk)"
+    linux_fs="(ext[234]|xfs|jfs|zfs|btrfs|reiserfs|reiser4)"
+    freebsd_fs="(ufs|zfs)"
+    netbsd_fs="(ufs|zfs)"
+    openbsd_fs="ufs"
+
+    supported_fs="${osfamily}_fs"
+
+    if [ "$fs" = "" ]; then
+        warn "Can't detect a file system on device: \`$device'"
+        return 0
+    fi
+
+    if [[ ! "$fs" =~ ${!supported_fs} ]]; then
+        warn "Ignoring device: \`$device' with file system: \`$fs' when checking for a $osfamily root"
+        return 0
+    fi
+
+    if [ "$fs" = ufs ]; then
+        args="-t ufs -o ufstype=$(get_ufstype "$device"),ro"
+    else
+        args="-o ro"
+    fi
+
+    is_root=no
+    $MOUNT "$device" "$SNF_IMAGE_TARGET" $args || {
+        warn "Unable to mount: \`$device' with file system: \`$fs'"
+        set -e
+        return 0
+    }
+    case "$osfamily" in
+        freebsd|linux)
+            if [ -f "$SNF_IMAGE_TARGET/etc/fstab" ]; then
+                is_root=yes
+            fi
+            ;;
+        windows)
+            exists=$(find "$SNF_IMAGE_TARGET" -maxdepth 1 -iname windows)
+            if [ -n "$exists" -a -d "$exists" ]; then
+                is_root=yes
+            fi
+            ;;
+    esac
+    umount "$SNF_IMAGE_TARGET"
+
+    if [ "$is_root" = yes ]; then
+        export DETECTED_OSFAMILY="$osfamily"
+    fi
+}
+
+examine_msdos_partition() {
+    local dev part
+    dev="$1"
+    part="$2"
+
+    num=$(cut -f1 -d: <<< "$part")
+    id=$($SFDISK --force --print-id "$dev" "$num") || true
+    fs=$($BLKID -s TYPE -o value "$dev$num") || true
+
+    case "$id" in
+        a5)
+            export DETECTED_OSFAMILY=freebsd
+            ;;
+        a6)
+            export DETECTED_OSFAMILY=openbsd
+            ;;
+        a9)
+            export DETECTED_OSFAMILY=netbsd
+            ;;
+        7) # looks like Windows
+            check_if_root windows "$fs" "$dev$num"
+            ;;
+        83) # looks like Linux
+            check_if_root linux "$fs" "$dev$num"
+            ;;
+    esac
+
+    if [ -n "$DETECTED_OSFAMILY" ]; then
+        export DETECTED_ROOT_PARTITION="$num"
+    fi
+}
+
+examine_gpt_partition() {
+    local dev part ufs_type
+    dev="$1"
+    part="$2"
+
+    # It's OK if some of those fail
+    num=$(cut -f1 -d: <<< "$part")
+    fs=$($BLKID -s TYPE -o value "$dev$num") || true
+    id=$($SGDISK -i "$num" "$dev" | \
+         grep "^Partition GUID code:" | \
+         cut -f2 -d: | \
+         awk '{print $1}') || true
+
+    case "$id" in
+        516E7CB6-6ECF-11D6-8FF8-00022D09712B) # FreeBSD
+            check_if_root freebsd "$fs" "$dev$num"
+            ;;
+        EBD0A0A2-B9E5-4433-87C0-68B6B72699C7) # Windows
+            check_if_root windows "$fs" "$dev$num"
+            ;;
+        *) # Linux does not respect the Partition GUID code at all
+            check_if_root linux "$fs" "$dev$num"
+            ;;
+    esac
+
+    if [ -n "$DETECTED_OSFAMILY" ]; then
+        export DETECTED_ROOT_PARTITION="$num"
+    fi
+}
+
+detect_image_properties() {
+    local dev table
+    dev="$1"
+
+    table=$(get_partition_table "$dev")
+    pttype=$(get_partition_table_type "$table")
+
+    partitions=$(tail -n +3 <<< "$table")
+    for part in $partitions; do
+        "examine_${pttype}_partition" "$dev" "$part"
+        if [ -n "$DETECTED_OSFAMILY" -a -n "$DETECTED_ROOT_PARTITION" ]; then
+            break
+        fi
+    done
 }
 
 cleanup() {
@@ -695,6 +853,58 @@ check_if_excluded() {
 
 return_success() {
     send_result_${HYPERVISOR} "SUCCESS"
+}
+
+networking_opts() {
+    local usage="$0 [-i | -f | -n  <index>] [-4 (dhcp|static)] [-6 (dhcp|slaac|slaac_dhcp)]"
+    ipv4=none
+    ipv6=none
+    index=
+    initialize=no
+    finalize=no
+
+    while getopts "h?ifn:4:6:" opt; do
+        case "$opt" in
+        h|\?)
+            echo $usage >&2
+            exit 0
+            ;;
+        i)  initialize=yes
+            ;;
+        f)  finalize=yes
+            ;;
+        n)  index=$OPTARG
+            ;;
+        4)  ipv4=$OPTARG
+            ;;
+        6)  ipv6=$OPTARG
+            ;;
+        esac
+    done
+
+    if [ -z "$index" -a "$initialize" = no -a "$finalize" = no ]; then
+        log_error "Either -i, -f or -n must be specified"
+    fi
+
+    if [ "$initialize" = yes -a "$finalize" = yes ]; then
+        log_error "-i and -f should not be both specified"
+    fi
+
+    if [[ "$index" && ("$initialize" == yes || "$finalize" == yes) ]]; then
+        log_error "-n cannot be combined with -i or -f"
+    fi
+
+    if [[ ! "$ipv4" =~ (dhcp|static|none) ]]; then
+        log_error "invalid ipv4: $ipv4"
+    fi
+
+    if [[ ! "$ipv6" =~ (dhcp|slaac|slaac_dhcp|none) ]]; then
+        log_error "invalid ipv6: $ipv6"
+    fi
+
+    if [[ (! "$index" =~ ^[0-9]+$) && "$prepare" = no ]]; then
+        log_error "invalid index: $index"
+    fi
 }
 
 trap cleanup EXIT
