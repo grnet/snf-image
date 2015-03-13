@@ -70,7 +70,8 @@ echo -e "DEVICE=eth${index}\nONBOOT=yes\nHWADDR=$MAC" > "$IFCFG"
 echo "NM_CONTROLLED=yes" >> "$IFCFG"
 
 if [ "$ipv4" = 'static' ]; then
-    echo -e "BOOTPROTO=static\nIPADDR=$IP\nNETMASK=$(cidr2mask "${SUBNET##*/}")" >> "$IFCFG"
+    netmask=$(cidr2mask "${SUBNET##*/}")
+    echo -e "BOOTPROTO=static\nIPADDR=$IP\nNETMASK=$netmask" >> "$IFCFG"
 elif [ "$ipv4" = 'dhcp' ]; then
     echo -e "BOOTPROTO=dhcp" >> "$IFCFG"
 else

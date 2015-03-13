@@ -92,6 +92,11 @@ for index in $(seq 0 $((NIC_COUNT-1))); do
         done
     done
 
+    # If the subnet is missing, the card cannot be configure in a static way
+    if [ -z "${SUBNET}" ]; then
+        dhcp=yes
+    fi
+
     if [ -n "${IP}" ]; then
         ipv4=yes
     fi
