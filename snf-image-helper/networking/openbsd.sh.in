@@ -69,7 +69,8 @@ SYSCTL="$SNF_IMAGE_TARGET/etc/sysctl.conf"
 cat /dev/null > "$HOSTNAME"
 
 if [ "$ipv4" = 'static' ]; then
-    echo "inet $IP $(cidr2mask "${SUBNET##*/}") NONE" >> "$HOSTNAME"
+    netmask=$(cidr2mask "${SUBNET##*/}")
+    echo "inet $IP $netmask NONE" >> "$HOSTNAME"
     if [ -n "$GATEWAY" ]; then
         echo "$GATEWAY" > "$MYGATE"
     fi

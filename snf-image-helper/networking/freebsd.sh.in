@@ -72,7 +72,8 @@ grep -v "ifconfig_$driver$index" "$CONF" > "$tmp_config"
 cat "$tmp_config" > "$CONF"
 
 if [ "$ipv4" = 'static' ]; then
-    echo "ifconfig_$driver$index=\"inet $IP netmask $(cidr2mask "${SUBNET##*/}")\"" >> "$CONF"
+    netmask=$(cidr2mask "${SUBNET##*/}")
+    echo "ifconfig_$driver$index=\"inet $IP netmask $netmask\"" >> "$CONF"
     if [ -n "$GATEWAY" ]; then
         sed -i '/^defaultrouter=/d' "$CONF"
         echo "defaultrouter=\"$GATEWAY\"" >> "$CONF"
