@@ -1,3 +1,6 @@
+2015-03-13, v0.18.1
+	* HELPER: Fix a bug in ConfigureNetwork task that caused a syntax error
+	  if the SUBNET was missing for a NIC
 2015-03-03, v0.18
 	* HELPER: Auto-detect OSFAMILY and ROOT_PARTITION properties if missing
 	* HELPER: Add new CofigureNetwork image configuration task

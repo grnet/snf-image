@@ -73,7 +73,8 @@ if [ "$ipv4" != none -o "$ipv6" != none ]; then
 fi
 
 if [ "$ipv4" = 'static' ]; then
-    echo "inet $IP netmask $(cidr2mask "${SUBNET##*/}")" >> "$IFCONFIG"
+    netmask=$(cidr2mask "${SUBNET##*/}")
+    echo "inet $IP netmask $netmask" >> "$IFCONFIG"
     if [ -n "$GATEWAY" ]; then
         sed -i '/^defaultroute=/d' "$RC_CONF"
         echo "defaultroute=$GATEWAY" >> "$RC_CONF"
