@@ -13,6 +13,8 @@ following OS Parameters:
    the image (:ref:`details <image-id>`)
  * **img_passwd** (optional): the password to be injected into the image
    (:ref:`details <image-passwd>`)
+ * **img_passwd_hash** (optional): the hash of the password to be injected into
+   the image (:ref:`details <image-passwd-hash>`)
  * **img_properties** (optional): additional image properties used to customize
    the image (:ref:`details <image-properties>`)
  * **img_personality** (optional): files to be injected into the image's file
@@ -89,8 +91,22 @@ Image Password (img_passwd)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The value of this parameter is the password to be injected into the image. If
-this parameter is not set at all, then the *ChangePassword* task (see
+this parameter is not set at all and **img_passwd_hash** is missing too, then
+the *ChangePassword* task (see
 :ref:`Image Configuration Tasks <image-configuration-tasks>`) will not run.
+This parameter cannot be defined in conjunction with **img_passwd_hash**.
+
+.. _image-passwd-hash:
+
+Image Password Hash (img_passwd_hash)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The value of this parameter is the hash of the password to be injected into the
+image. If this parameter is not set at all and **img_passwd** is missing too,
+then the *ChangePassword* task (see
+:ref:`Image Configuration Tasks <image-configuration-tasks>`) will not run.
+This parameter is not applicable on Windows images and cannot be defined in
+conjunction with **img_passwd**.
 
 .. _image-properties:
 
