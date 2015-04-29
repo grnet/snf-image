@@ -32,6 +32,7 @@ report_task_start
 
 # Check if the task should be prevented from running.
 check_if_excluded
+check_if_mounted_excluded
 
 windows_hostname() {
     local target password unattend tmp_unattend namespace

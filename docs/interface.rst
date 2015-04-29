@@ -197,6 +197,11 @@ All image formats properties
    because it gives the ability to deploy images hosting operating systems
    whose configuration is not supported by *snf-image*.
 
+ * **EXCLUDE_MOUNTED_TASKS=yes**
+   If this property is defined, then only the tasks that are meant to run
+   before the VM's disk gets mounted (namely *FixPartitionTable* and
+   *FilesystemResizeUmounted*) will be allowed to run during deployment.
+
  * **EXCLUDE_TASK_<task_name>=yes**
    This family of properties gives the ability to exclude individual
    configuration tasks from running. Hence, if the property

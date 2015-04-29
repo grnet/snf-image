@@ -851,6 +851,15 @@ check_if_excluded() {
     return 0
 }
 
+check_if_mounted_excluded() {
+    if [ -n "$SNF_IMAGE_PROPERTY_EXCLUDE_MOUNTED_TASKS" ]; then
+        warn "Task ${PROGNAME:2} was excluded and will not run."
+        exit 0
+    fi
+
+    return 0
+}
+
 return_success() {
     send_result_${HYPERVISOR} "SUCCESS"
 }
