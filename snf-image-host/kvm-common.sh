@@ -1,4 +1,4 @@
-# Copyright (C) 2013 GRNET S.A.
+# Copyright (C) 2013, 2015 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,15 +33,24 @@ launch_helper() {
 
     set +e
 
+    if [ "x$HELPER_DEBUG" = "xyes" ]; then
+        HELPER_DEBUG_ARG="snf_image_debug_helper"
+    else
+        HELPER_DEBUG_ARG=""
+    fi
+
+
     $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
       $KVM -runas "$HELPER_USER" -drive file="$HELPER_DIR/image",format=raw,if=virtio,readonly \
       -drive file="$blockdev",format=raw,if=virtio,cache=none -m "$HELPER_MEMORY" \
       -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
       -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
+      -serial pty \
       -drive file="$floppy",if=floppy -vga none -nographic -parallel none -monitor null \
       -kernel "$HELPER_DIR/kernel" -initrd "$HELPER_DIR/initrd" \
       -append "quiet ro root=/dev/vda console=ttyS0,9600n8 \
              hypervisor=$HYPERVISOR snf_image_activate_helper \
+             $HELPER_DEBUG_ARG \
 	     rules_dev=/dev/fd0 init=/usr/bin/snf-image-helper" \
       2>&1 | sed -u 's|^|HELPER: |g'
 

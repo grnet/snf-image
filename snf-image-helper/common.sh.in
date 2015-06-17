@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2015 GRNET S.A.
+# Copyright (C) 2011-2015 GRNET S.A. and individual contributors
 # Copyright (C) 2007, 2008, 2009 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -78,6 +78,23 @@ send_result_xen() {
 send_monitor_message_xen() {
     #Broadcast the message
     echo "$@" | socat "STDIO" "UDP-DATAGRAM:${BROADCAST}:${MONITOR_PORT},broadcast"
+}
+
+start_debug_shell_kvm() {
+    local dev="/dev/ttyS3"
+
+    echo "Starting a debug shell on \`$dev'"
+    echo "See Ganeti logs for /dev/pts/X device to use on host."
+    bash <$dev >$dev 2>&1
+    echo "Returned from debug shell, resuming..."
+}
+
+start_debug_shell_xen() {
+    echo "Cannot start a debug shell on Xen. Feature not yet supported."
+}
+
+start_debug_shell() {
+    start_debug_shell_${HYPERVISOR}
 }
 
 prepare_helper() {
@@ -834,8 +851,12 @@ task_cleanup() {
        report_task_end
     else
        report_error
+       # If in debug mode, drop to a shell and let a developer figure it out
+       if grep -q snf_image_debug_helper /proc/cmdline; then
+           echo "Failed. In debug mode, dropping to a shell."
+           start_debug_shell
+       fi
     fi
-
     cleanup
 }
 
