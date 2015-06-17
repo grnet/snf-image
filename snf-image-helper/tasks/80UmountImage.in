@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,12 +37,17 @@ fi
 umount_all "$SNF_IMAGE_TARGET"
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
-    # Sleep for a second after umounting Windows file systems just to be on
-    # the safe side. The NTFS driver is over fuse and umount with fuse is not
-    # synchronous. Since the helper VM gets killed using a sysrq call, there
-    # is a 0.0000000001% possibility that the altered data are not written back
-    # to the disk when the OS dies, unless you wait a little bit.
-    sleep 1
+    # Ensure any NTFS-3G processes are gone after umounting NTFS.
+    # Otherwise, we run the risk of continuing while data may still be
+    # written to the underlying block device.
+    # The NTFS driver is over fuse and umount with fuse is not synchronous.
+    echo "Waiting until no NTFS-3G mount processes remain..."
+    while pgrep -f 'mount.*ntfs' >/dev/null; do
+        echo "NTFS-3G mount processes still remain:"
+        pgrep -f 'mount.*ntfs'
+        echo "Sleeping for 1s..."
+        sleep 1
+    done
 fi
 
 exit 0

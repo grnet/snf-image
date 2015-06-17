@@ -190,6 +190,12 @@ report_task_end() {
 }
 
 system_poweroff() {
+    # Sync everything to disk and sleep for a second before powering off.
+    # Do this to ensure data has hit the disk, since we are about to
+    # kill the helper VM with a sysrq call.
+    sync
+    sleep 1
+
     while [ 1 ]; do
         # Credits to psomas@grnet.gr for this ...
         echo o > /proc/sysrq-trigger
