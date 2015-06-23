@@ -6,9 +6,9 @@ dist_tasks_SCRIPTS = \
 		30MountImage \
 		40AddSwap \
 		40DeleteSSHKeys \
-		40DisableRemoteDesktopConnections \
 		40InstallUnattend \
 		40SELinuxAutorelabel \
+		41DisableRemoteDesktopConnections \
 		50AssignHostname \
 		50ChangePassword \
 		50ConfigureNetwork \

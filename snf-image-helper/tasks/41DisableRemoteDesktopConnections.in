@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,9 +27,16 @@
 #
 # This task will change the value of `fDenyTSConnection' registry key located
 # under `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\'
-# to "true". This will disable RDP connections. The key will change back to
-# "false" during the specialize pass of the Windows setup.
+# to "true". This will disable RDP connections.
+
+# We assume that the key will change back to "false" during the specialize
+# pass of the Windows setup via an appropriate <RunSynchronousCommand>
+# entry in the unattend.xml or similar answer file for SYSPREP.
 #
+# TODO: Stop relying on specific entries in unattend.xml, which may
+# have been heavily customized for a specific Image. Instead, insert the
+# required # entry to re-enable RDP explicitly, and only if it was previously
+# enabled.
 
 set -e
 . "@commondir@/common.sh"
