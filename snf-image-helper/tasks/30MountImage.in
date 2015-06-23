@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -60,6 +60,31 @@ if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" == *bsd ]]; then
 
     # See mount_all() for a reason why we do this
     $MOUNT -o remount,rw "$SNF_IMAGE_TARGET"
+elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
+    # Special case for Windows:
+    # Perform a case-insensitive, all-lowercase mount with 'lowntfs-3g'
+    # to avoid problems with different case between installations,
+    # e.g., C:\WINDOWS vs. C:\Windows, and simplify path lookups.
+    #
+    NTFS_OPTS="ignore_case,windows_names,rw"
+
+    # Be extra safe: Warn when attempting to work on a dirty NTFS.
+    # In the future, it would be best to reject the Image outright.
+    if ! $NTFSINFO -m "$rootdev"; then
+        warn "Failed to get NTFS info, fs may be dirty (scheduled for CHKDSK)."
+        warn "Please fix your Image. Future versions will refuse to continue."
+    fi
+
+    if ! $MOUNT -t lowntfs-3g -o "$NTFS_OPTS,norecover" "$rootdev" \
+        "$SNF_IMAGE_TARGET"; then
+        warn "Failed to mount NTFS, fs may be unclean and need recovery."
+        warn "Please fix your Image. Future versions will refuse to continue."
+        # It would be best to fail here. NTFS-3G based recovery
+        # is based on wiping off the NTFS journal instead of replaying it,
+        # and may lead to data corruption.
+        warn "Attempting to mount NTFS again (allowing unclean filesystem)"
+        $MOUNT -t lowntfs-3g -o "$NTFS_OPTS" "$rootdev" "$SNF_IMAGE_TARGET"
+    fi
 else
     $MOUNT -o rw "$rootdev" "$SNF_IMAGE_TARGET"
 fi

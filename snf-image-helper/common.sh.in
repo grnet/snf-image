@@ -41,6 +41,7 @@ HIVEXGET=hivexget
 HIVEXREGEDIT=hivexregedit
 BTRFS=btrfs
 XFS_GROWFS=xfs_growfs
+NTFSINFO=ntfsinfo
 
 CLEANUP=( )
 ERRORS=( )
@@ -502,16 +503,17 @@ get_last_free_sector() {
 }
 
 get_unattend() {
-    local target exists
+    local target
     target="$1"
 
-    # Workaround to search for $target/Unattend.xml in an case insensitive way.
-    exists=$(find "$target"/ -maxdepth 1 -iregex ".*/\(auto\)?unattend\.xml" )
-    if [ $(wc -l <<< "$exists") -gt 1 ]; then
-        log_error "Found multiple Unattend.xml files in the image:" $exists
-    fi
-
-    echo "$exists"
+    # TODO: Take into account the precise answer file search order defined in
+    # https://technet.microsoft.com/en-us/library/cc749415(v=ws.10).aspx
+    for unattend in "$target/unattend.xml" "$target/autounattend.xml"; do
+        if [ -f "$unattend" ]; then
+            echo "$unattend"
+            break
+        fi
+    done
 }
 
 bsd2linux() {
