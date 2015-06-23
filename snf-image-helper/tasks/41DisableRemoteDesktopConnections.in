@@ -25,18 +25,15 @@
 ### END TASK INFO
 
 #
-# This task will change the value of `fDenyTSConnection' registry key located
+# This task will change the value of `fDenyTSConnections' registry key located
 # under `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\'
-# to "true". This will disable RDP connections.
-
-# We assume that the key will change back to "false" during the specialize
-# pass of the Windows setup via an appropriate <RunSynchronousCommand>
-# entry in the unattend.xml or similar answer file for SYSPREP.
+# to "true". This will disable RDP connections while the machine is being
+# set up by SYSPREP upon first boot.
 #
-# TODO: Stop relying on specific entries in unattend.xml, which may
-# have been heavily customized for a specific Image. Instead, insert the
-# required # entry to re-enable RDP explicitly, and only if it was previously
-# enabled.
+# When Setup is complete, the task ensures the value of `fDenyTSConnections'
+# is not set unconditionally to False, but is re-set to its original value
+# instead, thus preserving Image-specific policy of whether RDP is enabled
+# or not.
 
 set -e
 . "@commondir@/common.sh"
@@ -64,12 +61,16 @@ fi
 # Pad the value with zeros
 current=$(printf "%03d" "$current")
 
-#The current '\SYSTEM\CurrentContolSet\Control\Terminal Server' values
+# The current '\SYSTEM\CurrentContolSet\Control\Terminal Server' values
 values=$($HIVEXGET "$hive" "ControlSet${current}\Control\Terminal Server")
 
-# Remove fDenyTSConnections if present
+# Get current value of fDenyTSConnections, if one exists
+curval=$(grep ^'"fDenyTSConnections"=' <<< "$values"|cut -f2 -d:)
+
+# Then remove it from the list of values, if present
 values=$(grep -v ^'"fDenyTSConnections"=' <<< "$values")
 
+# and readd it with a value of 1
 regfile=$(mktemp)
 add_cleanup rm "$regfile"
 
@@ -83,6 +84,16 @@ $values
 EOF
 
 $HIVEXREGEDIT --merge "$hive" "$regfile"
+
+# Ensure the value of fDenyTSConnections is re-set
+# to its original Image-specific state after Setup has completed.
+
+# TODO: Remove any snf-image specific <RunSynchronousCommand>
+# segments from unattend.xml, since this task is now self-standing.
+
+curval=$(printf "%d" "$curval")
+echo "reg add \"HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\" /f /v fDenyTSConnections /t REG_DWORD /d $curval" >> \
+    "$SNF_IMAGE_TARGET/Windows/Setup/Scripts/SetupComplete.cmd"
 
 exit 0
 
