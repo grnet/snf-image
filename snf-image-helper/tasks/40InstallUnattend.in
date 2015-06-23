@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -63,6 +63,10 @@ else
     fi
 fi
 
+# FIXME: There is no guarantee the answer file is actually named
+# C:\unattend.xml. These may have to be modified to use the actual
+# name of the answer file, as returned by get_unattend().
+
 echo "del /Q /F C:\unattend.xml" > \
         "$target/Windows/Setup/Scripts/SetupComplete.cmd"
 
@@ -85,6 +89,44 @@ echo "del /Q /F C:\Windows\SnfScripts\ChangeAdminPassword.cmd" >> \
 
 echo "rmdir C:\Windows\SnfScripts" >> \
         "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+# If using an old-style (XP / Server 2003) SYSPREP.INF answer file,
+# ensure C:\SnfScripts\SetupComplete.cmd is executed via CmdLines.txt
+# which must be installed in the InstalledfilesPath from SYSPREP.INF.
+sysprepinf=$(get_sysprepinf "$target")
+if [ -n "$sysprepinf" ]; then
+    h=@scriptsdir@/handle-ini-file.py
+    installfilespath=$($h "$sysprepinf" get Unattended InstallFilesPath)
+    if [ -z "$installfilespath" ]; then
+        # Set InstallFilesPath to C:\SYSPREP\i386 explicitly, if missing
+        $h "$sysprepinf" set Unattended InstallFilesPath 'C:\SYSPREP\i386'
+        installfilespath=$($h "$sysprepinf" get Unattended InstallFilesPath)
+    fi
+    if [ -z "$installfilespath" ]; then
+        log_error "Failed to get value of InstallFilesPath in SYSPREP.INF"
+    fi
+    installfilespath=$(tr [A-Z] [a-z] <<< "$installfilespath")
+
+    if [[ ! "$installfilespath" == 'c:\sysprep\'* ]]; then
+        log_error "InstallFilesPath from SYSPREP.INF not under C:\\SYSPREP\\"
+    fi
+    installfilespath=${installfilespath#'c:\sysprep\'}
+    installfilespath=$(echo "$installfilespath"|sed 's/\\/\//g')
+
+    # Ensure final location for InstallFilesPath is still under $target
+    oemdir="$target"/sysprep/"$installfilespath"/'$OEM$'
+    if ! readlink -f "$oemdir"|grep -q "^$target"; then
+        log_error "Invalid value for InstallFilesPath in SYSPREP.INF"
+    fi
+
+    mkdir -p "$oemdir"
+    cmdlinestxt="$oemdir"/CmdLines.txt
+    if [ ! -f "$cmdlinestxt" ]; then
+        echo "[Commands]" >"$cmdlinestxt"
+    fi
+    echo "\"C:\\Windows\\SnfScripts\\ChangeAdminPassword.cmd\"" >>"$cmdlinestxt"
+    echo "\"C:\\Windows\\Setup\\Scripts\\SetupComplete.cmd\"" >>"$cmdlinestxt"
+fi
 
 exit 0
 

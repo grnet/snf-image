@@ -504,6 +504,19 @@ get_last_free_sector() {
     fi
 }
 
+get_sysprepinf() {
+    local target
+    target="$1"
+
+    # Return position of old-style (XP / Server 2003) answer file,
+    # C:\SYSPREP\SYSPREP.INF, if found.
+    sysprepinf="$target"/sysprep/sysprep.inf
+    if [ ! -f "$sysprepinf" ]; then
+        sysprepinf=""
+    fi
+    echo "$sysprepinf"
+}
+
 get_unattend() {
     local target
     target="$1"
