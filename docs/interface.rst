@@ -154,6 +154,23 @@ All image formats properties
    exists in the above-mentioned location. For more information on "answer
    files" please refer to :ref:`windows-deployment`.
 
+ * **OFFLINE_NTFSRESIZE**
+   When deploying a Windows Image, perform an offline NTFS resize, instead
+   of setting up the Unattend.xml file so SYSPREP executes a custom DISKPART
+   script to perform an online resize during the first boot. Note NTFS is
+   left dirty and will be checked automatically on first boot when performing
+   an offline NTFS resize. Define the *OFFLINE_NTFSRESIZE_NOCHECK* property
+   to a non-empty value to disable this behavior (this is dangerous).
+   For more information on "answer files" please refer to
+   :ref:`windows-deployment`.
+
+ * **OFFLINE_NTFSRESIZE_NOCHECK**
+   Set this property to a non-empty value to skip the NTFS check performed by
+   Windows upon the first boot when performing an offline NTFS resize (see the
+   *OFFLINE_NTFSRESIZE* property). Skipping the initial filesystem check is
+   dangerous, as it may lead to bugs of the offline NTFS resize procedure going
+   undetected.
+
  * **PASSWD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
    This property can be used on Unix instances to specify the method to be used
    to hash the users password. By default this is determined by the type of the

@@ -42,6 +42,8 @@ HIVEXREGEDIT=hivexregedit
 BTRFS=btrfs
 XFS_GROWFS=xfs_growfs
 NTFSINFO=ntfsinfo
+NTFSRESIZE=ntfsresize
+NTFSFIX=ntfsfix
 
 CLEANUP=( )
 ERRORS=( )
