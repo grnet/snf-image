@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011-2015 GRNET S.A.
+# Copyright (C) 2011-2016 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -104,10 +104,9 @@ case $BACKEND_TYPE in
         image_size="$(stat -L -c %s "$image_file")"
         ;;
     null)
-        image_file=/dev/null
+        # Since image copy will be skipped, image_size is the only var
+        # needed (see monitor command below)
         image_size=0
-        # Treat it as local file from now on...
-        BACKEND_TYPE="local"
         ;;
     network)
         image_cmd="$CURL $(printf "%q" "$IMAGE_NAME")"
@@ -165,7 +164,9 @@ esac
 
 report_info "Starting image copy..."
 monitor="./copy-monitor.py -o $MONITOR_FD -r $image_size"
-if [ "$BACKEND_TYPE" = "local" ]; then
+if [ "$BACKEND_TYPE" = "null" ]; then
+    report_info "Skipping image copy since no image provided (IMG_ID=null)..."
+elif [ "$BACKEND_TYPE" = "local" ]; then
     # dd the dump to its new home :-)
     # Deploying an image file on a target block device is a streaming copy
     # operation. Enable the direct I/O flag on the output fd to avoid polluting
