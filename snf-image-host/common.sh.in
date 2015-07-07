@@ -126,6 +126,7 @@ get_api10_arguments() {
         exit 1
     fi
     old_name=$OLD_INSTANCE_NAME
+    disk_type=$INSTANCE_HV_disk_type
 }
 
 get_api20_arguments() {
