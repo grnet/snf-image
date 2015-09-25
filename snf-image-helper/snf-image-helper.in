@@ -98,7 +98,7 @@ if [ -z "$RUN_PARTS" ]; then
     log_error "run-parts program is missing from the system"
 fi
 
-if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
+if ! check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS; then
 
     if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "" -o "$SNF_IMAGE_PROPERTY_ROOT_PARTITION" = "" ]; then
         warn "Needed image properties are missing. Autodetecting them..."
@@ -149,7 +149,7 @@ if [ -z "$SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS" ]; then
     # Reset the handler to its original value
     trap report_error ERR
 else
-    warn "EXCLUDE_ALL_TASKS: All configuration tasks were prevented from running."
+    warn "EXCLUDE_ALL_TASKS is set. All configuration tasks were prevented from running."
 fi
 
 

@@ -839,11 +839,40 @@ task_cleanup() {
     cleanup
 }
 
+check_yes_no() {
+    local name value
+    name="${1}"
+
+    if [ -z "${!name+dummy}" ]; then
+        # variable is not defined at all
+        return 1
+    fi
+
+
+    # lowercase value
+    value="${!name,,}"
+
+    # Remove the SNF_IMAGE_PROPERTY_ prefix from the name when displaying it.
+    name="${name#SNF_IMAGE_PROPERTY_}"
+
+    if [[ "$value" =~ ^(yes|true|on|1|set)$ ]]; then
+        return 0
+    elif  [[ "$value" =~ ^(no|false|off|0|unset)$ ]]; then
+        return 1
+    elif [ -z "$value" ]; then
+        warn "Variable \`$name' defined but empty. Will treat this as a \`NO'"
+        return 1
+    else
+        warn "Invalid value for variable: \`$name' (=$value). Will treat this as a \`YES'"
+        return 0
+    fi
+}
+
 check_if_excluded() {
     local name exclude
     name="$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
     exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${name}"
-    if [ -n "${!exclude}" ]; then
+    if check_yes_no "$exclude"; then
         warn "Task ${PROGNAME:2} was excluded and will not run."
         exit 0
     fi
@@ -852,7 +881,7 @@ check_if_excluded() {
 }
 
 check_if_mounted_excluded() {
-    if [ -n "$SNF_IMAGE_PROPERTY_EXCLUDE_MOUNTED_TASKS" ]; then
+    if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_MOUNTED_TASKS; then
         warn "Task ${PROGNAME:2} was excluded and will not run."
         exit 0
     fi
