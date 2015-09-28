@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011-2015 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ HOST_KEY="/etc/ssh/ssh_host_key"
 RSA_KEY="/etc/ssh/ssh_host_rsa_key"
 DSA_KEY="/etc/ssh/ssh_host_dsa_key"
 ECDSA_KEY="/etc/ssh/ssh_host_ecdsa_key"
+ED25519_KEY="/etc/ssh/ssh_host_ed25519_key"
 
 target="$SNF_IMAGE_TARGET"
 
@@ -58,21 +59,31 @@ if [ "x$distro" = "xdebian" ]; then
     add_cleanup umount "$target/proc"
     mount -o bind /dev "$target/dev"
     add_cleanup umount "$target/dev"
+    # Make sure that doing dpkg-reconfigure openssh-server will not try to
+    # start the service
+    if [ -f "$target/usr/sbin/policy-rc.d" ]; then
+        tmp="$target/usr/sbin/policy-rc.d.snf_image-$RANDOM"
+        mv "$target/usr/sbin/policy-rc.d" "$tmp"
+        add_cleanup mv "$tmp" "$target/usr/sbin/policy-rc.d"
+    fi
+    echo exit 101 > "$target/usr/sbin/policy-rc.d"
+    chmod +x "$target/usr/sbin/policy-rc.d"
+    add_cleanup rm -f "$target/usr/sbin/policy-rc.d"
 fi
 
-#Remove the default keys
-for pair in "$HOST_KEY@rsa1" "$RSA_KEY@rsa" "$DSA_KEY@dsa" "$ECDSA_KEY@ecdsa"; do
-    key=$(echo $pair | cut -d@ -f1)
-    key_type=$(echo $pair | cut -d@ -f2)
-    if [ -e "$target/$key" ]; then
-        rm -f "$target/$key"{,.pub}
-        if [ "x$distro" = "xdebian" ]; then
-            chroot "$target" \
-                env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
-                ssh-keygen -t $key_type -q -N '' -f "$key"
-        fi
+# Remove the default keys
+rm -v -f "$target"/etc/ssh/ssh_host_*
+
+# For Debian/Ubuntu we need to recreate them
+if [ "x$distro" = "xdebian" ]; then
+    # This check will still succeed, if the package is deinstalled but not
+    # purged, but let's stop being too paranoid...
+    if grep "Package: openssh-server"  "$target/var/lib/dpkg/status" &> /dev/null; then
+        chroot "$target" \
+            env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+            dpkg-reconfigure -fnoninteractive -pcritical openssh-server
     fi
-done
+fi
 
 config="$target/etc/ssh/sshd_config"
 if [ ! -e "$config" ]; then
@@ -85,7 +96,7 @@ fi
 { grep ^HostKey "$config" || true; } | while read key_line; do
     key=$(echo $key_line | cut -d" " -f2)
     if [ "$key" = $HOST_KEY -o "$key" = $RSA_KEY -o \
-            "$key" = $DSA_KEY -o "$key" = $ECDSA_KEY ]; then
+            "$key" = $DSA_KEY -o "$key" = $ECDSA_KEY -o "$key" = $ED25519_KEY ]; then
         continue
     fi
 
@@ -99,12 +110,14 @@ fi
                 type=ecdsa
             elif grep -e "-----BEGIN RSA PRIVATE KEY-----" "$target/$key" > /dev/null; then
                 type=rsa
+            elif grep -e "-----BEGIN OPENSSH PRIVATE KEY-----" "$target/$key" > /dev/null; then
+                type=ed25519
             elif grep -e "SSH PRIVATE KEY FILE FORMAT" "$target/$key" > /dev/null; then
                 type=rsa1
             fi
         else # do some guessing...
-            for i in rsa dsa ecdsa; do
-                if echo "$key" | grep _${i}_ > /dev/null; then
+            for i in rsa dsa ecdsa ed25519; do
+                if [[ "$key" =~  _${i}_ ]]; then
                     type="$i";
                     break;
                 fi
