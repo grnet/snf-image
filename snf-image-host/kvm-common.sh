@@ -1,4 +1,4 @@
-# Copyright (C) 2013 GRNET S.A.
+# Copyright (C) 2013-2015 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,15 +15,23 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-get_img_dev() {
-	echo /dev/vdb
+assign_disk_devices_to() {
+    local varname
+    varname="$1"
+
+    eval $varname=\(\)
+
+    set -- b c d e f g h e j k l m n
+
+    for ((i = 0; i < DISK_COUNT; i++)); do
+        eval $varname+=\(\"/dev/vd$1\"\); shift
+    done
 }
 
 launch_helper() {
-	local result_file result snapshot rc floppy blockdev
+    local result_file result snapshot rc floppy i disk_path disks
 
-    blockdev="$1"
-    floppy="$2"
+    floppy="$1"
 
     result_file=$(mktemp result.XXXXXX)
     add_cleanup rm "$result_file"
@@ -31,12 +39,19 @@ launch_helper() {
     report_info "Starting customization VM..."
     echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM START" >&2
 
+    disks=""
+    for ((i=0; i < DISK_COUNT; i++)); do
+        eval disk_path=\"\$DISK_${i}_PATH\"
+        disks+=" -drive file=$disk_path,format=raw,if=virtio,cache=none"
+    done
+
     set +e
 
     $TIMEOUT -k "$HELPER_HARD_TIMEOUT" "$HELPER_SOFT_TIMEOUT" \
-      $KVM -runas "$HELPER_USER" -drive file="$HELPER_DIR/image",format=raw,if=virtio,readonly \
-      -drive file="$blockdev",format=raw,if=virtio,cache=none -m "$HELPER_MEMORY" \
-      -boot c -serial stdio -serial "file:$(printf "%q" "$result_file")" \
+      $KVM -runas "$HELPER_USER" \
+      -drive file="$HELPER_DIR/image",format=raw,if=virtio,readonly \
+      $disks -m "$HELPER_MEMORY" -boot c -serial stdio \
+      -serial "file:$(printf "%q" "$result_file")" \
       -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
       -drive file="$floppy",if=floppy -vga none -nographic -parallel none -monitor null \
       -kernel "$HELPER_DIR/kernel" -initrd "$HELPER_DIR/initrd" \

@@ -67,6 +67,21 @@ else
     log_error "$RULES_DEV does not contain \`rules\' file"
 fi
 
+# Export SNF_IMAGE_DEV. This is an array and exporting arrays is not supported
+# in bash. We need to encode it's values to multiple variables
+encode_array SNF_IMAGE_DEV
+
+for ((i = 0; i < SNF_IMAGE_DEV_COUNT; i++)); do
+    export "SNF_IMAGE_DEV_$i"
+done
+export SNF_IMAGE_DEV_COUNT
+
+# For backwards compatibility set the value of the SNF_IMAGE_DEV variable to
+# the first value of the array
+unset SNF_IMAGE_DEV
+export SNF_IMAGE_DEV=${SNF_IMAGE_DEV_0}
+
+
 if [ -f "$rules/unattend.xml" ]; then
     export SNF_IMAGE_UNATTEND="$rules/unattend.xml"
 fi

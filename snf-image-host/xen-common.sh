@@ -1,4 +1,4 @@
-# Copyright (C) 2013 GRNET S.A.
+# Copyright (C) 2013-2015 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,29 +15,58 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-get_img_dev() {
-	echo /dev/xvdb
+assign_disk_devices_to() {
+    local varname
+    varname="$1"
+
+    eval $varname=\(\)
+
+    set -- c d e f g h e j k l m n o p q r
+
+    for ((i = 0; i < DISK_COUNT; i++)); do
+        eval $varname+=\(\"/dev/xvd$1\"\); shift
+    done
 }
 
 launch_helper() {
-    local name helperid rc blockdev floppy
+    local name helperid rc floppy disks disk_path xen_dev ftype
 
-    blockdev="$1"
-    floppy="$2"
+    floppy="$1"
 
     name="snf-image-helper-$instance-$RANDOM"
 
     report_info "Starting customization VM..."
     echo "$($DATE +%Y:%m:%d-%H:%M:%S.%N) VM START" >&2
 
+    set -- c d e f g h i j k l m n o p q r
+    for ((i = 0; i < DISK_COUNT; i++)); do
+        eval disk_path=\"\$DISK_${i}_PATH\"
+        case $(stat -L -c %F "$disk_path") in
+        "regular file")
+            ftype=file
+            ;;
+        "block special file")
+            ftype=phy
+            ;;
+        *)
+            log_error "Disk: $disk_path is not a block device or a regular file"
+            report_error "Disk: $disk_path is not a block device or a regular file"
+            exit 1
+        esac
+
+        xen_dev="xvd$1"; shift
+
+        disks+=" disk=$ftype:$disk_path,$xen_dev,w"
+    done
+
     xm create /dev/null \
       kernel="$HELPER_DIR/kernel" ramdisk="$HELPER_DIR/initrd" \
       root="/dev/xvda" memory="$HELPER_MEMORY" boot="c" vcpus=1 name="$name" \
       extra="console=hvc0 hypervisor=$HYPERVISOR snf_image_activate_helper \
-	  ipv6.disable=1 rules_dev=/dev/xvdc ro boot=local helper_ip=10.0.0.1 \
+	  ipv6.disable=1 rules_dev=/dev/xvdb ro boot=local helper_ip=10.0.0.1 \
           monitor_port=48888 init=/usr/bin/snf-image-helper" \
-      disk="file:$HELPER_DIR/image,xvda,r" disk="phy:$blockdev,xvdb,w" \
-      disk="file:$floppy,xvdc,r" vif="script=${XEN_SCRIPTS_DIR}/vif-snf-image"
+      disk="file:$HELPER_DIR/image,xvda,r" disk="file:$floppy,xvdb,r" $disks \
+      vif="script=${XEN_SCRIPTS_DIR}/vif-snf-image"
     add_cleanup suppress_errors xm destroy "$name"
 
     if ! xenstore-exists snf-image-helper; then

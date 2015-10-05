@@ -795,6 +795,20 @@ detect_image_properties() {
     done
 }
 
+encode_array() {
+    local array_name cnt tmp
+    array_name="$1"
+
+    cnt=0
+    tmp="${array_name}[@]"
+    for i in "${!tmp}"; do
+        declare -g ${array_name}_$cnt=$i
+        : $((cnt++))
+    done
+
+    declare -g ${array_name}_COUNT=$count
+}
+
 cleanup() {
     # if something fails here, it shouldn't call cleanup again...
     trap - EXIT
