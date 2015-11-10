@@ -37,7 +37,7 @@ Description: Some tools that came with snf-image
 Package: snf-image-helper
 Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}, xmlstarlet, libwin-hivex-perl,
- e2fsprogs (>= 1.41.12), ntfs-3g, ntfsprogs, parted, libhivex-bin,
+ e2fsprogs (>= 1.41.12), ntfs-3g, parted, libhivex-bin,
  eatmydata, socat, iproute, xenstore-utils, gdisk, ufsutils
 Description: Requisite for the snf-image Ganeti OS Provider
  This package needs to be installed in the Helper VM that is
