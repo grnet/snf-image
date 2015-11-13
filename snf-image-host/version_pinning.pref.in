@@ -6,16 +6,8 @@ Package: ufsutils
 Pin: version 8.2-3+wheezy+grnet.growfs.fix
 Pin-Priority: 1001
 
-Package: python-bcrypt
-Pin: version 0.4-1grnet
-Pin-Priority: 1001
-
-Package: linux-image-3.14-0.bpo.2-amd64
-Pin: version 3.14.15-2~bpo70+1+ufs.rw
-Pin-Priority: 1001
-
-Package: xen-linux-system-3.14-0.bpo.2-amd64
-Pin: version 3.14.15-2~bpo70+1+ufs.rw
+Package:linux-image-4.2.0-0.snf.image.helper.1-amd64
+Pin: version 4.2.5-1~bpo8+b1.1
 Pin-Priority: 1001
 
 Package: openbsd-utils
