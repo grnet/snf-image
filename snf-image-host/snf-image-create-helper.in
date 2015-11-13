@@ -171,7 +171,7 @@ initrd=$(basename "$initrd")
 
 (cd "$HELPER_DIR"; ln -fs "$kernel" kernel; ln -fs "$initrd" initrd)
 
-pkg_installed=$(grep snf-image-helper "$HELPER_DIR/packages" > /dev/null && echo yes)
+pkg_installed=$(grep snf-image-helper "$HELPER_DIR/packages" > /dev/null && echo yes) || true
 
 if [ -z "$HELPER_PKG" -a -z "$pkg_installed" ]; then
     log_error "No helper package was specified and non was found by the apt."
