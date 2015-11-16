@@ -20,7 +20,7 @@ dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-helper
 
 os_DATA = ${srcdir}/common.sh
 
-example_DATA = defaults multistrap.conf version_pinning.pref
+example_DATA = defaults multistrap.conf version_pinning.pref kconfig-4.2.5-1~bpo8+1
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \

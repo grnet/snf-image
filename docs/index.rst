@@ -47,6 +47,7 @@ Contents:
    configuration
    usage
    advanced
+   development
 
 Indices and tables
 ==================
