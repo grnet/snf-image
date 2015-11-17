@@ -450,14 +450,27 @@ enlarge_partition() {
     fi
 
     id=${fields[0]}
-    $PARTED -s -m "$device" rm "$id"
-    create_partition "$device" "$new_part" "$ptype"
 
-    if [ "$ptype" = "extended" ]; then
-        # Recreate logical partitions
-        echo "$logical" | while read logical_part; do
-            create_partition "$device" "$logical_part" "logical"
-        done
+    # Newer versions of parted have a resizepart command that can be used to
+    # extend a partition. If this command is absent, we will have to remove and
+    # recreate a partition. This is not safe because there is no way to retain
+    # the partition number if the numbering contains gaps. In order to
+    # determine if parted supports resizepart we print the command's usage. If
+    # the output is not empty, the command is there.
+    supports_resizepart=$($PARTED -s -m "$device" help resizepart)
+
+    if [ -n "$supports_resizepart" ]; then
+        $PARTED -s -m -- "$device" resizepart "$id" "$new_end"
+    else
+        $PARTED -s -m "$device" rm "$id"
+        create_partition "$device" "$new_part" "$ptype"
+
+        if [ "$ptype" = "extended" ]; then
+            # Recreate logical partitions
+            echo "$logical" | while read logical_part; do
+                create_partition "$device" "$logical_part" "logical"
+            done
+        fi
     fi
 }
 
