@@ -66,6 +66,26 @@ while getopts "d:hp:y" opt; do
     esac
 done
 
+if [ -n "$HELPER_PKG" ]; then
+    if [ ! -f "$HELPER_PKG" ]; then
+        log_error "File: \`$HELPER_PKG' does not exist"
+        exit 1
+    fi
+    set +e
+    name=$(dpkg-deb -W --showformat='${Package}\n' "$HELPER_PKG" 2> /dev/null)
+    ret=$?
+    set -e
+    if [ $ret -ne 0 ]; then
+        log_error "File \`$HELPER_PKG' is not a debian package"
+        exit 1
+    fi
+
+    if [ "$name" != snf-image-helper ]; then
+        log_error "File \`$HELPER_PKG' is not an snf-image-helper package"
+        exit 1
+    fi
+fi
+
 echo
 echo "This is the helper image creation script for snf-image."
 echo "If you don't know what to do, use \`-h'."
