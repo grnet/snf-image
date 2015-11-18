@@ -41,6 +41,8 @@ OPTIONS:
 
     -h  Print this message
 
+    -n Don't shrink the resulting image (useful when debugging)
+
     -p PACKAGE
         Install this deb package in the helper image, instead of the default
 
@@ -51,11 +53,13 @@ EOF
     exit "$rc"
 }
 
-while getopts "d:hp:y" opt; do
+while getopts "d:hnp:y" opt; do
     case $opt in
         d) HELPER_DIR="$OPTARG"
             ;;
         h) usage 0
+            ;;
+        n) NO_SHRINK="yes"
             ;;
         p) HELPER_PKG="$OPTARG"
             ;;
@@ -214,7 +218,7 @@ fi
 helper_version="$(grep ^snf-image-helper[[:space:]] "$HELPER_DIR/packages" | cut -f2)"
 host_version="$(dpkg-query -W -f "\${Version}\n" snf-image)"
 
-if [ "$VERSION_CHECK" == yes -a -z "$HELPER_PKG" ]; then
+if [ "$VERSION_CHECK" = yes -a -z "$HELPER_PKG" ]; then
     if [ "$host_version" != "$helper_version" ]; then
         log_error "snf-image version (=$host_version) and " \
             "snf-image-helper version (=$helper_version) don't match."
@@ -224,28 +228,30 @@ fi
 
 umount "$target"
 
-echo "Shrinking the created image:" >&2
-set +e
-e2fsck -y -f "$helper_img" 2>&1 | sed -u -e 's/^/E2FSCK: /g'
-ret=$?
-set -e
+if [ "$NO_SHRINK" != yes ]; then
+    echo "Shrinking the created image:" >&2
+    set +e
+    e2fsck -y -f "$helper_img" 2>&1 | sed -u -e 's/^/E2FSCK: /g'
+    ret=$?
+    set -e
 
-if [ $ret -ge 4 ]; then
-    log_error "File system check failed!"
-fi
-
-resize2fs -M "$helper_img" 2>&1 2>&1 | sed -u -e 's/^/RESIZE2FS: /g'
-
-while read line; do
-    value="$(echo $(cut -d: -f2 <<< "$line"))"
-    if grep '^Block size:' <<< "$line" &> /dev/null; then
-        block_size="$value"
-    elif grep '^Block count:' <<< "$line" &> /dev/null; then
-        block_count="$value"
+    if [ $ret -ge 4 ]; then
+        log_error "File system check failed!"
     fi
-done <<< "$(tune2fs -l "$helper_img")"
 
-truncate -s $((block_size*block_count)) "$helper_img"
+    resize2fs -M "$helper_img" 2>&1 2>&1 | sed -u -e 's/^/RESIZE2FS: /g'
+
+    while read line; do
+        value="$(echo $(cut -d: -f2 <<< "$line"))"
+        if grep '^Block size:' <<< "$line" &> /dev/null; then
+            block_size="$value"
+        elif grep '^Block count:' <<< "$line" &> /dev/null; then
+            block_count="$value"
+        fi
+    done <<< "$(tune2fs -l "$helper_img")"
+
+    truncate -s $((block_size*block_count)) "$helper_img"
+fi
 
 mv "$helper_img" "$HELPER_DIR/image"
 
