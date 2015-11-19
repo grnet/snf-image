@@ -179,17 +179,20 @@ All image formats properties
    `here <http://pythonhosted.org/passlib/modular_crypt_format.html#mcf-identifiers>`_
    for more info).
 
- * **SWAP=<partition id>:<size>**
-   If this property is defined, *snf-image* will create a swap partition with
-   the specified size in MB. The *partition id* is the number that the Linux
+ * **SWAP=<partition id>:<size>|<disk letter>**
+   If this property is defined, *snf-image* will create a swap device in the
+   VM. If the first form is used, then a swap partition with the specified size
+   in MB will be created. The *partition id* is the number that the Linux
    kernel will assign to this partition. For example, if you have a disk with
-   an MSDOS  partition table on it and one primary partition, the image
-   property *SWAP=2:512* would instruct *snf-image* to create a 512MB long
-   primary partition for swap with id=2. On the other hand, if the *SWAP*
-   property had this form: *SWAP=5:512*, since primary partitions may have an
-   id from 1 to 4, *snf-image* would create a 512MB extended partition with
-   id=2 and a logical swap partition with id=5 in it with the same size. This
-   property only applies to Linux instances.
+   an MSDOS partition table on it and one primary partition, an image property:
+   *SWAP=2:512* would instruct *snf-image* to create a 512MB long primary
+   partition for swap with id=2. On the other hand, if the *SWAP* property was
+   defined like this: *SWAP=5:512*, since primary partitions may have an id
+   from 1 to 4, *snf-image* would create a 512MB extended partition with id=2
+   and a logical swap partition of the same size with id=5 in it. If the second
+   form is specified, then a whole secondary disk will be configured
+   to be swap. Defining *SWAP=c* will configure the third disk of the VM to be
+   swap.This property only applies to Linux instances.
 
  * **EXCLUDE_ALL_TASKS=yes**
    If this property is defined with a value other than null, then during the
