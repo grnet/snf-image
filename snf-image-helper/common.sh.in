@@ -819,7 +819,7 @@ encode_array() {
         : $((cnt++))
     done
 
-    declare -g ${array_name}_COUNT=$count
+    declare -g ${array_name}_COUNT=$cnt
 }
 
 cleanup() {
