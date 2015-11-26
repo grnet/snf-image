@@ -231,7 +231,7 @@ create_floppy() {
         fi
     fi
     # Put all the NIC info in the floppy
-    set | egrep ^NIC_ | sed -e 's/^/export /' >> "$target/rules"
+    set | egrep ^NIC_ | sed -e 's/^/export SNF_IMAGE_/' >> "$target/rules"
     umount "$target"
 }
 

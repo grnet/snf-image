@@ -224,65 +224,59 @@ required information in its enviroment. In the table below we describe the
 enviroment variables that are present when the configuration tasks run.
 
 
-+-------------------------------+---------------------------------------------+
-|Name                           |Details                                      |
-+===============================+=============================================+
-|SNF_IMAGE_DEV_COUNT            |The number of the instance's disks           |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_DEV_%N               |The device file of the Nth disk              |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_DEV                  |The device file of the first disk (we keep   |
-|                               |this for backward compatibility)             |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_PERSONALITY          |The value of the img_personality OS          |
-|                               |parameter                                    |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_HOSTNAME             |The instance's name                          |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_PASSWD               |The value of the img_passwd OS parameter.    |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_PASSWD_HASH          |The value of the img_passwd_hash OS          |
-|                               |parameter.                                   |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_PROPERTY_*           |The value of a specific image property       |
-|                               |that was specified in json through the       |
-|                               |img_properties OS parameter.                 |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_RESIZE_PART          |The number of the partition that will be     |
-|                               |enlarged.                                    |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_TARGET               |The directory the instance's file systems are|
-|                               |mounted under.                               |
-+-------------------------------+---------------------------------------------+
-|NIC_COUNT                      |The number of the instance's network         |
-|                               |interfaces                                   |
-+-------------------------------+---------------------------------------------+
-|NIC_%N_*                       |The ganeti provided environment variable     |
-|                               |for the Nth network interface. Check `here <h|
-|                               |ttp://docs.ganeti.org/ganeti/current/man/gane|
-|                               |ti-os-interface.html>`_                      |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_DHCP_TAGS            |The value of the DHCP_TAGS configuration     |
-|                               |parameter (see                               |
-|                               |:ref:`Configuration Parameters               |
-|                               |<configuration-parameters>`)                 |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_STATEFUL_DHCPV6_TAGS |The value of the STATEFUL_DHCPV6_TAGS        |
-|                               |configuration parameter (see                 |
-|                               |:ref:`Configuration Parameters               |
-|                               |<configuration-parameters>`)                 |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_STATELESS_DHCPV6_TAGS|The value of the STATELESS_DHCPV6_TAGS       |
-|                               |configuration parameter (see                 |
-|                               |:ref:`Configuration Parameters               |
-|                               |<configuration-parameters>`)                 |
-+-------------------------------+---------------------------------------------+
-|SNF_IMAGE_UNATTEND             |The value of the UNATTED configuration       |
-|                               |parameter (see                               |
-|                               |:ref:`Configuration Parameters               |
-|                               |<configuration-parameters>`)                 |
-+-------------------------------+---------------------------------------------+
++---------------------+-------------------------------------------------------+
+|Name [#]_            |Details                                                |
++=====================+=======================================================+
+|DEV_COUNT            |The number of the instance's disks.                    |
++---------------------+-------------------------------------------------------+
+|DEV_%N               |The device file of the Nth disk.                       |
++---------------------+-------------------------------------------------------+
+|DEV                  |The device file of the first disk (we keep this for    |
+|                     |backward compatibility)                                |
++---------------------+-------------------------------------------------------+
+|PERSONALITY          |The value of the img_personality OS parameter.         |
++---------------------+-------------------------------------------------------+
+|HOSTNAME             |The instance's name.                                   |
++---------------------+-------------------------------------------------------+
+|PASSWD               |The value of the img_passwd OS parameter.              |
++---------------------+-------------------------------------------------------+
+|PASSWD_HASH          |The value of the img_passwd_hash OS parameter.         |
++---------------------+-------------------------------------------------------+
+|PROPERTY_*           |The value of a specific image property that was        |
+|                     |specified in json through the img_properties OS        |
+|                     |parameter.                                             |
++---------------------+-------------------------------------------------------+
+|RESIZE_PART          |The number of the partition that will be enlarged.     |
++---------------------+-------------------------------------------------------+
+|TARGET               |The directory the instance's file systems are mounted  |
+|                     |under.                                                 |
++---------------------+-------------------------------------------------------+
+|NIC_COUNT            |The number of network interface controllers of the     |
+|                     |instance.                                              |
++---------------------+-------------------------------------------------------+
+|NIC_%N_*             |The ganeti provided environment variable for the Nth   |
+|                     |network interface controller. Check                    |
+|                     |`here <http://docs.ganeti.org/ganeti/current/man/ganeti|
+|                     |-os-interface.html>`_                                  |
++---------------------+-------------------------------------------------------+
+|DHCP_TAGS            |The value of the DHCP_TAGS configuration parameter (see|
+|                     |:ref:`Configuration Parameters                         |
+|                     |<configuration-parameters>`)                           |
++---------------------+-------------------------------------------------------+
+|STATEFUL_DHCPV6_TAGS |The value of the STATEFUL_DHCPV6_TAGS configuration    |
+|                     |parameter (see  :ref:`Configuration Parameters         |
+|                     |<configuration-parameters>`)                           |
++---------------------+-------------------------------------------------------+
+|STATELESS_DHCPV6_TAGS|The value of the STATELESS_DHCPV6_TAGS configuration   |
+|                     |parameter (see :ref:`Configuration Parameters          |
+|                     |<configuration-parameters>`)                           |
++---------------------+-------------------------------------------------------+
+|UNATTEND             |The value of the UNATTED configuration parameter (see  |
+|                     |:ref:`Configuration Parameters                         |
+|                     |<configuration-parameters>`)                           |
++---------------------+-------------------------------------------------------+
 
+.. [#] all environment variable names are prefixed with *SNF_IMAGE_*
 
 .. rubric:: Footnotes
 
