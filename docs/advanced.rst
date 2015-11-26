@@ -214,6 +214,76 @@ like this:
 
 ``{"subtype": "error", "type": "image-helper", "messages": ["The image contains a(n) MSDOS partition table.  For FreeBSD images only GUID Partition Tables are supported."], "timestamp": 1379507910.799365}``
 
+.. _configuration-tasks-environment:
+
+Configuration Tasks Enviroment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When an *snf-image-helper* configuration task runs, it expects to find the
+required information in its enviroment. In the table below we describe the
+enviroment variables that are present when the configuration tasks run.
+
+
++-------------------------------+---------------------------------------------+
+|Name                           |Details                                      |
++===============================+=============================================+
+|SNF_IMAGE_DEV_COUNT            |The number of the instance's disks           |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_DEV_%N               |The device file of the Nth disk              |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_DEV                  |The device file of the first disk (we keep   |
+|                               |this for backward compatibility)             |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_PERSONALITY          |The value of the img_personality OS          |
+|                               |parameter                                    |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_HOSTNAME             |The instance's name                          |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_PASSWD               |The value of the img_passwd OS parameter.    |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_PASSWD_HASH          |The value of the img_passwd_hash OS          |
+|                               |parameter.                                   |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_PROPERTY_*           |The value of a specific image property       |
+|                               |that was specified in json through the       |
+|                               |img_properties OS parameter.                 |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_RESIZE_PART          |The number of the partition that will be     |
+|                               |enlarged.                                    |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_TARGET               |The directory the instance's file systems are|
+|                               |mounted under.                               |
++-------------------------------+---------------------------------------------+
+|NIC_COUNT                      |The number of the instance's network         |
+|                               |interfaces                                   |
++-------------------------------+---------------------------------------------+
+|NIC_%N_*                       |The ganeti provided environment variable     |
+|                               |for the Nth network interface. Check `here <h|
+|                               |ttp://docs.ganeti.org/ganeti/current/man/gane|
+|                               |ti-os-interface.html>`_                      |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_DHCP_TAGS            |The value of the DHCP_TAGS configuration     |
+|                               |parameter (see                               |
+|                               |:ref:`Configuration Parameters               |
+|                               |<configuration-parameters>`)                 |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_STATEFUL_DHCPV6_TAGS |The value of the STATEFUL_DHCPV6_TAGS        |
+|                               |configuration parameter (see                 |
+|                               |:ref:`Configuration Parameters               |
+|                               |<configuration-parameters>`)                 |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_STATELESS_DHCPV6_TAGS|The value of the STATELESS_DHCPV6_TAGS       |
+|                               |configuration parameter (see                 |
+|                               |:ref:`Configuration Parameters               |
+|                               |<configuration-parameters>`)                 |
++-------------------------------+---------------------------------------------+
+|SNF_IMAGE_UNATTEND             |The value of the UNATTED configuration       |
+|                               |parameter (see                               |
+|                               |:ref:`Configuration Parameters               |
+|                               |<configuration-parameters>`)                 |
++-------------------------------+---------------------------------------------+
+
+
 .. rubric:: Footnotes
 
 .. [#f1] http://technet.microsoft.com/en-us/library/hh824938.aspx

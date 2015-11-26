@@ -194,6 +194,12 @@ All image formats properties
    to be swap. Defining *SWAP=c* will configure the third disk of the VM to be
    swap.This property only applies to Linux instances.
 
+ * **CUSTOM_TASK=<base64_encoded_content>**
+   This property can be used to run a user-defined configuration task. The
+   value of this property should host the base64-encoded body of the task. If
+   you want to write a custom configuration task check
+   :ref:`Configuration Tasks Environment<configuration-tasks-environment>`.
+
  * **EXCLUDE_ALL_TASKS=yes**
    If this property is defined with a value other than null, then during the
    deployment, the image will not be configured at all. This is really handy

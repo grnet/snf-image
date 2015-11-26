@@ -121,6 +121,8 @@ some external programs in ``/etc/default/snf-image``:
   # CURL="curl"
   # TAR="tar"
 
+.. _configuration-parameters:
+
 Configuration parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -138,6 +140,8 @@ The most common configuration parameters the user may need to overwrite are:
  * **STATELESS_DHCPV6_TAGS**: To specify which Ganeti networks support SLAAC
    and stateless DHCPv6
  * **STATEFUL_DHCPV6_TAGS**: To specify which Ganeti networks support DHCPv6
+ * **UNATTEND**: To specify a custom Unattend.xml file to use on Windows
+   instead of the default one
 
 Paths of external programs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
