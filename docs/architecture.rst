@@ -215,49 +215,55 @@ will fail.
 missing a warning is produced. Only *SNF_IMAGE_TARGET* is required for this
 task to run.
 
+**RunCustomTask**: Run a user-defined task specified by the
+*SNF_IMAGE_PROPERTY_CUSTOM_TASK* variable. If the variable is missing or empty,
+a warning is produced.
+
 **UmountImage**: Umounts the file systems previously mounted by MountImage. The
 only environment variable required is *SNF_IMAGE_TARGET*.
 
 
-+-------------------------------+---+--------------------------------------------+-------------------------------------------+
-|                               |   |               Dependencies                 |         Enviromental Variables [#]_       |
-+          Name                 |   +------------------+-------------------------+-------------------------+-----------------+
-|                               |Pr.|        Run-After |        Run-Before       |        Required         |   Optional      |
-+===============================+===+==================+=========================+=========================+=================+
-|FixPartitionTable              |10 |                  |FilesystemResizeUnmounted|DEV                      |                 |
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|FilesystemResizeUnmounted      |20 |FixPartitionTable |MountImage               |DEV                      |                 |
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|MountImage                     |30 |                  |UmountImage              |DEV                      |                 |
-|                               |   |                  |                         |TARGET                   |                 |
-|                               |   |                  |                         |PROPERTY_ROOT_PARTITION  |                 |
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|AddSwap                        |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY|
-|                               |   |                  |                         |                         |PROPERTY_SWAP    |
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|DeleteSSHKeys                  |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY|
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|DisableRemoteDesktopConnections|40 |EnforcePersonality|UmountImage              |TARGET                   |PROPERTY_OSFAMILY|
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|InstallUnattend                |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY|
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|SELinuxAutorelabel             |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY|
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|AssignHostname                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |                 |
-|                               |   |                  |                         |HOSTNAME                 |PROPERTY_OSFAMILY|
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|ChangePassword                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_USERS   |
-|                               |   |                  |                         |                         |PROPERTY_OSFAMILY|
-|                               |   |                  |                         |                         |PASSWD           |
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|ConfigureNetwork               |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |NIC_*            |
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|FilesystemResizeMounted        |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY|
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|EnforcePersonality             |60 |MountImage        |UmountImage              |TARGET                   |PERSONALITY      |
-|                               |   |                  |                         |                         |PROPERTY_OSFAMILY|
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
-|UmountImage                    |80 |MountImage        |                         |TARGET                   |                 |
-+-------------------------------+---+------------------+-------------------------+-------------------------+-----------------+
++-------------------------------+---+--------------------------------------------+----------------------------------------------+
+|                               |   |               Dependencies                 |         Enviromental Variables [#]_          |
++          Name                 |   +------------------+-------------------------+-------------------------+--------------------+
+|                               |Pr.|        Run-After |        Run-Before       |        Required         |   Optional         |
++===============================+===+==================+=========================+=========================+====================+
+|FixPartitionTable              |10 |                  |FilesystemResizeUnmounted|DEV                      |                    |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|FilesystemResizeUnmounted      |20 |FixPartitionTable |MountImage               |DEV                      |                    |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|MountImage                     |30 |                  |UmountImage              |DEV                      |                    |
+|                               |   |                  |                         |TARGET                   |                    |
+|                               |   |                  |                         |PROPERTY_ROOT_PARTITION  |                    |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|AddSwap                        |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
+|                               |   |                  |                         |                         |PROPERTY_SWAP       |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|DeleteSSHKeys                  |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|DisableRemoteDesktopConnections|40 |EnforcePersonality|UmountImage              |TARGET                   |PROPERTY_OSFAMILY   |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|InstallUnattend                |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|SELinuxAutorelabel             |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|AssignHostname                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |                    |
+|                               |   |                  |                         |HOSTNAME                 |PROPERTY_OSFAMILY   |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|ChangePassword                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_USERS      |
+|                               |   |                  |                         |                         |PROPERTY_OSFAMILY   |
+|                               |   |                  |                         |                         |PASSWD              |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|ConfigureNetwork               |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |NIC_*               |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|FilesystemResizeMounted        |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|EnforcePersonality             |60 |MountImage        |UmountImage              |TARGET                   |PERSONALITY         |
+|                               |   |                  |                         |                         |PROPERTY_OSFAMILY   |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|RunCustomTask                  |70 |MountImage        |UmountImage              |TARGET                   |PROPERTY_CUSTOM_TASK|
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
+|UmountImage                    |80 |MountImage        |                         |TARGET                   |                    |
++-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
 
 .. [#] all environment variables are prefixed with *SNF_IMAGE_*

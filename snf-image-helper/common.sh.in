@@ -41,6 +41,7 @@ HIVEXGET=hivexget
 HIVEXREGEDIT=hivexregedit
 BTRFS=btrfs
 XFS_GROWFS=xfs_growfs
+BASE64=base64
 
 CLEANUP=( )
 ERRORS=( )
