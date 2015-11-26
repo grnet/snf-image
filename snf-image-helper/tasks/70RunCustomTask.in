@@ -1,0 +1,58 @@
+#! /bin/bash
+
+# Copyright (C) 2015 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+### BEGIN TASK INFO
+# Provides:		RunCustomTask
+# RunBefore:		UmountImage
+# RunAfter:		MountImage
+# Short-Description:	Run a user defined task on the image
+### END TASK INFO
+
+set -e
+
+. "@commondir@/common.sh"
+
+trap task_cleanup EXIT
+report_task_start
+
+# Check if the task should be prevented from running.
+check_if_excluded
+check_if_mounted_excluded
+
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
+fi
+
+if [ -z "$SNF_IMAGE_PROPERTY_CUSTOM_TASK" ]; then
+    warn "No custom task specified to run"
+    exit 0
+fi
+
+custom_task="$(mktemp)"
+add_cleanup rm "$custom_task"
+chmod +x "$custom_task"
+
+$BASE64 --decode > "$custom_task" <<< "$SNF_IMAGE_PROPERTY_CUSTOM_TASK"
+
+$custom_task
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
+

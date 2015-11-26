@@ -14,6 +14,7 @@ dist_tasks_SCRIPTS = \
 		50ConfigureNetwork \
 		50FilesystemResizeMounted \
 		60EnforcePersonality \
+		70RunCustomTask \
 		80UmountImage
 
 edit = sed \
