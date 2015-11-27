@@ -35,9 +35,11 @@ check_if_excluded
 check_if_mounted_excluded
 
 windows_hostname() {
-    local target password unattend tmp_unattend namespace
+    local target hostname unattend tmp_unattend namespace
     target="$1"
-    password="$2"
+    hostname="$2"
+
+    check_windows_computer_name "$hostname"
 
     tmp_unattend=$(mktemp)
     add_cleanup rm "$tmp_unattend"
@@ -51,7 +53,7 @@ windows_hostname() {
         log_error "Unattend.xml is missing."
     fi
     
-    "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$password" "$unattend" > "$tmp_unattend"
+    "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$hostname" "$unattend" > "$tmp_unattend"
 
     cat "$tmp_unattend" > "$unattend"
     echo done

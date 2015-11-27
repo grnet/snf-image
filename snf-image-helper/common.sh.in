@@ -973,6 +973,48 @@ networking_opts() {
     fi
 }
 
+check_windows_computer_name() {
+    local name length msg matched pipefail
+
+    name="${1}"
+    length=$(wc -c <<< "$name")
+
+    # ComputerName restrictions are documented here:
+    #   https://technet.microsoft.com/en-us/library/ff715676.aspx
+
+    msg="Invalid Windows ComputerName: \`$name'."
+
+    # Check if the length of the string exceeds the 15 bytes
+    if [ $length -gt 15 ]; then
+        log_error "$msg It's size is bigger (=$length) than 15 bytes."
+    fi
+
+    pipefail=$(set -o | grep pipefail | awk '{ print $2 }')
+    set -o pipefail
+    set +e
+    # We only check for invalid ascii characters but this is OK. The name
+    # derives from the instance's name and Ganeti seems to only allows ascii
+    # characters for instance names.
+    invalid_char="$(grep -o -P \
+        '[\x00-\x2c\x2e-\x2f\x3a-\x40\x5b-\x5e\x60\x7b-\x7e]' <<< "$name" \
+        | head -1)"
+    # If grep fails, the pipefail option will make $matched host the return
+    # code of grep
+    matched=$?
+    set -e
+    if [ "$pipefail" = off ]; then
+        set +o pipefail
+    fi
+
+    if [ $matched -eq 0 ]; then
+        log_error "$msg Contains invalid character: \`$(printf "%q" "$invalid_char")'."
+    fi
+
+    if [[ "$name" =~ ^([0-9])+$ ]]; then
+        log_error "$msg Contains only numbers (0-9)."
+    fi
+}
+
 trap cleanup EXIT
 set -o pipefail
 
