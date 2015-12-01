@@ -220,8 +220,8 @@ Configuration Tasks Enviroment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When an *snf-image-helper* configuration task runs, it expects to find the
-required information in its enviroment. In the table below we describe the
-enviroment variables that are present when the configuration tasks run.
+required information in its environment. In the table below we describe the
+environment variables that are present when the configuration tasks run.
 
 
 +---------------------+-------------------------------------------------------+
@@ -254,7 +254,7 @@ enviroment variables that are present when the configuration tasks run.
 |NIC_COUNT            |The number of network interface controllers of the     |
 |                     |instance.                                              |
 +---------------------+-------------------------------------------------------+
-|NIC_%N_*             |The ganeti provided environment variable for the Nth   |
+|NIC_%N_*             |The Ganeti provided environment variable for the Nth   |
 |                     |network interface controller. Check                    |
 |                     |`here <http://docs.ganeti.org/ganeti/current/man/ganeti|
 |                     |-os-interface.html>`_                                  |
@@ -277,6 +277,37 @@ enviroment variables that are present when the configuration tasks run.
 +---------------------+-------------------------------------------------------+
 
 .. [#] all environment variable names are prefixed with *SNF_IMAGE_*
+
+.. _overwriting-configuration-tasks:
+
+Overwriting Configuration Tasks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+One way to extend snf-image to work on images that are not directly supported
+by it, is the overwriting mechanism for the :ref:`configuration tasks
+<image-configuration-tasks>`. If the ``ALLOW_MOUNTED_TASK_OVERWRITING`` image
+property is defined with yes, then the presence of an executable under the path
+``/root/snf-image/helper/overwrite_task_<TASK>`` inside the image's file system
+will make *snf-image-helper* interrupt the execution of the actual
+configuration task and the image's file will be executed instead.  This
+executable should make use of the :ref:`Configuration Tasks Environment
+<configuration-tasks-environment>`. Also keep in mind that this only works for
+configuration tasks that run while the image is mounted (have a priority
+between 31 and 79).
+
+
+Return Code and post execution
+++++++++++++++++++++++++++++++
+
+If the return code of the execution of the image-defined executable is
+non-zero, *snf-image* will translate this as a failure of the configuration
+task. The only exception to this is the return code **101**, which will make
+*snf-image* execute the original configuration task and then the image's
+executable once again. The first time the image's executable will be called
+with **pre-exec** as its first argument and the second with **post-exec**. This
+way the executable itself can decide if it is going to be executed in
+conjunction with the original configuration task and in which order (before,
+after or in both cases).
 
 .. rubric:: Footnotes
 

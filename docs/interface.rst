@@ -170,6 +170,13 @@ All image formats properties
    exists in the above-mentioned location. For more information on "answer
    files" please refer to :ref:`windows-deployment`.
 
+ * **ALLOW_MOUNTED_TASK_OVERWRITING=yes**
+   If this property is defined with yes, then the presence of an executable
+   file under */root/snf-image/helper/overwrite_task_<TASK>* inside the image
+   will make *snf-image* execute the code hosted there instead of the default
+   one. See :ref:`Overwriting Configuration Tasks<overwriting-configuration-tasks>`
+   for more info.
+
  * **PASSWD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
    This property can be used on Unix instances to specify the method to be used
    to hash the users password. By default this is determined by the type of the

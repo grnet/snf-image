@@ -45,6 +45,9 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
 fi
 
+# Check if the image overwrites the task
+check_if_overwritten
+
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
     exit 0
 fi

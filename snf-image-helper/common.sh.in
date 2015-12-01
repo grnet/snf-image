@@ -917,6 +917,45 @@ check_if_mounted_excluded() {
     return 0
 }
 
+check_if_overwritten() {
+    local script ret
+
+    if ! check_yes_no SNF_IMAGE_PROPERTY_ALLOW_MOUNTED_TASK_OVERWRITING; then
+        return 0
+    fi
+    script=$(find -L $SNF_IMAGE_TARGET/root/snf-image/helper \
+             -iname "overwrite_task_${PROGNAME:2}" -type f 2>/dev/null) || true
+    if [ -x "$script" ]; then
+        warn "Task ${PROGNAME:2} was overwritten by file: \`${script:${#SNF_IMAGE_TARGET}}'"
+        export OVERWRITTEN_TASK="$script"
+        set +e
+        $OVERWRITTEN_TASK "pre-exec"
+        ret=$?
+        set -e
+        if [ $ret -eq 101 ]; then
+            # Reserve 101 for the case where the original task should be
+            # executed after the task that overwrote it has finished
+            warn "Running task ${PROGNAME:2} after \`${script:${#SNF_IMAGE_TARGET}}' returned 101"
+
+            # Overwrite exit to make sure the script is executed again at the
+            # end. This is error-prone, since you'll always have to use exit on
+            # normal termination (which we actually did before this) but I
+            # couldn't think of a better way. Adding it in the task_cleanup()
+            # is not an option because you can't control the failures well.
+            exit() {
+                local rc=$1
+                if [ $rc -eq 0 ]; then
+                    warn "Running \`${OVERWRITTEN_TASK:${#SNF_IMAGE_TARGET}}' again after task ${PROGNAME:2}"
+                    $OVERWRITTEN_TASK "post-exec"
+                fi
+                builtin exit $rc
+            }
+        else
+            exit $ret
+        fi
+    fi
+}
+
 return_success() {
     send_result_${HYPERVISOR} "SUCCESS"
 }

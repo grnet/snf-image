@@ -34,12 +34,15 @@ report_task_start
 check_if_excluded
 check_if_mounted_excluded
 
-if [ ! -b "$SNF_IMAGE_DEV" ]; then
-    log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
-fi
-
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
+fi
+
+# Check if the image overwrites the task
+check_if_overwritten
+
+if [ ! -b "$SNF_IMAGE_DEV" ]; then
+    log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
 fi
 
 if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then

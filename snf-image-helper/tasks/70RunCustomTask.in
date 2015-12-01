@@ -39,6 +39,9 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
 
+# Check if the image overwrites the task
+check_if_overwritten
+
 if [ -z "$SNF_IMAGE_PROPERTY_CUSTOM_TASK" ]; then
     warn "No custom task specified to run"
     exit 0

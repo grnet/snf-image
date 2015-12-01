@@ -39,6 +39,9 @@ if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
 
+# Check if the image overwrites the task
+check_if_overwritten
+
 distro=$(get_base_distro "$SNF_IMAGE_TARGET")
 
 if [ ! -f "@networkingdir@/$distro.sh" ]; then
