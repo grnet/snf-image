@@ -86,13 +86,13 @@ elif [[ "$ptype" == "freebsd-ufs" ]]; then
     $GROWFS_UFS -y "$device"
 elif [[ "$ptype" == "ntfs" ]]; then
     # For NTFS, only perform an offline resize if forced
-    if [ -n "$SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE" ]; then
+    if check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE; then
         # Be extra safe: Refuse to work on Image with a dirty NTFS
         if ! $NTFSINFO -m "$device"; then
             log_error "NTFS is dirty, refusing to continue"
         fi
         $NTFSRESIZE -f "$device"
-        if [ -n "$SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE_NOCHECK" ]; then
+        if check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE_NOCHECK; then
             warn "Clearing dirty bit after NTFS resize"
             warn "Please run CHKDSK manually after boot"
             $NTFSFIX -d "$device"

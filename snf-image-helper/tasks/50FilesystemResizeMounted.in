@@ -57,7 +57,7 @@ ptype=$(cut -d: -f5 <<< "$partition")
 device="${SNF_IMAGE_DEV}${id}"
 
 if [ "$ptype" = "ntfs" -a "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
-    if [ -n "$SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE" ]; then
+    if check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE; then
         warn "Task ${PROGNAME:2} will not run. Offline NTFS resize requested."
         exit 0
     fi
@@ -66,7 +66,7 @@ if [ "$ptype" = "ntfs" -a "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
     sysprepinf=$(get_sysprepinf "$target")
     if [ -n "$sysprepinf" ]; then
         warn "Found SYSPREP.INF. Cannot perform online resize on XP / Server 2003."
-        warn "Set the OFFLINE_NTFSRESIZE property to request an offline resize."
+        warn "Set the OFFLINE_NTFSRESIZE property to yes to request an offline resize."
     fi
 
     # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
