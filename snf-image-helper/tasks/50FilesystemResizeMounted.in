@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -57,6 +57,18 @@ ptype=$(cut -d: -f5 <<< "$partition")
 device="${SNF_IMAGE_DEV}${id}"
 
 if [ "$ptype" = "ntfs" -a "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
+    if [ -n "$SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE" ]; then
+        warn "Task ${PROGNAME:2} will not run. Offline NTFS resize requested."
+        exit 0
+    fi
+    # Windows XP / Server 2003
+    # No online resize is supported, emit a warning
+    sysprepinf=$(get_sysprepinf "$target")
+    if [ -n "$sysprepinf" ]; then
+        warn "Found SYSPREP.INF. Cannot perform online resize on XP / Server 2003."
+        warn "Set the OFFLINE_NTFSRESIZE property to request an offline resize."
+    fi
+
     # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
     # try to execute this script during the specialize pass.
     cat > "$SNF_IMAGE_TARGET/Windows/SnfScripts/ExtendFilesystem" <<EOF

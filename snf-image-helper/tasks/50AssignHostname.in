@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -55,14 +55,29 @@ windows_hostname() {
 
     namespace="urn:schemas-microsoft-com:unattend"
 
+    # Windows XP / Server 2003:
+    # Set the hostname inside a SYSPREP.INF answer file, if found
+    sysprepinf=$(get_sysprepinf "$target")
+    # Windows Vista / Server 2008 and later:
+    # Use Unattend.xml or similar
     unattend=$(get_unattend "$target")
-    if [ -z "$unattend" ]; then
-        log_error "Unattend.xml is missing."
+
+    if [ -z "$sysprepinf" -a -z "$unattend" ]; then
+        log_error "No C:\SYSPREP\SYSPREP.INF or Unattend.xml found in Image."
+    fi
+
+    if [ -n "$sysprepinf" ]; then
+        @scriptsdir@/handle-ini-file.py \
+            "$sysprepinf" set UserData ComputerName "$hostname"
+    fi
+
+    if [ -n "$unattend" ]; then
+        "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$hostname" "$unattend" > "$tmp_unattend"
+        cat "$tmp_unattend" > "$unattend"
     fi
     
     "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$hostname" "$unattend" > "$tmp_unattend"
 
-    cat "$tmp_unattend" > "$unattend"
     echo done
 }
 
