@@ -8,7 +8,7 @@ dist_tasks_SCRIPTS = \
 		40DeleteSSHKeys \
 		40InstallUnattend \
 		40SELinuxAutorelabel \
-		41DisableRemoteDesktopConnections \
+		50DisableRemoteDesktopConnections \
 		50AssignHostname \
 		50ChangePassword \
 		50ConfigureNetwork \

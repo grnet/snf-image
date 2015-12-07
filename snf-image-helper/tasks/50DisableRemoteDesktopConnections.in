@@ -19,8 +19,8 @@
 
 ### BEGIN TASK INFO
 # Provides:		DisableRemoteDesktopConnections
-# RunBefore:            EnforcePersonality
-# RunAfter:		MountImage
+# RunBefore:		EnforcePersonality
+# RunAfter:		InstallUnattend
 # Short-Description:	Temporary Disable Remote Desktop Connections
 ### END TASK INFO
 
