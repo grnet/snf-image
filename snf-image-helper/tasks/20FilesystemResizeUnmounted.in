@@ -85,8 +85,10 @@ if [[ "$ptype" == ext[234] ]]; then
 elif [[ "$ptype" == "freebsd-ufs" ]]; then
     $GROWFS_UFS -y "$device"
 elif [[ "$ptype" == "ntfs" ]]; then
-    # For NTFS, only perform an offline resize if forced
-    if check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE; then
+    # For NTFS on newer Windows, only perform an offline resize if forced. On
+    # Windows XP where online resize is not supported, do this by default.
+    if (check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE || \
+        [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]); then
         # Be extra safe: Refuse to work on Image with a dirty NTFS
         if ! $NTFSINFO -m "$device"; then
             log_error "NTFS is dirty, refusing to continue"

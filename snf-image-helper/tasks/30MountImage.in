@@ -41,6 +41,7 @@ if [ -z "$SNF_IMAGE_PROPERTY_ROOT_PARTITION" ]; then
 fi
 
 rootdev="${SNF_IMAGE_DEV}${SNF_IMAGE_PROPERTY_ROOT_PARTITION}"
+fs="$($BLKID -s TYPE -o value "$rootdev")" || true
 
 if [ ! -b "$rootdev" ]; then
     log_error "Root partition device:\`$rootdev' is not a block device." \
@@ -63,7 +64,7 @@ if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" == *bsd ]]; then
 
     # See mount_all() for a reason why we do this
     $MOUNT -o remount,rw "$SNF_IMAGE_TARGET"
-elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
+elif [ "$fs" = ntfs ]; then
     # Special case for Windows:
     # Perform a case-insensitive, all-lowercase mount with 'lowntfs-3g'
     # to avoid problems with different case between installations,
@@ -92,7 +93,7 @@ else
     $MOUNT -o rw "$rootdev" "$SNF_IMAGE_TARGET"
 fi
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
+if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^windows ]]; then
     exit 0
 fi
 

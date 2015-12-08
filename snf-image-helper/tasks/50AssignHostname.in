@@ -41,6 +41,25 @@ fi
 # Check if the image overwrites the task
 check_if_overwritten
 
+windows-legacy_hostname() {
+    local target hostname sysprepinf
+    target="$1"
+    hostname="$2"
+
+    check_windows_computer_name "$hostname"
+
+    sysprepinf=$(get_sysprepinf "$target")
+    if [ -z "$sysprepinf" ]; then
+        log_error 'No C:\SYSPREP\SYSPREP.INF found in the instance.'
+    fi
+
+    echo -n "Assigning new computer name..."
+
+    @scriptsdir@/handle-ini-file.py "$sysprepinf" set UserData ComputerName "$hostname"
+
+    echo done
+}
+
 windows_hostname() {
     local target hostname unattend tmp_unattend namespace
     target="$1"
@@ -55,28 +74,13 @@ windows_hostname() {
 
     namespace="urn:schemas-microsoft-com:unattend"
 
-    # Windows XP / Server 2003:
-    # Set the hostname inside a SYSPREP.INF answer file, if found
-    sysprepinf=$(get_sysprepinf "$target")
-    # Windows Vista / Server 2008 and later:
-    # Use Unattend.xml or similar
     unattend=$(get_unattend "$target")
-
-    if [ -z "$sysprepinf" -a -z "$unattend" ]; then
-        log_error "No C:\SYSPREP\SYSPREP.INF or Unattend.xml found in Image."
+    if [ -z "$unattend" ]; then
+        log_error "No Unattend.xml found in the instance."
     fi
 
-    if [ -n "$sysprepinf" ]; then
-        @scriptsdir@/handle-ini-file.py \
-            "$sysprepinf" set UserData ComputerName "$hostname"
-    fi
-
-    if [ -n "$unattend" ]; then
-        "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$hostname" "$unattend" > "$tmp_unattend"
-        cat "$tmp_unattend" > "$unattend"
-    fi
-    
     "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$hostname" "$unattend" > "$tmp_unattend"
+    cat "$tmp_unattend" > "$unattend"
 
     echo done
 }

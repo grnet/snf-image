@@ -40,7 +40,7 @@ fi
 # Check if the image overwrites the task
 check_if_overwritten
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]; then
+if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^windows ]]; then
     exit 0
 fi
 
@@ -50,34 +50,36 @@ fi
 
 target=$SNF_IMAGE_TARGET
 mkdir -p "$target/Windows/Setup/Scripts"
+touch "$target/Windows/Setup/Scripts/SetupComplete.cmd"
 
-unattend=$(get_unattend "$target")
-
-if [ -n "$unattend" -a ! check_yes_no SNF_IMAGE_PROPERTY_IGNORE_UNATTEND ]; then
-    warn "Using the Unattend.xml file found in the image"
-else
-    rm -f "$unattend"
-    if [ -n "$SNF_IMAGE_UNATTEND" ]; then
-        echo "Installing custom Unattend.xml file..."
-        if [ -f "$SNF_IMAGE_UNATTEND" ]; then
-            cat "$SNF_IMAGE_UNATTEND" > "$target/Unattend.xml"
-        else
-            log_error "Custom unattend file: \`"$SNF_IMAGE_UNATTEND"' is missing"
-        fi
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = windows ]; then
+    unattend=$(get_unattend "$target")
+    if test -n "$unattend" && ! check_yes_no SNF_IMAGE_PROPERTY_IGNORE_UNATTEND; then
+        warn "Using the Unattend.xml file found in the image"
     else
-        cat "@commondir@/unattend.xml" > "$target/Unattend.xml"
+        rm -f "$unattend"
+        if [ -n "$SNF_IMAGE_UNATTEND" ]; then
+            echo "Installing custom Unattend.xml file..."
+            if [ -f "$SNF_IMAGE_UNATTEND" ]; then
+                cat "$SNF_IMAGE_UNATTEND" > "$target/Unattend.xml"
+            else
+                log_error "Custom unattend file: \`"$SNF_IMAGE_UNATTEND"' is missing"
+            fi
+        else
+            cat "@commondir@/unattend.xml" > "$target/Unattend.xml"
+        fi
     fi
+
+    # FIXME: There is no guarantee the answer file is actually named
+    # C:\unattend.xml. These may have to be modified to use the actual
+    # name of the answer file, as returned by get_unattend().
+
+    echo "del /Q /F C:\unattend.xml" >> \
+            "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+    echo "del /Q /F C:\windows\panther\unattend.xml" >> \
+            "$target/Windows/Setup/Scripts/SetupComplete.cmd"
 fi
-
-# FIXME: There is no guarantee the answer file is actually named
-# C:\unattend.xml. These may have to be modified to use the actual
-# name of the answer file, as returned by get_unattend().
-
-echo "del /Q /F C:\unattend.xml" > \
-        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
-
-echo "del /Q /F C:\windows\panther\unattend.xml" >> \
-        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
 
 mkdir -p "$target/Windows/SnfScripts"
 
@@ -96,42 +98,44 @@ echo "del /Q /F C:\Windows\SnfScripts\ChangeAdminPassword.cmd" >> \
 echo "rmdir C:\Windows\SnfScripts" >> \
         "$target/Windows/Setup/Scripts/SetupComplete.cmd"
 
-# If using an old-style (XP / Server 2003) SYSPREP.INF answer file,
-# ensure C:\SnfScripts\SetupComplete.cmd is executed via CmdLines.txt
-# which must be installed in the InstalledfilesPath from SYSPREP.INF.
-sysprepinf=$(get_sysprepinf "$target")
-if [ -n "$sysprepinf" ]; then
-    h=@scriptsdir@/handle-ini-file.py
-    installfilespath=$($h "$sysprepinf" get Unattended InstallFilesPath)
-    if [ -z "$installfilespath" ]; then
-        # Set InstallFilesPath to C:\SYSPREP\i386 explicitly, if missing
-        $h "$sysprepinf" set Unattended InstallFilesPath 'C:\SYSPREP\i386'
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
+    # If using an old-style (XP / Server 2003) SYSPREP.INF answer file,
+    # ensure C:\SnfScripts\SetupComplete.cmd is executed via CmdLines.txt
+    # which must be installed in the InstalledfilesPath from SYSPREP.INF.
+    sysprepinf=$(get_sysprepinf "$target")
+    if [ -n "$sysprepinf" ]; then
+        h=@scriptsdir@/handle-ini-file.py
         installfilespath=$($h "$sysprepinf" get Unattended InstallFilesPath)
-    fi
-    if [ -z "$installfilespath" ]; then
-        log_error "Failed to get value of InstallFilesPath in SYSPREP.INF"
-    fi
-    installfilespath=$(tr [A-Z] [a-z] <<< "$installfilespath")
+        if [ -z "$installfilespath" ]; then
+            # Set InstallFilesPath to C:\SYSPREP\i386 explicitly, if missing
+            $h "$sysprepinf" set Unattended InstallFilesPath 'C:\SYSPREP\i386'
+            installfilespath=$($h "$sysprepinf" get Unattended InstallFilesPath)
+        fi
+        if [ -z "$installfilespath" ]; then
+            log_error "Failed to get value of InstallFilesPath in SYSPREP.INF"
+        fi
+        installfilespath=${installfilespath,,}
 
-    if [[ ! "$installfilespath" == 'c:\sysprep\'* ]]; then
-        log_error "InstallFilesPath from SYSPREP.INF not under C:\\SYSPREP\\"
-    fi
-    installfilespath=${installfilespath#'c:\sysprep\'}
-    installfilespath=$(echo "$installfilespath"|sed 's/\\/\//g')
+        if [[ ! "$installfilespath" == 'c:\sysprep\'* ]]; then
+            log_error "InstallFilesPath from SYSPREP.INF not under C:\\SYSPREP\\"
+        fi
+        installfilespath=${installfilespath#c:\\sysprep\\}
+        installfilespath=${installfilespath//\\//}
 
-    # Ensure final location for InstallFilesPath is still under $target
-    oemdir="$target"/sysprep/"$installfilespath"/'$OEM$'
-    if ! readlink -f "$oemdir"|grep -q "^$target"; then
-        log_error "Invalid value for InstallFilesPath in SYSPREP.INF"
-    fi
+        # Ensure final location for InstallFilesPath is still under $target
+        oemdir="$target/sysprep/$installfilespath"/'$OEM$'
+        if ! readlink -f "$oemdir"|grep -q "^$target"; then
+            log_error "Invalid value for InstallFilesPath in SYSPREP.INF"
+        fi
 
-    mkdir -p "$oemdir"
-    cmdlinestxt="$oemdir"/CmdLines.txt
-    if [ ! -f "$cmdlinestxt" ]; then
-        echo "[Commands]" >"$cmdlinestxt"
+        mkdir -p "$oemdir"
+        cmdlinestxt="$oemdir/CmdLines.txt"
+        if [ ! -f "$cmdlinestxt" ]; then
+            echo "[Commands]" >"$cmdlinestxt"
+        fi
+        echo '"C:\Windows\SnfScripts\ChangeAdminPassword.cmd"' >>"$cmdlinestxt"
+        echo '"C:\Windows\Setup\Scripts\SetupComplete.cmd"' >>"$cmdlinestxt"
     fi
-    echo "\"C:\\Windows\\SnfScripts\\ChangeAdminPassword.cmd\"" >>"$cmdlinestxt"
-    echo "\"C:\\Windows\\Setup\\Scripts\\SetupComplete.cmd\"" >>"$cmdlinestxt"
 fi
 
 exit 0

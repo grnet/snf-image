@@ -50,7 +50,7 @@ if [ -z "$SNF_IMAGE_PERSONALITY" ]; then
     exit 0
 fi
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
+if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^windows ]]; then
     echo "$SNF_IMAGE_PERSONALITY" |
         @scriptsdir@/inject-files.py "$SNF_IMAGE_TARGET"
     exit 0

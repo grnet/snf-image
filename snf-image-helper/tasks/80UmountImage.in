@@ -39,7 +39,7 @@ fi
 
 umount_all "$SNF_IMAGE_TARGET"
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
+if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^windows ]]; then
     # Ensure any NTFS-3G processes are gone after umounting NTFS.
     # Otherwise, we run the risk of continuing while data may still be
     # written to the underlying block device.
