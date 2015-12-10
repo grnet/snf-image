@@ -714,8 +714,8 @@ get_ufstype() {
 }
 
 check_if_root() {
-    local os fd device is_root args exists windows_fs linux_fs freebsd_fs \
-        netbsd_fs openbsd_fs supported_fs
+    local os fd device is_root args windows_fs linux_fs freebsd_fs netbsd_fs \
+        openbsd_fs supported_fs current_version hive major minor
 
     osfamily="$1"
     fs="$2"
@@ -741,6 +741,8 @@ check_if_root() {
 
     if [ "$fs" = ufs ]; then
         args="-t ufs -o ufstype=$(get_ufstype "$device"),ro"
+    elif $NTFSINFO -m "$device" &> /dev/null; then
+        args="-t lowntfs-3g -o ignore_case,windows_names,norecover,ro"
     else
         args="-o ro"
     fi
@@ -758,9 +760,21 @@ check_if_root() {
             fi
             ;;
         windows)
-            exists=$(find "$SNF_IMAGE_TARGET" -maxdepth 1 -iname windows)
-            if [ -n "$exists" -a -d "$exists" ]; then
+            hive="$SNF_IMAGE_TARGET/windows/system32/config/software"
+            if [ -f "$hive" ]; then
                 is_root=yes
+                current_version=$($HIVEXGET "$hive" 'Microsoft\Windows NT\CurrentVersion' \
+                    | grep ^'"CurrentVersion"=')
+                if [[ "$current_version" =~ \"CurrentVersion\"=\"([0-9]+)\.([0-9]+)\" ]]; then
+                    major=${BASH_REMATCH[1]}
+                    minor=${BASH_REMATCH[2]}
+                    if [ $major -lt 6 ]; then
+                        # This windows version is older than Vista
+                        osfamily='windows-legacy'
+                    fi
+                else
+                    warn "Can't decode windows version: $current_version"
+                fi
             fi
             ;;
     esac
