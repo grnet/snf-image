@@ -81,7 +81,8 @@ send_result_xen() {
 
 send_monitor_message_xen() {
     #Broadcast the message
-    echo "$@" | socat "STDIO" "UDP-DATAGRAM:${BROADCAST}:${MONITOR_PORT},broadcast"
+    echo "$@" \
+        | socat "STDIO" "UDP-DATAGRAM:${BROADCAST}:${MONITOR_PORT},broadcast"
 }
 
 start_debug_shell_kvm() {
@@ -295,7 +296,8 @@ get_partition_table() {
     # If the partition table is GUID and the secondary GPT header is not at the
     # end of the disk, parted will raise an error and will also print a warning
     # about the "Last Usable LBA" entry of the header.
-    if ! output="$("$PARTED" -s -m "$dev" unit s print | grep -E -v "^(Warning|Error): ")"; then
+    if ! output="$("$PARTED" -s -m "$dev" unit s print \
+                   | grep -E -v "^(Warning|Error): ")"; then
         log_error "Unable to read partition table for device \`${dev}'. The image seems corrupted."
     fi
 
@@ -550,7 +552,8 @@ bsd2linux() {
     partition="$1"
     device="$2"
 
-    linux_part=$(@scriptsdir@/disklabel.py --get-partitions-mapping "$device" | grep ^"$partition": | cut -d" " -f2)
+    linux_part=$(@scriptsdir@/disklabel.py --get-partitions-mapping "$device" \
+                 | grep ^"$partition": | cut -d" " -f2)
 
     if [[ "$linux_part" =~ ^[1-9][0-9]*$ ]]; then
         echo "$linux_part"
@@ -611,7 +614,9 @@ mount_all() {
         ;;
     esac
 
-    fstab="$(grep -v ^\# "${target}/etc/fstab" | awk "{ if (match(\$3, \"$fs\")) { print \$2,\$1,\$3 } }" | sort -bd)"
+    fstab="$(grep -v ^\# "${target}/etc/fstab" \
+             | awk "{ if (match(\$3, \"$fs\")) { print \$2,\$1,\$3 } }" \
+             | sort -bd)"
     # <mpoint> <device> <fs>
     while read -ra entry; do
         # Skip root. It is already mounted
@@ -678,7 +683,8 @@ umount_all() {
     target="$1"
 
     # Unmount file systems mounted under directory `target'
-    mpoints="$({ awk "{ if (match(\$2, \"^$target\")) { print \$2 } }" < /proc/mounts; } | sort -rbd | uniq)"
+    mpoints="$({ awk "{ if (match(\$2, \"^$target\")) { print \$2 } }" < /proc/mounts; } \
+               | sort -rbd | uniq)"
 
     for mpoint in $mpoints; do
         umount $mpoint
@@ -694,7 +700,8 @@ get_ufstype() {
     if [ "$pipefail" = on ]; then
         set +o pipefail
     fi
-    ufs="$($DUMPFS_UFS "$device" | head -1 | awk -F "[()]" '{ for (i=2; i<NF; i+=2) print $i }')"
+    ufs="$($DUMPFS_UFS "$device" | head -1 \
+           | awk -F "[()]" '{ for (i=2; i<NF; i+=2) print $i }')"
     if [ "$pipefail" = on ]; then
         set -o pipefail
     fi
@@ -764,7 +771,7 @@ check_if_root() {
             if [ -f "$hive" ]; then
                 is_root=yes
                 current_version=$($HIVEXGET "$hive" 'Microsoft\Windows NT\CurrentVersion' \
-                    | grep ^'"CurrentVersion"=')
+                                  | grep ^'"CurrentVersion"=')
                 if [[ "$current_version" =~ \"CurrentVersion\"=\"([0-9]+)\.([0-9]+)\" ]]; then
                     major=${BASH_REMATCH[1]}
                     minor=${BASH_REMATCH[2]}
