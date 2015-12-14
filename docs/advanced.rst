@@ -82,7 +82,7 @@ the VM's hard disk is this one:
 
 .. literalinclude:: ../snf-image-helper/unattend.xml
    :language: xml
-   :emphasize-lines: 7,21-30
+   :emphasize-lines: 7,15-24
    :linenos:
 
 The file above is expected to work with all AMD64 releases (Server or Desktop)
