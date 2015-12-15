@@ -74,7 +74,7 @@ elif [ "$fs" = ntfs ]; then
 
     # Be extra safe: Warn when attempting to work on a dirty NTFS.
     # In the future, it would be best to reject the Image outright.
-    if ! $NTFSINFO -m "$rootdev"; then
+    if ! $NTFSINFO -m "$rootdev" &>/dev/null; then
         warn "Failed to get NTFS info, fs may be dirty (scheduled for CHKDSK)."
         warn "Please fix your Image. Future versions will refuse to continue."
     fi
