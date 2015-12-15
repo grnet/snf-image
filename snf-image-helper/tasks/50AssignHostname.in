@@ -61,7 +61,7 @@ windows-legacy_hostname() {
 }
 
 windows_hostname() {
-    local target hostname unattend tmp_unattend namespace
+    local target hostname unattend xpath
     target="$1"
     hostname="$2"
 
@@ -72,15 +72,24 @@ windows_hostname() {
 
     echo -n "Assigning new computer name..."
 
-    namespace="urn:schemas-microsoft-com:unattend"
-
     unattend=$(get_unattend "$target")
     if [ -z "$unattend" ]; then
         log_error "No Unattend.xml found in the instance."
     fi
 
-    "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$hostname" "$unattend" > "$tmp_unattend"
-    cat "$tmp_unattend" > "$unattend"
+    xpath='/_:unattend/_:settings[@pass="specialize"]/_:component[@name="Microsoft-Windows-Shell-Setup"]'
+    if ! $XMLSTARLET sel -t -v "$xpath" "$unattend" &> /dev/null; then
+        log_error 'Error in unattend.xml: Component "Microsoft-Windows-Shell-Setup" '\
+                  'is needed but missing from "specialize" pass.'
+    fi
+
+    if $XMLSTARLET sel -t -v "$xpath/_:ComputerName" "$unattend" &> /dev/null; then
+        # ComputerName node exists. Updating its value.
+        $XMLSTARLET ed -L -u "$xpath/_:ComputerName" -v "$hostname" "$unattend"
+    else
+        # Creating ComputerName subnode.
+        $XMLSTARLET ed -L -s "$xpath" -t elem -n ComputerName -v "$hostname" "$unattend"
+    fi
 
     echo done
 }
