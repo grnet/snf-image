@@ -720,6 +720,27 @@ get_ufstype() {
     esac
 }
 
+get_windows_architecture() {
+    local target hive current
+    target="$1"
+
+    hive="$target/windows/system32/config/system"
+
+    current=$($HIVEXGET "$hive" Select Current)
+    if [ "$current" = "" ]; then
+        log_error "Unable to find CurrentControlSet in the registry"
+    fi
+
+    # Pad the value with zeros
+    current=$(printf "%03d" "$current")
+
+   $HIVEXGET "$hive" 'ControlSet'${current}'\Control\Session Manager\Environment' \
+       | grep PROCESSOR_ARCHITECTURE \
+       | cut -d= -f2 \
+       | sed 's/"//g' \
+       | tr [A-Z] [a-z]
+}
+
 check_if_root() {
     local os fd device is_root args windows_fs linux_fs freebsd_fs netbsd_fs \
         openbsd_fs supported_fs current_version hive major minor

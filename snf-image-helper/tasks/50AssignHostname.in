@@ -61,7 +61,7 @@ windows-legacy_hostname() {
 }
 
 windows_hostname() {
-    local target hostname unattend xpath
+    local target hostname unattend arch xpath
     target="$1"
     hostname="$2"
 
@@ -76,8 +76,13 @@ windows_hostname() {
     if [ -z "$unattend" ]; then
         log_error "No Unattend.xml found in the instance."
     fi
+    arch=$(get_windows_architecture "$target")
+    if [ -z "$arch" ]; then
+        log_error "Unable to determine windows architecture"
+    fi
 
-    xpath='/_:unattend/_:settings[@pass="specialize"]/_:component[@name="Microsoft-Windows-Shell-Setup"]'
+    xpath='/_:unattend/_:settings[@pass="specialize"]/'
+    xpath+='_:component[@name="Microsoft-Windows-Shell-Setup" and @processorArchitecture="'${arch}'"]'
     if ! $XMLSTARLET sel -t -v "$xpath" "$unattend" &> /dev/null; then
         log_error 'Error in unattend.xml: Component "Microsoft-Windows-Shell-Setup" '\
                   'is needed but missing from "specialize" pass.'
