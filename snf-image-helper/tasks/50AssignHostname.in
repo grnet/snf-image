@@ -81,12 +81,11 @@ windows_hostname() {
         log_error "Unable to determine windows architecture"
     fi
 
+    # Create Microsoft-Windows-Shell-Setup component if missing
+    create_unattend_component "$unattend" specialize Microsoft-Windows-Shell-Setup "$arch"
+
     xpath='/_:unattend/_:settings[@pass="specialize"]/'
-    xpath+='_:component[@name="Microsoft-Windows-Shell-Setup" and @processorArchitecture="'${arch}'"]'
-    if ! $XMLSTARLET sel -t -v "$xpath" "$unattend" &> /dev/null; then
-        log_error 'Error in unattend.xml: Component "Microsoft-Windows-Shell-Setup" '\
-                  'is needed but missing from "specialize" pass.'
-    fi
+    xpath+='_:component[@name="Microsoft-Windows-Shell-Setup" and @processorArchitecture="'"${arch}"'"]'
 
     if $XMLSTARLET sel -t -v "$xpath/_:ComputerName" "$unattend" &> /dev/null; then
         # ComputerName node exists. Updating its value.

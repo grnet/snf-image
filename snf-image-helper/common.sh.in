@@ -547,6 +547,42 @@ get_unattend() {
     done
 }
 
+create_unattend_component() {
+    local unattend pass component arch args settings component
+    unattend="$1"
+    pass="$2"
+    name="$3"
+    arch="$4"
+
+    settings='/_:unattend/_:settings[@pass="'"$pass"'"]'
+
+    # Create the 'settings' node if missing
+    if ! $XMLSTARLET sel -t -v "$settings" "$unattend" &>/dev/null; then
+        $XMLSTARLET ed -L -s '/_:unattend' -t elem -n settings -i \
+            '/_:unattend/_:settings[not(@pass)]' -t attr -n pass -v "$pass" \
+            "$unattend"
+    fi
+
+    component=$settings'/_:component[@name="'"$name"'" and @processorArchitecture="'"$arch"'"]'
+
+    # Create the 'component' node if missing
+    if ! $XMLSTARLET sel -t -v "$component" "$unattend" &>/dev/null; then
+        $XMLSTARLET ed -L -s "$settings" -t elem -n component "$unattend"
+        $XMLSTARLET ed -L -i "$settings"'/_:component[not(@name)]' -t attr \
+            -n name -v "$name" "$unattend"
+        $XMLSTARLET ed -L -i \
+            "$settings"'/_:component[@name="'"$name"'" and not(@processorArchitecture)]' \
+            -t attr -n processorArchitecture -v "$arch" "$unattend"
+        $XMLSTARLET ed -L \
+            -i "$component" -t attr -n publicKeyToken -v 31bf3856ad364e35 \
+            -i "$component" -t attr -n language -v neutral \
+            -i "$component" -t attr -n versionScope -v nonSxS \
+            -i "$component" -t attr -n xmlns:wcm -v "http://schemas.microsoft.com/WMIConfig/2002/State" \
+            -i "$component" -t attr -n xmlns:xsi -v "http://www.w3.org/2001/XMLSchema-instance" \
+            "$unattend"
+    fi
+}
+
 bsd2linux() {
     local partition device
     partition="$1"
