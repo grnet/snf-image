@@ -92,9 +92,6 @@ $HIVEXREGEDIT --merge "$hive" "$regfile"
 # Ensure the value of fDenyTSConnections is re-set
 # to its original Image-specific state after Setup has completed.
 
-# TODO: Remove any snf-image specific <RunSynchronousCommand>
-# segments from unattend.xml, since this task is now self-standing.
-
 curval=$(printf "%d" "$curval")
 echo "reg add \"HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\" /f /v fDenyTSConnections /t REG_DWORD /d $curval" >> \
     "$SNF_IMAGE_TARGET/Windows/Setup/Scripts/SetupComplete.cmd"

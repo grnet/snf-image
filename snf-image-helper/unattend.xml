@@ -28,18 +28,13 @@
                     <Path>diskpart.exe /s C:\Windows\SnfScripts\ExtendFilesystem</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
-                    <Description>Enable RDP</Description>
-                    <Order>3</Order>
-                    <Path>cmd /C reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f</Path>
-                </RunSynchronousCommand>
-                <RunSynchronousCommand wcm:action="add">
                     <Description>Enable Automatic Updates</Description>
-                    <Order>4</Order>
+                    <Order>3</Order>
                     <Path>cmd /C reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update" /v AUOptions /t REG_DWORD /d 4 /f</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
                     <Description>Supress local user account setup</Description>
-                    <Order>5</Order>
+                    <Order>4</Order>
                     <Path>cmd /C reg add HKLM\Software\Microsoft\Windows\CurrentVersion\Setup\OOBE /v UnattendCreatedUser /t REG_DWORD /d 1 /f</Path>
                 </RunSynchronousCommand>
             </RunSynchronous>
@@ -57,18 +52,13 @@
                     <Path>diskpart.exe /s C:\Windows\SnfScripts\ExtendFilesystem</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
-                    <Description>Enable RDP</Description>
-                    <Order>3</Order>
-                    <Path>cmd /C reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f</Path>
-                </RunSynchronousCommand>
-                <RunSynchronousCommand wcm:action="add">
                     <Description>Enable Automatic Updates</Description>
-                    <Order>4</Order>
+                    <Order>3</Order>
                     <Path>cmd /C reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update" /v AUOptions /t REG_DWORD /d 4 /f</Path>
                 </RunSynchronousCommand>
                 <RunSynchronousCommand wcm:action="add">
                     <Description>Supress local user account setup</Description>
-                    <Order>5</Order>
+                    <Order>4</Order>
                     <Path>cmd /C reg add HKLM\Software\Microsoft\Windows\CurrentVersion\Setup\OOBE /v UnattendCreatedUser /t REG_DWORD /d 1 /f</Path>
                 </RunSynchronousCommand>
             </RunSynchronous>
