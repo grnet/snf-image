@@ -583,6 +583,38 @@ create_unattend_component() {
     fi
 }
 
+windows_add_synchronous_command() {
+    local unattend arch description order path component run_synchronous \
+        token rsc
+    unattend="$1"
+    arch="$2"
+    description="$3"
+    order="$4"
+    path="$5"
+
+    # Create 'Microsoft-Windows-Deployment' if missing
+    create_unattend_component "$unattend" specialize 'Microsoft-Windows-Deployment' "$arch"
+
+    component='/_:unattend/_:settings[@pass="specialize"]'
+    component+='/_:component[@name="Microsoft-Windows-Deployment" and @processorArchitecture="'"$arch"'"]'
+
+    if ! $XMLSTARLET sel -t -v "$component/_:RunSynchronous" "$unattend" &>/dev/null; then
+        $XMLSTARLET ed -L -s "$component" -t elem -n RunSynchronous "$unattend"
+    fi
+
+    token=$(cat /proc/sys/kernel/random/uuid)
+    $XMLSTARLET ed -L -s "$component/_:RunSynchronous" -t elem -n RunSynchronousCommand "$unattend"
+    $XMLSTARLET ed -L -s "($component/_:RunSynchronous/_:RunSynchronousCommand[count(@*)=0])[1]" -t attr -n randomToken -v "$token" "$unattend"
+
+    rsc="$component/_:RunSynchronous/_:RunSynchronousCommand[@randomToken=\"$token\"]"
+    $XMLSTARLET ed -L \
+        -s "$rsc" -t elem -n Description -v "$description" \
+        -s "$rsc" -t elem -n Order -v "$order" \
+        -s "$rsc" -t elem -n Path -v "$path" \
+        -i "$rsc" -t attr -n wcm:action -v add \
+        -d "$rsc/@randomToken" "$unattend"
+}
+
 bsd2linux() {
     local partition device
     partition="$1"

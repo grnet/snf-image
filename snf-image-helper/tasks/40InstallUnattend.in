@@ -49,37 +49,13 @@ if [ ! -f "@commondir@/unattend.xml" ]; then
 fi
 
 target=$SNF_IMAGE_TARGET
+arch=$(get_windows_architecture "$target")
+if [ -z "$arch" ]; then
+    log_error "Unable to determine windows architecture"
+fi
+
 mkdir -p "$target/Windows/Setup/Scripts"
 touch "$target/Windows/Setup/Scripts/SetupComplete.cmd"
-
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = windows ]; then
-    unattend=$(get_unattend "$target")
-    if test -n "$unattend" && ! check_yes_no SNF_IMAGE_PROPERTY_IGNORE_UNATTEND; then
-        warn "Using the Unattend.xml file found in the image"
-    else
-        rm -f "$unattend"
-        if [ -n "$SNF_IMAGE_UNATTEND" ]; then
-            echo "Installing custom Unattend.xml file..."
-            if [ -f "$SNF_IMAGE_UNATTEND" ]; then
-                cat "$SNF_IMAGE_UNATTEND" > "$target/Unattend.xml"
-            else
-                log_error "Custom unattend file: \`"$SNF_IMAGE_UNATTEND"' is missing"
-            fi
-        else
-            cat "@commondir@/unattend.xml" > "$target/Unattend.xml"
-        fi
-    fi
-
-    # FIXME: There is no guarantee the answer file is actually named
-    # C:\unattend.xml. These may have to be modified to use the actual
-    # name of the answer file, as returned by get_unattend().
-
-    echo "del /Q /F C:\unattend.xml" >> \
-            "$target/Windows/Setup/Scripts/SetupComplete.cmd"
-
-    echo "del /Q /F C:\windows\panther\unattend.xml" >> \
-            "$target/Windows/Setup/Scripts/SetupComplete.cmd"
-fi
 
 mkdir -p "$target/Windows/SnfScripts"
 
@@ -98,7 +74,57 @@ echo "del /Q /F C:\Windows\SnfScripts\ChangeAdminPassword.cmd" >> \
 echo "rmdir C:\Windows\SnfScripts" >> \
         "$target/Windows/Setup/Scripts/SetupComplete.cmd"
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
+
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = windows ]; then
+    unattend=$(get_unattend "$target")
+    if test -n "$unattend" && ! check_yes_no SNF_IMAGE_PROPERTY_IGNORE_UNATTEND; then
+        warn "Using the Unattend.xml file found in the image"
+    else
+        rm -f "$unattend"
+        if [ -n "$SNF_IMAGE_UNATTEND" ]; then
+            echo "Installing custom Unattend.xml file..."
+            if [ -f "$SNF_IMAGE_UNATTEND" ]; then
+                cat "$SNF_IMAGE_UNATTEND" > "$target/Unattend.xml"
+            else
+                log_error "Custom unattend file: \`"$SNF_IMAGE_UNATTEND"' is missing"
+            fi
+        else
+            cat "@commondir@/unattend.xml" > "$target/Unattend.xml"
+        fi
+        unattend="$target/Unattend.xml"
+    fi
+
+    # FIXME: There is no guarantee the answer file is actually named
+    # C:\unattend.xml. These may have to be modified to use the actual
+    # name of the answer file, as returned by get_unattend().
+
+    echo 'del /Q /F C:\unattend.xml' >> \
+            "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+    echo 'del /Q /F C:\windows\panther\unattend.xml' >> \
+            "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+    # Check if ChangeAdminPassword.cmd and ExtendFilesystem are executed by
+    # this unattend.xml file. If this is not the case, then add the proper
+    # entries
+    xpath='/_:unattend/_:settings/_:component[@processorArchitecture="'"$arch"'"]/_:RunSynchronous/_:RunSynchronousCommand'
+    commands=$($XMLSTARLET sel -t -v "$xpath/_:Path"  "$unattend") || true
+    max_order=$($XMLSTARLET sel -t -v "($xpath/_:Order[not(. < $xpath/_:Order)])[1]" "$unattend") || true
+    order=$((max_order+1)) || true
+    if ! grep -i ChangeAdminPassword.cmd <<< "$commands" &> /dev/null; then
+        windows_add_synchronous_command "$unattend" "$arch" \
+            "Change user passwords" \
+            "$((order++))" \
+            'C:\Windows\SnfScripts\ChangeAdminPassword.cmd'
+    fi
+
+    if ! grep -i ExtendFilesystem <<< "$commands" &> /dev/null; then
+        windows_add_synchronous_command "$unattend" "$arch" \
+            "Extend the file system" \
+            "$((order++))" \
+            'diskpart.exe /s C:\Windows\SnfScripts\ExtendFilesystem'
+    fi
+elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
     # If using an old-style (XP / Server 2003) SYSPREP.INF answer file,
     # ensure C:\SnfScripts\SetupComplete.cmd is executed via CmdLines.txt
     # which must be installed in the InstalledfilesPath from SYSPREP.INF.
