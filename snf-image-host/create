@@ -206,6 +206,10 @@ if [ -n "$IMG_PERSONALITY" ]; then
     snf_export_PERSONALITY="$IMG_PERSONALITY"
 fi
 
+if [ -n "${OS_PRODUCT_KEY+dummy}" ]; then
+    snf_export_OS_PRODUCT_KEY="$OS_PRODUCT_KEY"
+fi
+
 assign_disk_devices_to snf_export_DEV
 
 create_floppy "$floppy"

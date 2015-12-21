@@ -124,6 +124,13 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = windows ]; then
             "$((order++))" \
             'diskpart.exe /s C:\Windows\SnfScripts\ExtendFilesystem'
     fi
+
+    if [ -n "${SNF_IMAGE_OS_PRODUCT_KEY+dummy}" ]; then
+        windows_update_unattend_node "$unattend" specialize \
+            "Microsoft-Windows-Shell-Setup" "$arch" ProductKey \
+            "$SNF_IMAGE_OS_PRODUCT_KEY"
+    fi
+
 elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
     # If using an old-style (XP / Server 2003) SYSPREP.INF answer file,
     # ensure C:\SnfScripts\SetupComplete.cmd is executed via CmdLines.txt
@@ -164,6 +171,11 @@ elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
 
         echo '"C:\Windows\SnfScripts\ChangeAdminPassword.cmd"' >>"$cmdlinestxt"
         echo '"C:\Windows\Setup\Scripts\SetupComplete.cmd"' >>"$cmdlinestxt"
+
+        #Install a product key if defined
+        if [ -n "${SNF_IMAGE_OS_PRODUCT_KEY+dummy}" ]; then
+            $h "$sysprepinf" set UserData ProductKey "$SNF_IMAGE_OS_PRODUCT_KEY"
+        fi
     fi
 fi
 

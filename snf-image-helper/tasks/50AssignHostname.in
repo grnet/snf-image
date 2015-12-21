@@ -61,7 +61,7 @@ windows-legacy_hostname() {
 }
 
 windows_hostname() {
-    local target hostname unattend arch xpath
+    local target hostname unattend arch component
     target="$1"
     hostname="$2"
 
@@ -81,19 +81,8 @@ windows_hostname() {
         log_error "Unable to determine windows architecture"
     fi
 
-    # Create Microsoft-Windows-Shell-Setup component if missing
-    create_unattend_component "$unattend" specialize Microsoft-Windows-Shell-Setup "$arch"
-
-    xpath='/_:unattend/_:settings[@pass="specialize"]/'
-    xpath+='_:component[@name="Microsoft-Windows-Shell-Setup" and @processorArchitecture="'"${arch}"'"]'
-
-    if $XMLSTARLET sel -t -v "$xpath/_:ComputerName" "$unattend" &> /dev/null; then
-        # ComputerName node exists. Updating its value.
-        $XMLSTARLET ed -L -u "$xpath/_:ComputerName" -v "$hostname" "$unattend"
-    else
-        # Creating ComputerName subnode.
-        $XMLSTARLET ed -L -s "$xpath" -t elem -n ComputerName -v "$hostname" "$unattend"
-    fi
+    windows_update_unattend_node "$unattend" specialize \
+        "Microsoft-Windows-Shell-Setup" "$arch" ComputerName "$hostname"
 
     echo done
 }

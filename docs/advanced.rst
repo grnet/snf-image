@@ -242,6 +242,8 @@ environment variables that are present when the configuration tasks run.
 +---------------------+-------------------------------------------------------+
 |PASSWD_HASH          |The value of the img_passwd_hash OS parameter.         |
 +---------------------+-------------------------------------------------------+
+|OS_PRODUCT_KEY       |The value of the os_product_key parameter.             |
++---------------------+-------------------------------------------------------+
 |PROPERTY_*           |The value of a specific image property that was        |
 |                     |specified in json through the img_properties OS        |
 |                     |parameter.                                             |

@@ -581,6 +581,8 @@ create_unattend_component() {
             -i "$component" -t attr -n xmlns:xsi -v "http://www.w3.org/2001/XMLSchema-instance" \
             "$unattend"
     fi
+
+    echo "$component"
 }
 
 windows_add_synchronous_command() {
@@ -593,10 +595,7 @@ windows_add_synchronous_command() {
     path="$5"
 
     # Create 'Microsoft-Windows-Deployment' if missing
-    create_unattend_component "$unattend" specialize 'Microsoft-Windows-Deployment' "$arch"
-
-    component='/_:unattend/_:settings[@pass="specialize"]'
-    component+='/_:component[@name="Microsoft-Windows-Deployment" and @processorArchitecture="'"$arch"'"]'
+    component="$(create_unattend_component "$unattend" specialize 'Microsoft-Windows-Deployment' "$arch")"
 
     if ! $XMLSTARLET sel -t -v "$component/_:RunSynchronous" "$unattend" &>/dev/null; then
         $XMLSTARLET ed -L -s "$component" -t elem -n RunSynchronous "$unattend"
@@ -613,6 +612,27 @@ windows_add_synchronous_command() {
         -s "$rsc" -t elem -n Path -v "$path" \
         -i "$rsc" -t attr -n wcm:action -v add \
         -d "$rsc/@randomToken" "$unattend"
+}
+
+windows_update_unattend_node() {
+    local unattend pass component arch name value xpath
+    unattend="$1"
+    pass=$2
+    component=$3
+    arch="$4"
+    name="$5"
+    value="$6"
+
+    # Create component if missing
+    xpath="$(create_unattend_component "$unattend" "$pass" "$component" "$arch")"
+
+    if $XMLSTARLET sel -t -v "$xpath/_:$name" "$unattend" &> /dev/null; then
+        # The node exists. Updating its value.
+        $XMLSTARLET ed -L -u "$xpath/_:$name" -v "$value" "$unattend"
+    else
+        # Creating the node.
+        $XMLSTARLET ed -L -s "$xpath" -t elem -n $name -v "$value" "$unattend"
+    fi
 }
 
 bsd2linux() {

@@ -130,7 +130,7 @@ get_api20_arguments() {
     get_api10_arguments
 
     if [ "$SCRIPT_NAME" = "create" ]; then
-        local osparams="IMG_ID IMG_FORMAT IMG_PASSWD IMG_PASSWD_HASH IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL"
+        local osparams="IMG_ID IMG_FORMAT IMG_PASSWD IMG_PASSWD_HASH IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY"
         local osp
 
         # Store OSP_VAR in VAR
