@@ -156,9 +156,12 @@ elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
 
         mkdir -p "$oemdir"
         cmdlinestxt="$oemdir/CmdLines.txt"
-        if [ ! -f "$cmdlinestxt" ]; then
-            echo "[Commands]" >"$cmdlinestxt"
+        touch "$cmdlinestxt"
+
+        if ! egrep '^[[:space:]]*\[Commands\][[:space:]]*$' "$cmdlinestxt" >/dev/null; then
+            echo "[Commands]" >> "$cmdlinestxt"
         fi
+
         echo '"C:\Windows\SnfScripts\ChangeAdminPassword.cmd"' >>"$cmdlinestxt"
         echo '"C:\Windows\Setup\Scripts\SetupComplete.cmd"' >>"$cmdlinestxt"
     fi
