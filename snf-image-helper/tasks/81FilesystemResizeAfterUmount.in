@@ -1,0 +1,78 @@
+#! /bin/bash
+
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+### BEGIN TASK INFO
+# Provides:		FilesystemResizeUnmounted
+# RunBefore:
+# RunAfter: 		UmountImage
+# Short-Description:	Resize file system to use all the available space
+### END TASK INFO
+
+set -e
+. "@commondir@/common.sh"
+
+trap task_cleanup EXIT
+report_task_start
+# Check if the task should be prevented from running.
+check_if_excluded
+
+if [ ! -b "$SNF_IMAGE_DEV" ]; then
+    log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
+fi
+
+if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then
+    warn "No partition chosen for resize"
+    exit 0
+fi
+
+table=$(get_partition_table "$SNF_IMAGE_DEV")
+partition=$(get_partition_by_num "$table" "$SNF_IMAGE_RESIZE_PART")
+id=$(cut -d: -f1 <<< "$partition")
+ptype=$(cut -d: -f5 <<< "$partition")
+
+device="${SNF_IMAGE_DEV}${id}"
+
+if [ "$ptype" = ntfs ]; then
+    # For NTFS on newer Windows, only perform an offline resize if forced. On
+    # Windows XP where online resize is not supported, do this by default.
+    if (check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE || \
+        [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]); then
+        # Be extra safe: Refuse to work on Image with a dirty NTFS
+        if ! $NTFSINFO -m "$device" &>/dev/null; then
+            log_error "NTFS is dirty, refusing to continue"
+        fi
+        $NTFSRESIZE -P -f "$device"
+        if check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE_NOCHECK; then
+            warn "Clearing dirty bit after NTFS resize"
+            warn "Please run CHKDSK manually after boot"
+            $NTFSFIX -d "$device"
+        else
+            warn "NTFS filesystem set to dirty after offline resize"
+            warn "Disable with OFFLINE_NTFSRESIZE_NOCHECK (dangerous)"
+        fi
+    else
+        warn "Not performing offline file system resize for NTFS unless forced"
+    fi
+else
+    warn "Only resizing NTFS partitions on this task."
+fi
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

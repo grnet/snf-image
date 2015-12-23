@@ -15,7 +15,9 @@ dist_tasks_SCRIPTS = \
 		50SELinuxAutorelabel \
 		60EnforcePersonality \
 		70RunCustomTask \
-		80UmountImage
+		80UmountImage \
+		81FilesystemResizeAfterUmount
+
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \

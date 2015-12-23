@@ -85,26 +85,11 @@ if [[ "$ptype" == ext[234] ]]; then
 elif [[ "$ptype" == "freebsd-ufs" ]]; then
     $GROWFS_UFS -y "$device"
 elif [[ "$ptype" == "ntfs" ]]; then
-    # For NTFS on newer Windows, only perform an offline resize if forced. On
-    # Windows XP where online resize is not supported, do this by default.
-    if (check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE || \
-        [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]); then
-        # Be extra safe: Refuse to work on Image with a dirty NTFS
-        if ! $NTFSINFO -m "$device" &>/dev/null; then
-            log_error "NTFS is dirty, refusing to continue"
-        fi
-        $NTFSRESIZE -P -f "$device"
-        if check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE_NOCHECK; then
-            warn "Clearing dirty bit after NTFS resize"
-            warn "Please run CHKDSK manually after boot"
-            $NTFSFIX -d "$device"
-        else
-            warn "NTFS filesystem set to dirty after offline resize"
-            warn "Disable with OFFLINE_NTFSRESIZE_NOCHECK (dangerous)"
-        fi
-    else
-        warn "Not performing offline file system resize for NTFS unless forced"
-    fi
+    # Since ntfsresize will mark the file system as dirty and will schedule it
+    # for CHKDSK, it's better not to mount it afterwards. This is why we have
+    # a separate task for growing NTFS partitions after snf-image-helper has
+    # umounted everything.
+    warn "Not resizing NTFS partitions on this task"
 else
     warn "Don't know how to resize unmounted partition \`$id' with file system \`$ptype'."
 fi
