@@ -33,7 +33,7 @@ launch_helper() {
 
     floppy="$1"
 
-    result_file=$(mktemp result.XXXXXX)
+    result_file=$(mktemp --tmpdir result.XXXXXX)
     add_cleanup rm "$result_file"
 
     report_info "Starting customization VM..."
