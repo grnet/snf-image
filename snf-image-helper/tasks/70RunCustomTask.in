@@ -20,7 +20,7 @@
 ### BEGIN TASK INFO
 # Provides:		RunCustomTask
 # RunBefore:		UmountImage
-# RunAfter:		MountImage
+# RunAfter:		FilesystemResizeMounted
 # Short-Description:	Run a user defined task on the image
 ### END TASK INFO
 

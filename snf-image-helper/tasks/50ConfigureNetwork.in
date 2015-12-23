@@ -20,7 +20,7 @@
 ### BEGIN TASK INFO
 # Provides:             ConfigureNetwork
 # RunBefore:            EnforcePersonality
-# RunAfter:             InstallUnattend
+# RunAfter:             FilesystemResizeMounted
 # Short-Description:    Configure the VM's network interfaces
 ### END TASK INFO
 

@@ -20,7 +20,7 @@
 ### BEGIN TASK INFO
 # Provides:		SELinuxAutorelabel
 # RunBefore:            EnforcePersonality
-# RunAfter:             MountImage
+# RunAfter:             FilesystemResizeMounted
 # Short-Description:	Force the system to relabel at next boot
 ### END TASK INFO
 

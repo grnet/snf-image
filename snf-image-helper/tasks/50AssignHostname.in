@@ -20,7 +20,7 @@
 ### BEGIN TASK INFO
 # Provides:		AssignHostname
 # RunBefore:            EnforcePersonality
-# RunAfter:		InstallUnattend
+# RunAfter:		InstallUnattend & FilesystemResizeMounted
 # Short-Description:	Assign Hostname/Computer Name to the instance
 ### END TASK INFO
 
