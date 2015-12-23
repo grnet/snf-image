@@ -47,9 +47,9 @@ check_required() {
     done
 
     if [ -n "${OS_PRODUCT_KEY+dummy}" ]; then
-        if [[ ! "${OS_PRODUCT_KEY}" =~ ^([a-zA-Z0-9]{5}-){3}[a-zA-Z0-9]{5}$ ]]; then
+        if [[ ! "${OS_PRODUCT_KEY}" =~ ^([a-zA-Z0-9]{5}-){4}[a-zA-Z0-9]{5}$ ]]; then
             log_error "Invalid OS API Parameter: os_product_key."
-            log_error "Valid format is: XXXXX-XXXXX-XXXXX-XXXXX"
+            log_error "Valid format is: XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
             exit 1
         fi
     fi
