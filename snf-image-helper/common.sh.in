@@ -829,9 +829,28 @@ get_windows_architecture() {
        | tr [A-Z] [a-z]
 }
 
+get_windows_nt_version() {
+    local target hive current_version
+    target="$1"
+
+    hive="$target/windows/system32/config/software"
+    if [ ! -f "$hive" ]; then
+        log_error "File: \`$hive' does not exist"
+    fi
+
+    current_version=$($HIVEXGET "$hive" 'Microsoft\Windows NT\CurrentVersion' \
+                      | grep ^'"CurrentVersion"=')
+
+    if [[ "$current_version" =~ \"CurrentVersion\"=\"([0-9]+)\.([0-9]+)\" ]]; then
+        echo ${BASH_REMATCH[1]} ${BASH_REMATCH[2]}
+    else
+        log_error "Can't decode CurrentVersion registry key: $current_version"
+    fi
+}
+
 check_if_root() {
     local os fd device is_root args windows_fs linux_fs freebsd_fs netbsd_fs \
-        openbsd_fs supported_fs current_version hive major minor
+        openbsd_fs supported_fs major minor
 
     osfamily="$1"
     fs="$2"
@@ -876,21 +895,12 @@ check_if_root() {
             fi
             ;;
         windows)
-            hive="$SNF_IMAGE_TARGET/windows/system32/config/software"
-            if [ -f "$hive" ]; then
-                is_root=yes
-                current_version=$($HIVEXGET "$hive" 'Microsoft\Windows NT\CurrentVersion' \
-                                  | grep ^'"CurrentVersion"=')
-                if [[ "$current_version" =~ \"CurrentVersion\"=\"([0-9]+)\.([0-9]+)\" ]]; then
-                    major=${BASH_REMATCH[1]}
-                    minor=${BASH_REMATCH[2]}
-                    if [ $major -lt 6 ]; then
-                        # This windows version is older than Vista
-                        osfamily='windows-legacy'
-                    fi
-                else
-                    warn "Can't decode windows version: $current_version"
+            if [ -d "$SNF_IMAGE_TARGET/windows/system32" ]; then
+                read major minor <<<$(get_windows_nt_version "$SNF_IMAGE_TARGET")
+                if [ $major -lt 6 ]; then
+                    osfamily="windows-legacy"
                 fi
+                is_root=yes
             fi
             ;;
     esac

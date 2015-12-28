@@ -120,12 +120,12 @@ if ! check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_ALL_TASKS; then
         detect_image_properties "$SNF_IMAGE_DEV"
 
         if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "" ]; then
-            echo "Detected OSFAMILY: $DETECTED_OSFAMILY"
+            warn "Detected OSFAMILY: $DETECTED_OSFAMILY"
             export SNF_IMAGE_PROPERTY_OSFAMILY="$DETECTED_OSFAMILY"
         fi
 
         if [ "$SNF_IMAGE_PROPERTY_ROOT_PARTITION" = "" ]; then
-            echo "Detected ROOT_PARTITION: $DETECTED_ROOT_PARTITION"
+            warn "Detected ROOT_PARTITION: $DETECTED_ROOT_PARTITION"
             export SNF_IMAGE_PROPERTY_ROOT_PARTITION="$DETECTED_ROOT_PARTITION"
         fi
     fi

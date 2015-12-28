@@ -74,8 +74,13 @@ echo "del /Q /F C:\Windows\SnfScripts\ChangeAdminPassword.cmd" >> \
 echo "rmdir C:\Windows\SnfScripts" >> \
         "$target/Windows/Setup/Scripts/SetupComplete.cmd"
 
+read nt_version_major nt_version_minor <<<$(get_windows_nt_version "$target")
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = windows ]; then
+    if [ $nt_version_major -lt 6 ]; then
+        log_error "Windows image seems older than Vista. Use 'windows-legacy' as OSFAMILY"
+    fi
+
     unattend=$(get_unattend "$target")
     if test -n "$unattend" && ! check_yes_no SNF_IMAGE_PROPERTY_IGNORE_UNATTEND; then
         warn "Using the Unattend.xml file found in the image"
@@ -132,6 +137,10 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = windows ]; then
     fi
 
 elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
+    if [ $nt_version_major -ge 6 ]; then
+        log_error "Windows image is not legacy. Use 'windows' as OSFAMILY"
+    fi
+
     # If using an old-style (XP / Server 2003) SYSPREP.INF answer file,
     # ensure C:\SnfScripts\SetupComplete.cmd is executed via CmdLines.txt
     # which must be installed in the InstalledfilesPath from SYSPREP.INF.
