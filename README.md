@@ -24,7 +24,7 @@ for more information.
 Copyright and license
 =====================
 
-Copyright (C) 2011-2015 GRNET S.A. and individual contributors.
+Copyright (C) 2011-2016 GRNET S.A. and individual contributors.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
