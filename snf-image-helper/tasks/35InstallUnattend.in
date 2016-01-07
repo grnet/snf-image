@@ -81,6 +81,9 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = windows ]; then
         log_error "Windows image seems older than Vista. Use 'windows-legacy' as OSFAMILY"
     fi
 
+    # The system must be generalized in order to proceed
+    check_windows_if_sysprepped "$target"
+
     unattend=$(get_unattend "$target")
     if test -n "$unattend" && ! check_yes_no SNF_IMAGE_PROPERTY_IGNORE_UNATTEND; then
         warn "Using the Unattend.xml file found in the image"
@@ -140,6 +143,9 @@ elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
     if [ $nt_version_major -ge 6 ]; then
         log_error "Windows image is not legacy. Use 'windows' as OSFAMILY"
     fi
+
+    # Check if Mini-Setup is to be started at the next boot
+    check_windows-legacy_if_sysprepped "$target"
 
     # If using an old-style (XP / Server 2003) SYSPREP.INF answer file,
     # ensure C:\SnfScripts\SetupComplete.cmd is executed via CmdLines.txt
