@@ -210,9 +210,17 @@ EOF
 }
 
 create_floppy() {
-    local img target
+    local img target IFS index name tm
 
     img=$1
+
+    IFS=$'\t' read index name tm <<< \
+        "$(grep -Pi "^[0-9]{3}\\t$WINDOWS_TIMEZONE\\t" \
+        ms-timezone-indexes.txt || true)"
+
+    if [[ ! "$index" =~ [0-9]{3} ]]; then
+        log_error "Invalid value for WINDOWS_TIMEZONE (=$WINDOWS_TIMEZONE) variable"
+    fi
 
     target=$(mktemp -d)
     add_cleanup rmdir "$target"
@@ -230,10 +238,10 @@ create_floppy() {
             exit 1
         fi
     else
-        cat unattend.xml > "$target/unattend.xml"
+        sed -e "s/@TIMEZONE@/$name/g" unattend.xml.in > "$target/unattend.xml"
     fi
 
-    cat sysprep.inf > "$target/sysprep.inf"
+    sed -e "s/@TIMEZONE_INDEX@/$index/g" sysprep.inf.in > "$target/sysprep.inf"
     # Put all the NIC info in the floppy
     set | egrep ^NIC_ | sed -e 's/^/export SNF_IMAGE_/' >> "$target/rules"
     umount "$target"
@@ -446,6 +454,7 @@ fi
 : ${PITHOS_ARCHIPELAGO_CONF:="@sysconfdir@/archipelago/archipelago.conf"}
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
 : ${UNATTEND:="@UNATTEND@"}
+: ${WINDOWS_TIMEZONE:="GMT Standard Time"}
 : ${XEN_SCRIPTS_DIR="@sysconfdir@/xen/scripts"}
 : ${MULTISTRAP_CONFIG:="@MULTISTRAP_CONFIG@"}
 : ${MULTISTRAP_APTPREFDIR:="@MULTISTRAP_APTPREFDIR@"}

@@ -114,6 +114,15 @@
 # are doing.
 # UNATTEND="@UNATTEND@"
 
+# WINDOWS_TIMEZONE: This variable is used to specify the time zone when
+# deploying a Windows image. This will only work if you are using snf-image's
+# default OS answer file. If the Windows image already contains an answer file,
+# which should by itself specify a time zone in order to have an unattended
+# Windows customization process, this variable will be completely ignored. For
+# a list of available time zones, check here:
+# https://msdn.microsoft.com/en-us/library/ms912391%28v=winembedded.11%29.aspx
+# WINDOWS_TIMEZONE="GMT Standard Time"
+
 # Paths for needed programs. Uncomment and change the variables below if you
 # don't want to use the default one.
 # MD5SUM="md5sum"

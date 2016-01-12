@@ -5,7 +5,7 @@
 
 [GuiUnattended]
     OEMSkipRegional=1
-    TimeZone=130
+    TimeZone=@TIMEZONE_INDEX@
     OemSkipWelcome=1
 
 [UserData]
