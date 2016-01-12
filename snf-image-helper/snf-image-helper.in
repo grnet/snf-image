@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011-2015 GRNET S.A.
+# Copyright (C) 2011-2016 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -84,6 +84,14 @@ export SNF_IMAGE_DEV=${SNF_IMAGE_DEV_0}
 
 if [ -f "$rules/unattend.xml" ]; then
     export SNF_IMAGE_UNATTEND="$rules/unattend.xml"
+else
+    log_error "unattend.xml file missing from the device hosting the rules"
+fi
+
+if [ -f "$rules/sysprep.inf" ]; then
+    export SNF_IMAGE_SYSPREPINF="$rules/sysprep.inf"
+else
+    log_error "sysprep.inf file missing from the device hosting the rules"
 fi
 
 if [ -n "$SNF_IMAGE_PROPERTIES" ]; then

@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2014 GRNET S.A.
+# Copyright (C) 2011-2016 GRNET S.A.
 # Copyright (C) 2007, 2008, 2009 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -229,7 +229,11 @@ create_floppy() {
             log_error "Unattend file: \`"$UNATTEND"' does not exist"
             exit 1
         fi
+    else
+        cat unattend.xml > "$target/unattend.xml"
     fi
+
+    cat sysprep.inf > "$target/sysprep.inf"
     # Put all the NIC info in the floppy
     set | egrep ^NIC_ | sed -e 's/^/export SNF_IMAGE_/' >> "$target/rules"
     umount "$target"

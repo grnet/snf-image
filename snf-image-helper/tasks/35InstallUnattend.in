@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
+# Copyright (C) 2011-2016 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,10 +44,6 @@ if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^windows ]]; then
     exit 0
 fi
 
-if [ ! -f "@commondir@/unattend.xml" ]; then
-    log_error "File \`@commondir@/unattend.xml' is missing."
-fi
-
 target=$SNF_IMAGE_TARGET
 arch=$(get_windows_architecture "$target")
 if [ -z "$arch" ]; then
@@ -89,17 +85,8 @@ if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = windows ]; then
         warn "Using the Unattend.xml file found in the image"
     else
         rm -f "$unattend"
-        if [ -n "$SNF_IMAGE_UNATTEND" ]; then
-            echo "Installing custom Unattend.xml file..."
-            if [ -f "$SNF_IMAGE_UNATTEND" ]; then
-                cat "$SNF_IMAGE_UNATTEND" > "$target/Unattend.xml"
-            else
-                log_error "Custom unattend file: \`"$SNF_IMAGE_UNATTEND"' is missing"
-            fi
-        else
-            cat "@commondir@/unattend.xml" > "$target/Unattend.xml"
-        fi
-        unattend="$target/Unattend.xml"
+        cat "$SNF_IMAGE_UNATTEND" > "$target/unattend.xml"
+        unattend="$target/unattend.xml"
     fi
 
     # FIXME: There is no guarantee the answer file is actually named
@@ -151,46 +138,52 @@ elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
     # ensure C:\SnfScripts\SetupComplete.cmd is executed via CmdLines.txt
     # which must be installed in the InstalledfilesPath from SYSPREP.INF.
     sysprepinf=$(get_sysprepinf "$target")
-    if [ -n "$sysprepinf" ]; then
-        h=@scriptsdir@/handle-ini-file.py
-        installfilespath=$($h "$sysprepinf" get Unattended InstallFilesPath)
-        if [ -z "$installfilespath" ]; then
-            # Set InstallFilesPath to C:\SYSPREP\i386 explicitly, if missing
-            $h "$sysprepinf" set Unattended InstallFilesPath 'C:\SYSPREP\i386'
-            installfilespath=$($h "$sysprepinf" get Unattended InstallFilesPath)
-        fi
-        if [ -z "$installfilespath" ]; then
-            log_error "Failed to get value of InstallFilesPath in SYSPREP.INF"
-        fi
-        installfilespath=${installfilespath,,}
+    if test -n "$sysprepinf" && ! check_yes_no SNF_IMAGE_PROPERTY_IGNORE_UNATTEND; then
+        warn "Using the sysprep.inf file found in the image"
+    else
+        rm -f "$sysprepinf"
+        mkdir -p "$target/sysprep"
+        cat "$SNF_IMAGE_SYSPREPINF" > "$target/sysprep/sysprep.inf"
+    fi
 
-        if [[ ! "$installfilespath" == 'c:\sysprep\'* ]]; then
-            log_error "InstallFilesPath from SYSPREP.INF not under C:\\SYSPREP\\"
-        fi
-        installfilespath=${installfilespath#c:\\sysprep\\}
-        installfilespath=${installfilespath//\\//}
+    infedit="@scriptsdir@/handle-ini-file.py"
+    installfilespath=$($infedit "$sysprepinf" get Unattended InstallFilesPath)
+    if [ -z "$installfilespath" ]; then
+        # Set InstallFilesPath to C:\SYSPREP\i386 explicitly, if missing
+        "$infedit" "$sysprepinf" set Unattended InstallFilesPath 'C:\SYSPREP\i386'
+        installfilespath=$("$infedit" "$sysprepinf" get Unattended InstallFilesPath)
+    fi
+    if [ -z "$installfilespath" ]; then
+        log_error "Failed to get value of InstallFilesPath in SYSPREP.INF"
+    fi
+    installfilespath=${installfilespath,,}
 
-        # Ensure final location for InstallFilesPath is still under $target
-        oemdir="$target/sysprep/$installfilespath"/'$OEM$'
-        if ! readlink -f "$oemdir"|grep -q "^$target"; then
-            log_error "Invalid value for InstallFilesPath in SYSPREP.INF"
-        fi
+    if [[ ! "$installfilespath" == 'c:\sysprep\'* ]]; then
+        log_error "InstallFilesPath from SYSPREP.INF not under C:\\SYSPREP\\"
+    fi
+    installfilespath=${installfilespath#c:\\sysprep\\}
+    installfilespath=${installfilespath//\\//}
 
-        mkdir -p "$oemdir"
-        cmdlinestxt="$oemdir/CmdLines.txt"
-        touch "$cmdlinestxt"
+    # Ensure final location for InstallFilesPath is still under $target
+    oemdir="$target/sysprep/$installfilespath"/'$OEM$'
+    if ! readlink -f "$oemdir"|grep -q "^$target"; then
+        log_error "Invalid value for InstallFilesPath in SYSPREP.INF"
+    fi
 
-        if ! egrep '^[[:space:]]*\[Commands\][[:space:]]*$' "$cmdlinestxt" >/dev/null; then
-            echo "[Commands]" >> "$cmdlinestxt"
-        fi
+    mkdir -p "$oemdir"
+    cmdlinestxt="$oemdir/CmdLines.txt"
+    touch "$cmdlinestxt"
 
-        echo '"C:\Windows\SnfScripts\ChangeAdminPassword.cmd"' >>"$cmdlinestxt"
-        echo '"C:\Windows\Setup\Scripts\SetupComplete.cmd"' >>"$cmdlinestxt"
+    if ! egrep '^[[:space:]]*\[Commands\][[:space:]]*$' "$cmdlinestxt" >/dev/null; then
+        echo "[Commands]" >> "$cmdlinestxt"
+    fi
 
-        #Install a product key if defined
-        if [ -n "${SNF_IMAGE_OS_PRODUCT_KEY+dummy}" ]; then
-            $h "$sysprepinf" set UserData ProductKey "$SNF_IMAGE_OS_PRODUCT_KEY"
-        fi
+    echo '"C:\Windows\SnfScripts\ChangeAdminPassword.cmd"' >>"$cmdlinestxt"
+    echo '"C:\Windows\Setup\Scripts\SetupComplete.cmd"' >>"$cmdlinestxt"
+
+    #Install a product key if defined
+    if [ -n "${SNF_IMAGE_OS_PRODUCT_KEY+dummy}" ]; then
+        "$infedit" "$sysprepinf" set UserData ProductKey "$SNF_IMAGE_OS_PRODUCT_KEY"
     fi
 fi
 

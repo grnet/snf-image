@@ -12,7 +12,8 @@ dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list ${srcdir}/xen-common.sh \
-               ${srcdir}/kvm-common.sh
+               ${srcdir}/kvm-common.sh ${srcdir}/unattend.xml \
+               ${srcdir}/sysprep.inf
 
 dist_xenscripts_SCRIPTS = ${srcdir}/vif-snf-image
 
