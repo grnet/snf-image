@@ -110,8 +110,10 @@
 
 # UNATTEND: This variable overwrites the unattend.xml file used when deploying
 # a Windows image. snf-image-helper will use its own unattend.xml file if this
-# variable is empty. Please leave this empty, unless you really know what you
-# are doing.
+# variable is empty.
+# WARNING: This variable is DEPRECATED. If you need to define an answer file
+# different that the one shipped with snf-image, which is very likely, put it
+# inside the image or use the os_answer_file OS parameter.
 # UNATTEND="@UNATTEND@"
 
 # WINDOWS_TIMEZONE: This variable is used to specify the time zone when

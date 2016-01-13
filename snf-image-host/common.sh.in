@@ -130,11 +130,13 @@ get_api20_arguments() {
     get_api10_arguments
 
     if [ "$SCRIPT_NAME" = "create" ]; then
-        local osparams="IMG_ID IMG_FORMAT IMG_PASSWD IMG_PASSWD_HASH IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY"
-        local osp
+        local osparams osp
+
+        osparams=(IMG_ID IMG_FORMAT IMG_PASSWD IMG_PASSWD_HASH IMG_PROPERTIES
+                  IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE)
 
         # Store OSP_VAR in VAR
-        for param in $osparams; do
+        for param in "${osparams[@]}"; do
             # This is black magic. Only execute the eval command if the "param"
             # variable is set. This way we can distinguish between variables
             # with value "" and variables that have not been set at all
@@ -148,7 +150,7 @@ get_api20_arguments() {
             local config config_params
             echo "Downloading configuration parameters from: \`$CONFIG_URL'" >&2
             config=$($CURL -f "$CONFIG_URL")
-            config_params=$(./decode-config.py $osparams <<< "$config")
+            config_params=$(./decode-config.py "${osparams[@]}" <<< "$config")
             eval "$config_params"
         fi
     fi
@@ -228,20 +230,34 @@ create_floppy() {
     dd bs=512 count=2880 if=/dev/zero of="$img"
     mkfs.ext2 -F "$img" > /dev/null
     mount "$img" "$target" -o loop
-    set | egrep ^snf_export_\\w+= | sed -e 's/^snf_export_/export SNF_IMAGE_/' \
-        > "$target/rules"
+
     if [ -n "$UNATTEND" ]; then
+        log_warning "Used deprecated variable UNATTEND which may be removed in the future"
         if [ -f "$UNATTEND" ]; then
             cat "$UNATTEND" > "$target/unattend.xml"
         else
-            log_error "Unattend file: \`"$UNATTEND"' does not exist"
+            log_error "File defined with UNATTEND variable (=$UNATTEND) does not exist"
             exit 1
         fi
+    elif [ -n "$OS_ANSWER_FILE" ]; then
+        $CURL -f "$OS_ANSWER_FILE" > "$target/unattend.xml"
+        # This file has higher priority than the one in the image
+        snf_export_PROPERTY_IGNORE_UNATTEND=yes
     else
         sed -e "s/@TIMEZONE@/$name/g" unattend.xml.in > "$target/unattend.xml"
     fi
 
-    sed -e "s/@TIMEZONE_INDEX@/$index/g" sysprep.inf.in > "$target/sysprep.inf"
+    # Since unattend.xml and sysprep.inf are used mutually exclusive, if the
+    # user has defined an OS Answer File, make both of them point to it.
+    if [ -n "$OS_ANSWER_FILE" ]; then
+        ln -s unattend.xml "$target/sysprep.inf"
+    else
+        sed -e "s/@TIMEZONE_INDEX@/$index/g" sysprep.inf.in > "$target/sysprep.inf"
+    fi
+
+    set | egrep ^snf_export_\\w+= | sed -e 's/^snf_export_/export SNF_IMAGE_/' \
+        > "$target/rules"
+
     # Put all the NIC info in the floppy
     set | egrep ^NIC_ | sed -e 's/^/export SNF_IMAGE_/' >> "$target/rules"
     umount "$target"

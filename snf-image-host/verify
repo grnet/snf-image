@@ -24,7 +24,7 @@ set -e
 
 check_required() {
     local required_params="IMG_ID IMG_FORMAT"
-    local osparams="$required_params IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY"
+    local osparams="$required_params IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE"
     local osp
 
     source_variant
@@ -50,6 +50,15 @@ check_required() {
         if [[ ! "${OS_PRODUCT_KEY}" =~ ^([a-zA-Z0-9]{5}-){4}[a-zA-Z0-9]{5}$ ]]; then
             log_error "Invalid OS API Parameter: os_product_key."
             log_error "Valid format is: XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+            exit 1
+        fi
+    fi
+
+    if [ -n "${OS_ANSWER_FILE+dummy}" ]; then
+        # Not the perfect regexp but should catch most errors.
+        if [[ ! "${OS_ANSWER_FILE}" =~ ^(https?|ftps?|file)://.+ ]]; then
+            log_error "Invalid OS API Parameter: os_answer_file."
+            log_error "Valid value is an file,ftp[s] or http[s] URI".
             exit 1
         fi
     fi
