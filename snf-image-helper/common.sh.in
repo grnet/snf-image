@@ -610,8 +610,8 @@ windows_add_synchronous_command() {
         -s "$rsc" -t elem -n Description -v "$description" \
         -s "$rsc" -t elem -n Order -v "$order" \
         -s "$rsc" -t elem -n Path -v "$path" \
-        -i "$rsc" -t attr -n wcm:action -v add \
-        -d "$rsc/@randomToken" "$unattend"
+        -i "$rsc" -t attr -n wcm:action -v add "$unattend"
+    $XMLSTARLET ed -L -d "$rsc/@randomToken" "$unattend"
 }
 
 windows_update_unattend_node() {
