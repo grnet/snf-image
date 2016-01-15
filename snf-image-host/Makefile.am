@@ -42,6 +42,7 @@ edit = sed \
 	   -e 's|@INSTALL_MBR[@]|$(INSTALL_MBR)|g' \
 	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g' \
 	   -e 's|@UNATTEND[@]|$(UNATTEND)|g' \
+	   -e 's|@XEN_CMD[@]|$(XEN_CMD)|g' \
            -e 's|@MULTISTRAP_CONFIG[@]|$(MULTISTRAP_CONFIG)|g' \
            -e 's|@MULTISTRAP_APTPREFDIR[@]|$(MULTISTRAP_APTPREFDIR)|g'
 

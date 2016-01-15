@@ -472,6 +472,7 @@ fi
 : ${UNATTEND:="@UNATTEND@"}
 : ${WINDOWS_TIMEZONE:="GMT Standard Time"}
 : ${XEN_SCRIPTS_DIR="@sysconfdir@/xen/scripts"}
+: ${XEN_CMD:="@XEN_CMD@"}
 : ${MULTISTRAP_CONFIG:="@MULTISTRAP_CONFIG@"}
 : ${MULTISTRAP_APTPREFDIR:="@MULTISTRAP_APTPREFDIR@"}
 : ${DHCP_TAGS:="auto dhcp nfdhcpd"}

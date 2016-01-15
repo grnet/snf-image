@@ -57,6 +57,12 @@
 # XEN_SCRIPTS_DIR: Directory where the Xen scripts are stored
 # XEN_SCRIPTS_DIR="@sysconfdir@/xen/scripts"
 
+# XEN_CMD: This variable specifies the Xen CLI tool snf-image should use. This
+# depends on the XEN version and configuration and should probably coincide
+# with the Ganeti's xen_cmd hypervisor parameter for xen-hvm or xen-pvm. Right
+# now the supported ones are 'xm' and 'xl'.
+# XEN_CMD="@XEN_CMD@"
+
 # PITHOS_DB: Pithos database in SQLAlchemy format
 # PITHOS_DB="sqlite:////@localstatedir@/lib/pithos/backend.db"
 
