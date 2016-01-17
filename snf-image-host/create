@@ -133,17 +133,12 @@ case $BACKEND_TYPE in
         ;;
 esac
 
-# If the target device is not a real block device we'll first losetup it.
-# This is needed for file disks.
-if [ ! -b "$blockdev" ]; then
-    original_blockdev="$blockdev"
-    blockdev=$($LOSETUP --show -f "$blockdev")
-    add_cleanup $LOSETUP -d "$blockdev"
-fi
-
 case "$IMAGE_TYPE" in
     ntfsdump|extdump)
-        # Create partitions
+        # Create a corresponding blockdev if required
+        blockdev=$(losetup_disk "$disk0")
+
+        # Create partitions on blockdev
         format_disk0 "$blockdev" "$IMAGE_TYPE"
 
         # Install a new MBR
@@ -159,7 +154,7 @@ case "$IMAGE_TYPE" in
         fi
         ;;
     diskdump)
-        target="$blockdev"
+        target="$disk0"
         ;;
     *)
         log_error "Unknown Image format: \`$IMAGE_TYPE'"
