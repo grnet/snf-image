@@ -1,4 +1,4 @@
-# Copyright (C) 2013-2015 GRNET S.A. and individual contributors
+# Copyright (C) 2013-2016 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ assign_disk_devices_to() {
 }
 
 launch_helper() {
-    local result_file result snapshot rc floppy i disk_path disks
+    local result_file result snapshot rc floppy i disks
 
     floppy="$1"
 
@@ -41,8 +41,7 @@ launch_helper() {
 
     disks=""
     for ((i=0; i < DISK_COUNT; i++)); do
-        eval disk_path=\"\$DISK_${i}_PATH\"
-        disks+=" -drive file=$disk_path,format=raw,if=virtio,cache=none"
+        disks+=" -drive file=$(find_disk $i),format=raw,if=virtio,cache=none"
     done
 
     set +e

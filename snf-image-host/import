@@ -26,11 +26,7 @@ ganeti_os_main
 
 # If the device we will import to, is not a real block device,
 # we'll first losetup it. This is needed for file disks.
-if [ ! -b "$blockdev" ]; then
-    original_blockdev="$blockdev"
-    blockdev=$($LOSETUP --show -f "$blockdev")
-    add_cleanup $LOSETUP -d "$blockdev"
-fi
+blockdev=$(losetup_disk "$disk0")
 
 $DD of="$blockdev" bs=4M
 
