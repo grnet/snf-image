@@ -142,3 +142,5 @@
 # TIMEOUT="timeout"
 # CURL="curl"
 # TAR="tar"
+# BLOCKDEV="blockdev"
+# DD="dd"
