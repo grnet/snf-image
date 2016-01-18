@@ -41,6 +41,20 @@ some external programs in ``/etc/default/snf-image``:
   # HELPER_MEMORY: Virtual RAM size in megabytes to be given to the helper VM.
   # HELPER_MEMORY="512"
 
+  # HELPER_DEBUG: When enabled, the helper VM will drop to a root shell
+  # whenever a task fails. This allows the administrator or a developer
+  # to examine its internal state for debugging purposes.
+  # To access the shell, use a program like 'minicom' to connect to /dev/pts/X on
+  # the host, where /dev/pts/X is the name of the device reported in the Ganeti
+  # OS installation logs for helper's 3rd serial port, e.g.,
+  # "char device redirected to /dev/pts/9 (label serial3)".
+  # This feature is KVM-specific for the time being.
+  # For HELPER_DEBUG to be useful, you also need to set HELPER_SOFT_TIMEOUT
+  # to a much higher value.
+  # WARNING: DO NOT ENABLE THIS FEATURE IN PRODUCTION. Every failure to deploy
+  # an Image will cause the helper VM to hang.
+  # HELPER_DEBUG="no"
+
   # MULTISTRAP_CONFIG: Configuration file to be used with multistrap to create
   # the rootfs of the helper image.
   # MULTISTRAP_CONFIG="/etc/snf-image/multistrap.conf"
@@ -51,6 +65,12 @@ some external programs in ``/etc/default/snf-image``:
 
   # XEN_SCRIPTS_DIR: Directory where the Xen scripts are stored
   # XEN_SCRIPTS_DIR="/etc/xen/scripts"
+
+  # XEN_CMD: This variable specifies the Xen CLI tool snf-image should use. This
+  # depends on the XEN version and configuration and should probably coincide
+  # with the Ganeti's xen_cmd hypervisor parameter for xen-hvm or xen-pvm. Right
+  # now the supported ones are 'xm' and 'xl'.
+  # XEN_CMD="xl"
 
   # PITHOS_DB: Pithos database in SQLAlchemy format
   # PITHOS_DB="sqlite://///var/lib/pithos/backend.db"
@@ -101,13 +121,23 @@ some external programs in ``/etc/default/snf-image``:
   # will configure a VM's NIC to perform SLAAC and Stateless DHCPv6 if the card
   # is expected to have an IPv6 address and any of those tags is present in the
   # card's NETWORK_TAGS variable.
-  # STATELESS_DHCPV6_TAGS="nfdhcpd stateless_dhcpv6
+  # STATELESS_DHCPV6_TAGS="nfdhcpd stateless_dhcpv6"
 
   # UNATTEND: This variable overwrites the unattend.xml file used when deploying
   # a Windows image. snf-image-helper will use its own unattend.xml file if this
-  # variable is empty. Please leave this empty, unless you really know what you
-  # are doing.
+  # variable is empty.
+  # WARNING: This variable is DEPRECATED. If you need to define an answer file
+  # different that the one shipped with snf-image, which is very likely, put it
+  # inside the image or use the os_answer_file OS parameter.
   # UNATTEND=""
+
+  # WINDOWS_TIMEZONE: This variable is used to specify the time zone when
+  # deploying a Windows image. This will only work if you are using snf-image's
+  # default OS answer file. If the Windows image already contains an answer file
+  # or the os_answer_file OS parameter is used to define one, this variable will
+  # be completely ignored. For a list of available time zones, check here:
+  # https://msdn.microsoft.com/en-us/library/ms912391%28v=winembedded.11%29.aspx
+  # WINDOWS_TIMEZONE="GMT Standard Time"
 
   # Paths for needed programs. Uncomment and change the variables below if you
   # don't want to use the default one.
@@ -140,8 +170,9 @@ The most common configuration parameters the user may need to overwrite are:
  * **STATELESS_DHCPV6_TAGS**: To specify which Ganeti networks support SLAAC
    and stateless DHCPv6
  * **STATEFUL_DHCPV6_TAGS**: To specify which Ganeti networks support DHCPv6
- * **UNATTEND**: To specify a custom Unattend.xml file to use on Windows
-   instead of the default one
+ * **WINDOWS_TIMEZONE**: To specify a time zone to use when deploying Windows
+   images that do not host an Unattend.xml file and depend on the one provided
+   by *snf-image*.
 
 Paths of external programs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

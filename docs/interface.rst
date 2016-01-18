@@ -20,6 +20,10 @@ following OS Parameters:
  * **img_personality** (optional): files to be injected into the image's file
    system (:ref:`details <image-personality>`)
  * **config_url** (optional): the URL to download configuration data from
+ * **os_product_key** (optional): a product key to be used to license a Windows
+   deployment (windows-only)
+ * **os_answer_file** (optional): an answer file used by Windows to automate
+   the setup process, instead the default one (windows-only)
 
 .. _image-format:
 
@@ -129,8 +133,9 @@ A list of all properties follows:
 Diskdump only properties
 ++++++++++++++++++++++++
 
- * **OSFAMILY=linux|windows|freebsd|netbsd|openbsd**
-   This specifies whether the image is a Linux, a Windows or a \*BSD Image.
+ * **OSFAMILY=linux|windows|windows-legacy|freebsd|netbsd|openbsd**
+   This specifies whether the image is a Linux, a Windows or a \*BSD Image. For
+   Windows OSes prior to Vista, *windows-legacy* should be used.
    *{ext,ntfs}dump* formats are self descriptive regarding this property.
  * **ROOT_PARTITION=n**
    This specifies the partition number of the root partition. As mentioned

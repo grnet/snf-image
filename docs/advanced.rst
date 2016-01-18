@@ -52,7 +52,8 @@ Although *diskdump* is a lot more flexible than the older formats, there are
 still some rules to follow:
 
  * For Linux:
-   * All block devices in ``/etc/fstab`` should be specified using persistent names (UUID or LABEL)
+   * All block devices in ``/etc/fstab`` should be specified using persistent
+   names (UUID or LABEL)
    * LVM partitions are not supported
    * Only ext{2,3,4} file systems are supported
  * For FreeBSD:
@@ -80,14 +81,20 @@ previously been generalized [#f1]_ with a command like this:
 The pre-included Unattend.xml file that *snf-image* will by default install on
 the VM's hard disk is this one:
 
-.. literalinclude:: ../snf-image-helper/unattend.xml
+.. literalinclude:: ../snf-image-host/unattend.xml.in
    :language: xml
-   :emphasize-lines: 7,15-24
-   :linenos:
 
-The file above is expected to work with all AMD64 releases (Server or Desktop)
-of Microsoft Windows starting from version 6.1. The table below lists the
-releases the developers have confirmed it to work with:
+The file above is expected to work with all releases (Server or Desktop)
+of Microsoft Windows starting from version 6.1. The ``@TIMEZONE@`` containers
+you see are replaced by snf-image with the value of the *WINDOWS_TIMEZONE*
+configuration variable during the deployment. Also, as you may have already
+noticed, all *component* elements of the pre-included Unattend.xml are in 2
+copies. One for *processorArchitecture* *amd64* and one for *x86*. This is done
+in order to support both 32-bit and 64-bit versions of Windows using only one
+file.
+
+The table below lists the releases the developers have confirmed it to work
+with:
 
 +-------+----------------------+----------------------+
 |Version|Marketing name        | Editions             |
@@ -106,19 +113,44 @@ releases the developers have confirmed it to work with:
 +-------+----------------------+----------------------+
 
 Nevertheless, the user may want to use a custom Unattend.xml file that better
-fits his needs. To do so, he can either update the *UNATTEND* configuration
-parameter in ``/etc/default/snf-image`` to point to such a file in the host
-system or put his copy of the file in the root directory of the image's
-%SystemDrive% (*snf-image* will not install an Unattend.xml file if it is
-already present in the image, unless *IGNORE_UNATTEND* image property is
-defined). The latter is the recommended way to do it since it allows to provide
-answer files in a per-image basis.
+fits his needs. To do so, he can either use the *os_answer_file* OS parameter
+during the deployment to specify one or put his copy of the file in the root
+directory of the image's %SystemDrive%. *snf-image* will not install an
+Unattend.xml file if it is already present in the image, unless
+*IGNORE_UNATTEND* image property is defined.
 
-.. warning::
-  When using custom Unattend.xml files, keep in mind that the highlighted
-  entries (lines 7 & 21-30) are crucial for *snf-image* to work. You may remove
-  or add settings in the file but the highlighted entries must be present.
+Windows Legacy Deployment
++++++++++++++++++++++++++
 
+For Windows OSes prior to Windows Vista, the System Preparation Tool (Sysprep)
+utility is completely different than the one used on later versions. It is not
+installed with the OS itself. It's located in the Windows product CD in the
+``/Sypport/Tools/Deploy.cab`` file and needs to be extracted under the
+``%SYSTEMDRIVE%\Sysprep`` folder by the user. The  commands that needs to be
+executed in order to put the system in a state ready for cloning looks like
+this one:
+
+.. code-block:: console
+
+  Sysprep -mini -quiet
+
+The answer file which is typically called Sysprep.inf has an INI format. The
+one *snf-image* hosts and will install under ``C:\Sysprep\Sysprep.inf`` is this
+one:
+
+.. literalinclude:: ../snf-image-host/sysprep.inf.in
+   :language: ini
+
+The ``@TIMEZONE_INDEX@`` container will be replaced during the installation of
+the file by the index value of the time zone which is specified through the
+*WINDOWS_TIMEZONE* configuration variable. For more info check `here
+<https://msdn.microsoft.com/en-us/library/ms912391%28v=winembedded.11%29.aspx>`_.
+This file is known to work with Windows XP and in order for the deployment to
+be completely unattended, the user must provide a Windows Product key using the
+*os_product_key* OS parameter *snf-image* offers. As with the newer Windows
+versions, the user is free to use his custom copy of *sysprep.inf* either by
+putting it inside the image (under ``C:\Sysprep\Sysprep.inf``) or by using the
+*os_answer_file* OS parameter.
 
 Progress Monitoring Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -273,9 +305,11 @@ environment variables that are present when the configuration tasks run.
 |                     |parameter (see :ref:`Configuration Parameters          |
 |                     |<configuration-parameters>`)                           |
 +---------------------+-------------------------------------------------------+
-|UNATTEND             |The value of the UNATTED configuration parameter (see  |
-|                     |:ref:`Configuration Parameters                         |
-|                     |<configuration-parameters>`)                           |
+|UNATTEND             |The path to the Windows setup answer file              |
+|                     |(Unattend.xml)                                         |
++---------------------+-------------------------------------------------------+
+|SYSPREPINF           |The path to the Windows legacy setup answer file       |
+|                     |(sysprep.inf)                                          |
 +---------------------+-------------------------------------------------------+
 
 .. [#] all environment variable names are prefixed with *SNF_IMAGE_*
@@ -296,7 +330,6 @@ executable should make use of the :ref:`Configuration Tasks Environment
 <configuration-tasks-environment>`. Also keep in mind that this only works for
 configuration tasks that run while the image is mounted (have a priority
 between 31 and 79).
-
 
 Return Code and post execution
 ++++++++++++++++++++++++++++++
