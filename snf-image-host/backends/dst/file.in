@@ -1,0 +1,29 @@
+#!/bin/bash -e
+
+. @osdir@/common.sh
+
+DISK=$1
+IMAGE_TYPE=$2
+
+case "$IMAGE_TYPE" in
+    ntfsdump|extdump)
+        # Create a corresponding blockdev if required
+        blockdev=$(losetup_disk "$DISK")
+
+        # Create partitions
+        format_disk0 "$blockdev" "$IMAGE_TYPE"
+
+        # Install a new MBR
+        $INSTALL_MBR -p 1 -i n "$blockdev"
+
+        # map_disk0 uses kpartx and returns the filesystem device e.g. /dev/mapper/loop0
+        # The target that we will dump our data will be the first partition
+        target="$(map_disk0 "$blockdev")-1"
+        add_cleanup unmap_disk0 "$blockdev"
+        ;;
+    diskdump)
+        target=$DISK
+        ;;
+esac
+
+$DD bs=4M of="$target" oflag=direct iflag=fullblock

@@ -1,5 +1,7 @@
 osname=snf-image
 osdir=$(OS_DIR)/$(osname)
+backend_srcdir=$(osdir)/backends/src
+backend_dstdir=$(osdir)/backends/dst
 defaultdir=$(DEFAULT_DIR)
 exampledir = $(datarootdir)/doc/$(PACKAGE)
 variantsdir=${sysconfdir}/ganeti/snf-image/variants
@@ -9,6 +11,14 @@ dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 	${srcdir}/rename ${srcdir}/verify ${srcdir}/pithcat \
 	${srcdir}/copy-monitor.py ${srcdir}/helper-monitor.py \
 	${srcdir}/host-monitor.py ${srcdir}/decode-config.py
+
+dist_backend_src_SCRIPTS = \
+	${srcdir}/backends/src/file \
+	${srcdir}/backends/src/network \
+	${srcdir}/backends/src/pithos
+
+dist_backend_dst_SCRIPTS = \
+	${srcdir}/backends/dst/file
 
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list ${srcdir}/xen-common.sh \
@@ -57,6 +67,5 @@ install-exec-local:
 	@mkdir_p@ "$(DESTDIR)$(osdir)"
 	@mkdir_p@ "$(DESTDIR)$(variantsdir)"
 	touch "$(DESTDIR)$(variantsdir)/default.conf"
-	
 
 CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS) defaults version_pinning.pref

@@ -48,17 +48,21 @@ Image ID (img_id)
 ^^^^^^^^^^^^^^^^^
 
 The **img_id** OS parameter points to the actual Image that we want to deploy.
-It is a URI and its prefix denotes the type of :ref:`backend <storage-backends>`
-to be used. If no prefix is used, it defaults to the local back-end:
+It is a URI and its prefix denotes the type of :ref:`image backend
+<source-backends>` to be used. If no prefix is used, it defaults to the file
+backend:
 
- * **Local backend**:
-   To select it, the prefix should be ``local://``, followed by the name of the
-   image. All local images are expected to be found under a predefined image
-   directory (``/var/lib/snf-image`` by default).
+ * **File backend**:
+   To select it, just pass the name of the image optionally prefixed with
+   either ``file://`` or ``local://``. All local images are expected to be found
+   under a predefined image directory (``/var/lib/snf-image`` by default).
+   The image will be fetched using ``dd``.
 
   | For example, if we want to deploy the image file:
   | ``/var/lib/snf-image/slackware.diskdump``
   | We need to assign:
+  | ``img_id=slackware.diskdump`` or
+  | ``img_id=file://slackware.diskdump``
   | ``img_id=local://slackware.diskdump``
 
  * **Network backend**:
@@ -86,7 +90,7 @@ to be used. If no prefix is used, it defaults to the local back-end:
   | ``img_id=pithosmap://<slackware-image-map-name>/<size>``
 
  * **Null backend**:
-   To select the Null back-end and skip the fetching and extraction step, we set
+   To select the Null backend and skip the fetching and extraction step, we set
    ``img_id=null``.
 
 .. _image-passwd:

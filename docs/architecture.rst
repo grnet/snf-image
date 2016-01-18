@@ -83,16 +83,56 @@ The architecture is presented below:
 .. image:: images/arch.png
 
 
-.. _storage-backends:
+.. _image-copy:
 
-Storage backends
-^^^^^^^^^^^^^^^^
+Image copying
+^^^^^^^^^^^^^
 
-As stated above, for step (1), *snf-image* is capable of fetching images that
-are stored in a variety of different backends and then extracting them onto the
-newly created block device. The following back-ends are supported:
+For step (1), *snf-image* supports a modular interface for copying data from the
+provided image to the VM's actual disk. For fetching image data, *snf-image*
+supports a variety of different source backends: ``file``, ``network``,
+``pithos``, and ``null``. For copying these data to the VM's disk, *snf-image*
+currently supports only the ``file`` destination backend, i.e. local block
+devices or files.
 
- * **Local backend**:
+*snf-image* serves a different script for each backend name after the backend
+type. The source backend scripts are located under
+``/usr/share/ganeti/os/snf-image/backends/src/<backend type>`` while the
+destination backend scripts are located under
+``/usr/share/ganeti/os/snf-image/backends/dst/<backend type>``. All of them
+should be executable.
+
+The source scripts sould fetch data from the image and dump them to ``stdout``.
+They should take two possitional arguments; *IMG_ID* and *IMG_FORMAT*. They
+should support a ``-s`` option and if given they should return the size of the
+image.
+
+The destination scripts should read data from ``stdin`` and dump them to the
+VM's disk. They should take two possitional arguments; *DISK0* and *IMG_FORMAT*.
+
+So the whole process of image copying boils down to:
+
+#. Parse *IMG_ID* and get the source backend type.
+#. Parse *DISK_0_PATH* or *DISK_0_URI* and get the destination backend type.
+#. Check if the corresponding scripts exist.
+#. Invoke the source script with the -s option to get the image size.
+#. Create a process chain of the source script, the monitor script,
+   and the destination script "connected" with pipes.
+
+The above steps will eventually fetch data from the image, pass them
+to the monitor, and finally dump them to the VM's disk.
+
+.. _source-backends:
+
+Source Backends
+"""""""""""""""
+
+*snf-image* is capable of fetching images that are stored in a variety of
+different backends. It decides which backend to use based on the *IMG_ID*
+:ref:`parameter <image-id>`. Currently *snf-image* supports the following
+backends:
+
+ * **File backend**:
    The local backend is used to retrieve images that are stored on the Ganeti
    node that the image deployment takes place. All local images are expected to
    be found under a predefined image directory. By default */var/lib/snf-image*
@@ -120,6 +160,43 @@ newly created block device. The following back-ends are supported:
    disk provisioned by Ganeti already contains an OS installation before
    *snf-image* is executed (for example if the disk was created as a clone of
    an existing VM's hard disk).
+
+.. _destination-backends:
+
+Destination Backends
+""""""""""""""""""""
+
+Since Ganeti supports userspace access to disks (e.g. via the RBD
+and the ExtStorage disk template) the existence of a local block device should
+not be taken for granted, and thus a simple ``dd`` might not work. For example,
+in case of RADOS without having the volume locally mapped this would not work.
+Additionally in case of Archipelago, if we choose to go only with QEMU userspace
+support (without using blktap to create a local block device) this would not
+work either.
+
+To get the destination backend type, *snf-image* first parses the *DISK_0_PATH*
+as exported by Ganeti. If this is neither a block device nor a file, it
+parsed *DISK_0_URI*. If found, the expected format is::
+
+  <backend type>:<some identifier>
+
+For example, in case of RADOS, the *DISK_0_URI* would be something like::
+
+  rbd:<rbd pool>/<rbd name>
+
+or, in case of Archipelago, it would be::
+
+  archipelago:<volume name>
+
+Currently *snf-image* supports the following backends:
+
+ * **File backend**:
+   This backend supports instance disks that are local files or block devices.
+   The image data will get dumped to the VM's disk using a simple ``dd`` reading
+   from stdin. In case of ntfsdump or extdump image types, the script
+   will losetup the disk, create partitions, install a new MBR then copy
+   the filesystem on the first partition.
+
 
 .. _image-configuration-tasks:
 
