@@ -1152,6 +1152,15 @@ check_if_mounted_excluded() {
     return 0
 }
 
+check_if_filesystem_resize_excluded() {
+    if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_FILESYSTEMRESIZE_TASKS; then
+        warn "Task ${PROGNAME:2} was excluded and will not run."
+        exit 0
+    fi
+
+    return 0
+}
+
 check_if_overwritten() {
     local script ret
 

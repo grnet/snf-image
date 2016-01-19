@@ -229,15 +229,20 @@ All image formats properties
    :ref:`Configuration Tasks Environment<configuration-tasks-environment>`.
 
  * **EXCLUDE_ALL_TASKS=yes**
-   If this property is defined with a value other than null, then during the
-   deployment, the image will not be configured at all. This is really handy
-   because it gives the ability to deploy images hosting operating systems
-   whose configuration is not supported by *snf-image*.
+   If this property is defined with a yes value, the image will not be
+   configured at all, during the deployment. This is really handy because it
+   gives the ability to deploy images hosting operating systems whose
+   configuration is not supported by *snf-image*.
 
  * **EXCLUDE_MOUNTED_TASKS=yes**
    If this property is defined, then only the tasks that are meant to run
    before the VM's disk gets mounted (namely *FixPartitionTable* and
    *FilesystemResizeUmounted*) will be allowed to run during deployment.
+
+ * **EXCLUDE_FilesystemResize_TASKS=yes**
+   If this property is defined with a yes value, the 3 filesystem resize tasks
+   (*FilesystemResizeUnmounted*, *FilesystemResizeMounted*,
+   *FilesystemResizeAfterUmount*) will be prevented from running.
 
  * **EXCLUDE_TASK_<task_name>=yes**
    This family of properties gives the ability to exclude individual
