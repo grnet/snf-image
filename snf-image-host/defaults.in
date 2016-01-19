@@ -32,6 +32,20 @@
 # HELPER_MEMORY: Virtual RAM size in megabytes to be given to the helper VM.
 # HELPER_MEMORY="512"
 
+# HELPER_DEBUG: When enabled, the helper VM will drop to a root shell
+# whenever a task fails. This allows the administrator or a developer
+# to examine its internal state for debugging purposes.
+# To access the shell, use a program like 'minicom' to connect to /dev/pts/X on
+# the host, where /dev/pts/X is the name of the device reported in the Ganeti
+# OS installation logs for helper's 3rd serial port, e.g.,
+# "char device redirected to /dev/pts/9 (label serial3)".
+# This feature is KVM-specific for the time being.
+# For HELPER_DEBUG to be useful, you also need to set HELPER_SOFT_TIMEOUT
+# to a much higher value.
+# WARNING: DO NOT ENABLE THIS FEATURE IN PRODUCTION. Every failure to deploy
+# an Image will cause the helper VM to hang.
+# HELPER_DEBUG="no"
+
 # MULTISTRAP_CONFIG: Configuration file to be used with multistrap to create
 # the rootfs of the helper image.
 # MULTISTRAP_CONFIG="@MULTISTRAP_CONFIG@"
@@ -42,6 +56,12 @@
 
 # XEN_SCRIPTS_DIR: Directory where the Xen scripts are stored
 # XEN_SCRIPTS_DIR="@sysconfdir@/xen/scripts"
+
+# XEN_CMD: This variable specifies the Xen CLI tool snf-image should use. This
+# depends on the XEN version and configuration and should probably coincide
+# with the Ganeti's xen_cmd hypervisor parameter for xen-hvm or xen-pvm. Right
+# now the supported ones are 'xm' and 'xl'.
+# XEN_CMD="@XEN_CMD@"
 
 # PITHOS_DB: Pithos database in SQLAlchemy format
 # PITHOS_DB="sqlite:////@localstatedir@/lib/pithos/backend.db"
@@ -96,9 +116,20 @@
 
 # UNATTEND: This variable overwrites the unattend.xml file used when deploying
 # a Windows image. snf-image-helper will use its own unattend.xml file if this
-# variable is empty. Please leave this empty, unless you really know what you
-# are doing.
+# variable is empty.
+# WARNING: This variable is DEPRECATED. If you need to define an answer file
+# different that the one shipped with snf-image, which is very likely, put it
+# inside the image or use the os_answer_file OS parameter.
 # UNATTEND="@UNATTEND@"
+
+# WINDOWS_TIMEZONE: This variable is used to specify the time zone when
+# deploying a Windows image. This will only work if you are using snf-image's
+# default OS answer file. If the Windows image already contains an answer file,
+# which should by itself specify a time zone in order to have an unattended
+# Windows customization process, this variable will be completely ignored. For
+# a list of available time zones, check here:
+# https://msdn.microsoft.com/en-us/library/ms912391%28v=winembedded.11%29.aspx
+# WINDOWS_TIMEZONE="GMT Standard Time"
 
 # Paths for needed programs. Uncomment and change the variables below if you
 # don't want to use the default one.

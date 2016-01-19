@@ -12,7 +12,8 @@ dist_os_SCRIPTS = ${srcdir}/create ${srcdir}/import ${srcdir}/export \
 
 dist_os_DATA = ${srcdir}/ganeti_api_version ${srcdir}/parameters.list \
                ${srcdir}/variants.list ${srcdir}/xen-common.sh \
-               ${srcdir}/kvm-common.sh
+               ${srcdir}/kvm-common.sh ${srcdir}/unattend.xml.in \
+               ${srcdir}/sysprep.inf.in ${srcdir}/ms-timezone-indexes.txt
 
 dist_xenscripts_SCRIPTS = ${srcdir}/vif-snf-image
 
@@ -20,7 +21,7 @@ dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-helper
 
 os_DATA = ${srcdir}/common.sh
 
-example_DATA = defaults multistrap.conf version_pinning.pref
+example_DATA = defaults multistrap.conf version_pinning.pref kconfig-4.2.5-1~bpo8+1
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
@@ -41,6 +42,7 @@ edit = sed \
 	   -e 's|@INSTALL_MBR[@]|$(INSTALL_MBR)|g' \
 	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g' \
 	   -e 's|@UNATTEND[@]|$(UNATTEND)|g' \
+	   -e 's|@XEN_CMD[@]|$(XEN_CMD)|g' \
            -e 's|@MULTISTRAP_CONFIG[@]|$(MULTISTRAP_CONFIG)|g' \
            -e 's|@MULTISTRAP_APTPREFDIR[@]|$(MULTISTRAP_APTPREFDIR)|g'
 

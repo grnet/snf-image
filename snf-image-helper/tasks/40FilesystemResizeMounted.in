@@ -1,0 +1,94 @@
+#! /bin/bash
+
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+### BEGIN TASK INFO
+# Provides:		FilesystemResizeMounted
+# RunBefore:            EnforcePersonality
+# RunAfter:		InstallUnattend
+# Short-Description:	Resize file system to use all the available space
+### END TASK INFO
+
+set -e
+. "@commondir@/common.sh"
+
+trap task_cleanup EXIT
+report_task_start
+
+# Check if the task should be prevented from running.
+check_if_excluded
+check_if_mounted_excluded
+check_if_filesystem_resize_excluded
+
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
+fi
+
+# Check if the image overwrites the task
+check_if_overwritten
+
+if [ ! -b "$SNF_IMAGE_DEV" ]; then
+    log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
+fi
+
+if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then
+    warn "No partition chosen for resize"
+    exit 0
+fi
+
+table=$(get_partition_table "$SNF_IMAGE_DEV")
+partition=$(get_partition_by_num "$table" "$SNF_IMAGE_RESIZE_PART")
+id=$(cut -d: -f1 <<< "$partition")
+ptype=$(cut -d: -f5 <<< "$partition")
+device="${SNF_IMAGE_DEV}${id}"
+
+if [ "$ptype" = "ntfs" -a "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
+    if check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE; then
+        warn "Task ${PROGNAME:2} will not run. Offline NTFS resize requested."
+        exit 0
+    fi
+    # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
+    # try to execute this script during the specialize pass.
+    cat > "$SNF_IMAGE_TARGET/Windows/SnfScripts/ExtendFilesystem" <<EOF
+select disk 0
+select volume $id
+extend filesystem
+exit
+EOF
+elif [[ "$ptype" =~ ^(btrfs|xfs)$ ]]; then
+    target=$(find_mount_target "$device")
+
+    if [ -z "$target" ]; then
+        warn "Can't enlarge $ptype file system in device: \`$device'. File system not mounted."
+        exit 0
+    fi
+
+    if [ "$ptype" = btrfs ]; then
+        set $($BTRFS filesystem show "$device" | grep "$device")
+
+        $BTRFS filesystem resize "$2":max "$target"
+    else # "$ptype" = xfs
+        $XFS_GROWFS "$target"
+    fi
+else
+    warn "Don't know how to resize mounted device: \`$device'"
+fi
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

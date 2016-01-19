@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
+# Copyright (C) 2011 GRNET S.A. 
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
 # 02110-1301, USA.
 
 ### BEGIN TASK INFO
-# Provides:		UmountImage
-# RunBefore:
-# RunAfter:		MountImage
-# Short-Description:	Umount the partition that hosts the image
+# Provides:		SELinuxAutorelabel
+# RunBefore:            EnforcePersonality
+# RunAfter:             FilesystemResizeMounted
+# Short-Description:	Force the system to relabel at next boot
 ### END TASK INFO
 
 set -e
@@ -33,27 +33,27 @@ report_task_start
 # Check if the task should be prevented from running
 check_if_mounted_excluded
 
+# Check if the task should be prevented from running.
+check_if_excluded
+
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target dir:\`$SNF_IMAGE_TARGET' is missing"
+	log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
 fi
 
-umount_all "$SNF_IMAGE_TARGET"
+# Check if the image overwrites the task
+check_if_overwritten
 
-if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^windows ]]; then
-    # Ensure any NTFS-3G processes are gone after umounting NTFS.
-    # Otherwise, we run the risk of continuing while data may still be
-    # written to the underlying block device.
-    # The NTFS driver is over fuse and umount with fuse is not synchronous.
-    echo "Waiting until no NTFS-3G mount processes remain..."
-    while pgrep -f 'mount.*ntfs' >/dev/null; do
-        echo "NTFS-3G mount processes still remain:"
-        pgrep -f 'mount.*ntfs'
-        echo "Sleeping for 1s..."
-        sleep 1
-    done
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
+    distro=$(get_base_distro $SNF_IMAGE_TARGET)
+
+    if [ "$distro" = "redhat" ]; then
+        # we have to force a filesystem relabeling for SELinux after messing
+        # around with the filesystem in redhat derived OSs
+        echo "Enforce an automatic relabeling in the initial boot process..."
+        touch "$SNF_IMAGE_TARGET/.autorelabel"
+    fi
 fi
 
 exit 0
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
-
