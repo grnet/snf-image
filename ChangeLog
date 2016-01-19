@@ -1,3 +1,6 @@
+2016-01-19, v0.19rc2
+	* Fix version files
+
 2016-01-19, v0.19rc1
 	* Support Windows XP/2003 (windows-legacy OSFAMILY)
 	* Support 32-bit versions of Windows
