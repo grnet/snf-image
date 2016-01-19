@@ -11,14 +11,14 @@ following images are basic installations of some popular Linux distributions,
 that have been tested with *snf-image* and provided here for testing purposes:
 
 
- * Debian Wheezy Base System
-   [`diskdump <https://cdn.synnefo.org/debian_base-7.0-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/debian_base-7.0-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/debian_base-7.0-x86_64.diskdump.meta>`_]
- * Debian Desktop
-   [`diskdump <https://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/debian_desktop-7.0-x86_64.diskdump.meta>`_]
+ * Debian Jessie Base System
+   [`diskdump <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump>`_]
+   [`md5sum <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump.md5sum>`_]
+   [`metadata <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump.meta>`_]
+ * Debian Jessie Desktop
+   [`diskdump <https://cdn.synnefo.org/debian_desktop-8.0-x86_64.diskdump>`_]
+   [`md5sum <https://cdn.synnefo.org/debian_desktop-8.0-x86_64.diskdump.md5sum>`_]
+   [`metadata <https://cdn.synnefo.org/debian_desktop-8.0-x86_64.diskdump.meta>`_]
  * CentOS 7.x
    [`diskdump <https://cdn.synnefo.org/centos-7-x86_64.diskdump>`_]
    [`md5sum <https://cdn.synnefo.org/centos-7-x86_64.diskdump.md5sum>`_]
