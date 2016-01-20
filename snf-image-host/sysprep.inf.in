@@ -1,0 +1,26 @@
+;SetupMgrTag
+[Unattended]
+    OemSkipEula=Yes
+    InstallFilesPath=C:\sysprep\i386
+
+[GuiUnattended]
+    OEMSkipRegional=1
+    TimeZone=@TIMEZONE_INDEX@
+    OemSkipWelcome=1
+
+[UserData]
+    FullName=User
+    OrgName=GRNET
+    ComputerName=*
+
+[SetupMgr]
+    DistFolder=C:\windist
+    DistShare=windist
+
+[Identification]
+    JoinWorkgroup=WORKGROUP
+
+[Networking]
+    InstallDefaultComponents=Yes
+
+[sysprepcleanup]

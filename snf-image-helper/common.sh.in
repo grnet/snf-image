@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2015 GRNET S.A.
+# Copyright (C) 2011-2016 GRNET S.A. and individual contributors
 # Copyright (C) 2007, 2008, 2009 Google Inc.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -41,6 +41,10 @@ HIVEXGET=hivexget
 HIVEXREGEDIT=hivexregedit
 BTRFS=btrfs
 XFS_GROWFS=xfs_growfs
+BASE64=base64
+NTFSINFO=ntfsinfo
+NTFSRESIZE=ntfsresize
+NTFSFIX=ntfsfix
 
 CLEANUP=( )
 ERRORS=( )
@@ -77,7 +81,25 @@ send_result_xen() {
 
 send_monitor_message_xen() {
     #Broadcast the message
-    echo "$@" | socat "STDIO" "UDP-DATAGRAM:${BROADCAST}:${MONITOR_PORT},broadcast"
+    echo "$@" \
+        | socat "STDIO" "UDP-DATAGRAM:${BROADCAST}:${MONITOR_PORT},broadcast"
+}
+
+start_debug_shell_kvm() {
+    local dev="/dev/ttyS3"
+
+    echo "Starting a debug shell on \`$dev'"
+    echo "See Ganeti logs for /dev/pts/X device to use on host."
+    bash <$dev >$dev 2>&1
+    echo "Returned from debug shell, resuming..."
+}
+
+start_debug_shell_xen() {
+    echo "Cannot start a debug shell on Xen. Feature not yet supported."
+}
+
+start_debug_shell() {
+    start_debug_shell_${HYPERVISOR}
 }
 
 prepare_helper() {
@@ -173,6 +195,12 @@ report_task_end() {
 }
 
 system_poweroff() {
+    # Sync everything to disk and sleep for a second before powering off.
+    # Do this to ensure data has hit the disk, since we are about to
+    # kill the helper VM with a sysrq call.
+    sync
+    sleep 1
+
     while [ 1 ]; do
         # Credits to psomas@grnet.gr for this ...
         echo o > /proc/sysrq-trigger
@@ -268,7 +296,8 @@ get_partition_table() {
     # If the partition table is GUID and the secondary GPT header is not at the
     # end of the disk, parted will raise an error and will also print a warning
     # about the "Last Usable LBA" entry of the header.
-    if ! output="$("$PARTED" -s -m "$dev" unit s print | grep -E -v "^(Warning|Error): ")"; then
+    if ! output="$("$PARTED" -s -m "$dev" unit s print \
+                   | grep -E -v "^(Warning|Error): ")"; then
         log_error "Unable to read partition table for device \`${dev}'. The image seems corrupted."
     fi
 
@@ -450,14 +479,27 @@ enlarge_partition() {
     fi
 
     id=${fields[0]}
-    $PARTED -s -m "$device" rm "$id"
-    create_partition "$device" "$new_part" "$ptype"
 
-    if [ "$ptype" = "extended" ]; then
-        # Recreate logical partitions
-        echo "$logical" | while read logical_part; do
-            create_partition "$device" "$logical_part" "logical"
-        done
+    # Newer versions of parted have a resizepart command that can be used to
+    # extend a partition. If this command is absent, we will have to remove and
+    # recreate a partition. This is not safe because there is no way to retain
+    # the partition number if the numbering contains gaps. In order to
+    # determine if parted supports resizepart we print the command's usage. If
+    # the output is not empty, the command is there.
+    supports_resizepart=$($PARTED -s -m "$device" help resizepart)
+
+    if [ -n "$supports_resizepart" ]; then
+        $PARTED -s -m -- "$device" resizepart "$id" "$new_end"
+    else
+        $PARTED -s -m "$device" rm "$id"
+        create_partition "$device" "$new_part" "$ptype"
+
+        if [ "$ptype" = "extended" ]; then
+            # Recreate logical partitions
+            echo "$logical" | while read logical_part; do
+                create_partition "$device" "$logical_part" "logical"
+            done
+        fi
     fi
 }
 
@@ -478,17 +520,119 @@ get_last_free_sector() {
     fi
 }
 
-get_unattend() {
-    local target exists
+get_sysprepinf() {
+    local target
     target="$1"
 
-    # Workaround to search for $target/Unattend.xml in an case insensitive way.
-    exists=$(find "$target"/ -maxdepth 1 -iregex ".*/\(auto\)?unattend\.xml" )
-    if [ $(wc -l <<< "$exists") -gt 1 ]; then
-        log_error "Found multiple Unattend.xml files in the image:" $exists
+    # Return position of old-style (XP / Server 2003) answer file,
+    # C:\SYSPREP\SYSPREP.INF, if found.
+    sysprepinf="$target"/sysprep/sysprep.inf
+    if [ ! -f "$sysprepinf" ]; then
+        sysprepinf=""
+    fi
+    echo "$sysprepinf"
+}
+
+get_unattend() {
+    local target
+    target="$1"
+
+    # TODO: Take into account the precise answer file search order defined in
+    # https://technet.microsoft.com/en-us/library/cc749415(v=ws.10).aspx
+    for unattend in "$target/unattend.xml" "$target/autounattend.xml"; do
+        if [ -f "$unattend" ]; then
+            echo "$unattend"
+            break
+        fi
+    done
+}
+
+create_unattend_component() {
+    local unattend pass component arch args settings component
+    unattend="$1"
+    pass="$2"
+    name="$3"
+    arch="$4"
+
+    settings='/_:unattend/_:settings[@pass="'"$pass"'"]'
+
+    # Create the 'settings' node if missing
+    if ! $XMLSTARLET sel -t -v "$settings" "$unattend" &>/dev/null; then
+        $XMLSTARLET ed -L -s '/_:unattend' -t elem -n settings -i \
+            '/_:unattend/_:settings[not(@pass)]' -t attr -n pass -v "$pass" \
+            "$unattend"
     fi
 
-    echo "$exists"
+    component=$settings'/_:component[@name="'"$name"'" and @processorArchitecture="'"$arch"'"]'
+
+    # Create the 'component' node if missing
+    if ! $XMLSTARLET sel -t -v "$component" "$unattend" &>/dev/null; then
+        $XMLSTARLET ed -L -s "$settings" -t elem -n component "$unattend"
+        $XMLSTARLET ed -L -i "$settings"'/_:component[not(@name)]' -t attr \
+            -n name -v "$name" "$unattend"
+        $XMLSTARLET ed -L -i \
+            "$settings"'/_:component[@name="'"$name"'" and not(@processorArchitecture)]' \
+            -t attr -n processorArchitecture -v "$arch" "$unattend"
+        $XMLSTARLET ed -L \
+            -i "$component" -t attr -n publicKeyToken -v 31bf3856ad364e35 \
+            -i "$component" -t attr -n language -v neutral \
+            -i "$component" -t attr -n versionScope -v nonSxS \
+            -i "$component" -t attr -n xmlns:wcm -v "http://schemas.microsoft.com/WMIConfig/2002/State" \
+            -i "$component" -t attr -n xmlns:xsi -v "http://www.w3.org/2001/XMLSchema-instance" \
+            "$unattend"
+    fi
+
+    echo "$component"
+}
+
+windows_add_synchronous_command() {
+    local unattend arch description order path component run_synchronous \
+        token rsc
+    unattend="$1"
+    arch="$2"
+    description="$3"
+    order="$4"
+    path="$5"
+
+    # Create 'Microsoft-Windows-Deployment' if missing
+    component="$(create_unattend_component "$unattend" specialize 'Microsoft-Windows-Deployment' "$arch")"
+
+    if ! $XMLSTARLET sel -t -v "$component/_:RunSynchronous" "$unattend" &>/dev/null; then
+        $XMLSTARLET ed -L -s "$component" -t elem -n RunSynchronous "$unattend"
+    fi
+
+    token=$(cat /proc/sys/kernel/random/uuid)
+    $XMLSTARLET ed -L -s "$component/_:RunSynchronous" -t elem -n RunSynchronousCommand "$unattend"
+    $XMLSTARLET ed -L -s "($component/_:RunSynchronous/_:RunSynchronousCommand[count(@*)=0])[1]" -t attr -n randomToken -v "$token" "$unattend"
+
+    rsc="$component/_:RunSynchronous/_:RunSynchronousCommand[@randomToken=\"$token\"]"
+    $XMLSTARLET ed -L \
+        -s "$rsc" -t elem -n Description -v "$description" \
+        -s "$rsc" -t elem -n Order -v "$order" \
+        -s "$rsc" -t elem -n Path -v "$path" \
+        -i "$rsc" -t attr -n wcm:action -v add "$unattend"
+    $XMLSTARLET ed -L -d "$rsc/@randomToken" "$unattend"
+}
+
+windows_update_unattend_node() {
+    local unattend pass component arch name value xpath
+    unattend="$1"
+    pass=$2
+    component=$3
+    arch="$4"
+    name="$5"
+    value="$6"
+
+    # Create component if missing
+    xpath="$(create_unattend_component "$unattend" "$pass" "$component" "$arch")"
+
+    if $XMLSTARLET sel -t -v "$xpath/_:$name" "$unattend" &> /dev/null; then
+        # The node exists. Updating its value.
+        $XMLSTARLET ed -L -u "$xpath/_:$name" -v "$value" "$unattend"
+    else
+        # Creating the node.
+        $XMLSTARLET ed -L -s "$xpath" -t elem -n $name -v "$value" "$unattend"
+    fi
 }
 
 bsd2linux() {
@@ -496,7 +640,8 @@ bsd2linux() {
     partition="$1"
     device="$2"
 
-    linux_part=$(@scriptsdir@/disklabel.py --get-partitions-mapping "$device" | grep ^"$partition": | cut -d" " -f2)
+    linux_part=$(@scriptsdir@/disklabel.py --get-partitions-mapping "$device" \
+                 | grep ^"$partition": | cut -d" " -f2)
 
     if [[ "$linux_part" =~ ^[1-9][0-9]*$ ]]; then
         echo "$linux_part"
@@ -557,7 +702,9 @@ mount_all() {
         ;;
     esac
 
-    fstab="$(grep -v ^\# "${target}/etc/fstab" | awk "{ if (match(\$3, \"$fs\")) { print \$2,\$1,\$3 } }" | sort -bd)"
+    fstab="$(grep -v ^\# "${target}/etc/fstab" \
+             | gawk "{ if (match(\$3, \"$fs\")) { print \$2,\$1,\$3 } }" \
+             | sort -bd)"
     # <mpoint> <device> <fs>
     while read -ra entry; do
         # Skip root. It is already mounted
@@ -624,7 +771,8 @@ umount_all() {
     target="$1"
 
     # Unmount file systems mounted under directory `target'
-    mpoints="$({ awk "{ if (match(\$2, \"^$target\")) { print \$2 } }" < /proc/mounts; } | sort -rbd | uniq)"
+    mpoints="$({ gawk "{ if (match(\$2, \"^$target\")) { print \$2 } }" < /proc/mounts; } \
+               | sort -rbd | uniq)"
 
     for mpoint in $mpoints; do
         umount $mpoint
@@ -640,7 +788,8 @@ get_ufstype() {
     if [ "$pipefail" = on ]; then
         set +o pipefail
     fi
-    ufs="$($DUMPFS_UFS "$device" | head -1 | awk -F "[()]" '{ for (i=2; i<NF; i+=2) print $i }')"
+    ufs="$($DUMPFS_UFS "$device" | head -1 \
+           | gawk -F "[()]" '{ for (i=2; i<NF; i+=2) print $i }')"
     if [ "$pipefail" = on ]; then
         set -o pipefail
     fi
@@ -659,9 +808,100 @@ get_ufstype() {
     esac
 }
 
+get_windows_architecture() {
+    local target hive current
+    target="$1"
+
+    hive="$target/windows/system32/config/system"
+
+    current=$($HIVEXGET "$hive" Select Current)
+    if [ "$current" = "" ]; then
+        log_error "Unable to find CurrentControlSet in the registry"
+    fi
+
+    # Pad the value with zeros
+    current=$(printf "%03d" "$current")
+
+   $HIVEXGET "$hive" 'ControlSet'${current}'\Control\Session Manager\Environment' \
+       | grep PROCESSOR_ARCHITECTURE \
+       | cut -d= -f2 \
+       | sed 's/"//g' \
+       | tr [A-Z] [a-z]
+}
+
+get_windows_nt_version() {
+    local target hive current_version
+    target="$1"
+
+    hive="$target/windows/system32/config/software"
+    if [ ! -f "$hive" ]; then
+        log_error "File: \`$hive' does not exist"
+    fi
+
+    current_version=$($HIVEXGET "$hive" 'Microsoft\Windows NT\CurrentVersion' \
+                      | grep ^'"CurrentVersion"=')
+
+    if [[ "$current_version" =~ \"CurrentVersion\"=\"([0-9]+)\.([0-9]+)\" ]]; then
+        echo ${BASH_REMATCH[1]} ${BASH_REMATCH[2]}
+    else
+        log_error "Can't decode CurrentVersion registry key: $current_version"
+    fi
+}
+
+check_windows_if_sysprepped() {
+    local target state
+    target="$1"
+
+    # https://technet.microsoft.com/en-us/library/hh824815.aspx
+    state=$($HIVEXGET "$target/windows/system32/config/software" \
+            '\Microsoft\Windows\CurrentVersion\Setup\State')
+
+    case "$(grep '^"ImageState"=' <<< "$state" | cut -d= -f2)" in
+    \"IMAGE_STATE_COMPLETE\")
+        log_error "Image is not sysprepped. Windows customization is only" \
+            "supported for sysprepped images."
+        ;;
+    \"IMAGE_STATE_UNDEPLOYABLE\")
+        log_error "Image is in an undeployable state. Setup seems corrupted."
+        ;;
+    \"IMAGE_STATE_GENERALIZE_RESEAL_TO_OOBE\")
+        ;;
+    \"IMAGE_STATE_GENERALIZE_RESEAL_TO_AUDIT\")
+        ;;
+    \"IMAGE_STATE_SPECIALIZE_RESEAL_TO_OOBE\")
+        log_error "Customization is supported only for generalized images." \
+            "You must run sysprep /generalize when creating the image."
+        ;;
+    \"IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT\")
+        log_error "Customization is supported only for generalized images." \
+            "You must run sysprep /generalize when creating the image."
+        ;;
+    *)
+        log_error "Can't check if image is sysprepped. Unknown System State."
+        ;;
+    esac
+}
+
+check_windows-legacy_if_sysprepped() {
+    local target setup
+    target="$1"
+
+    setup=$($HIVEXGET "$target/windows/system32/config/system" '\Setup')
+    if ! grep '"SystemSetupInProgress"=dword:00000001' <<<"$setup" &>/dev/null; then
+        log_error "Image is not sysprepped. Windows customization is only" \
+            "supported for sysprepped images."
+    fi
+
+    if ! grep '"MiniSetupInProgress"=dword:00000001' <<<"$setup" &>/dev/null; then
+        log_error "MiniSetup flag is not set in Sysprep. Windows" \
+            "customization is only supported for sysprepped images with" \
+            "MiniSetup enabled."
+    fi
+}
+
 check_if_root() {
-    local os fd device is_root args exists windows_fs linux_fs freebsd_fs \
-        netbsd_fs openbsd_fs supported_fs
+    local os fd device is_root args windows_fs linux_fs freebsd_fs netbsd_fs \
+        openbsd_fs supported_fs major minor
 
     osfamily="$1"
     fs="$2"
@@ -687,6 +927,8 @@ check_if_root() {
 
     if [ "$fs" = ufs ]; then
         args="-t ufs -o ufstype=$(get_ufstype "$device"),ro"
+    elif $NTFSINFO -m "$device" &> /dev/null; then
+        args="-t lowntfs-3g -o ignore_case,windows_names,norecover,ro"
     else
         args="-o ro"
     fi
@@ -704,8 +946,11 @@ check_if_root() {
             fi
             ;;
         windows)
-            exists=$(find "$SNF_IMAGE_TARGET" -maxdepth 1 -iname windows)
-            if [ -n "$exists" -a -d "$exists" ]; then
+            if [ -d "$SNF_IMAGE_TARGET/windows/system32" ]; then
+                read major minor <<<$(get_windows_nt_version "$SNF_IMAGE_TARGET")
+                if [ $major -lt 6 ]; then
+                    osfamily="windows-legacy"
+                fi
                 is_root=yes
             fi
             ;;
@@ -760,7 +1005,7 @@ examine_gpt_partition() {
     id=$($SGDISK -i "$num" "$dev" | \
          grep "^Partition GUID code:" | \
          cut -f2 -d: | \
-         awk '{print $1}') || true
+         gawk '{print $1}') || true
 
     case "$id" in
         516E7CB6-6ECF-11D6-8FF8-00022D09712B) # FreeBSD
@@ -793,6 +1038,20 @@ detect_image_properties() {
             break
         fi
     done
+}
+
+encode_array() {
+    local array_name cnt tmp
+    array_name="$1"
+
+    cnt=0
+    tmp="${array_name}[@]"
+    for i in "${!tmp}"; do
+        declare -g ${array_name}_$cnt=$i
+        : $((cnt++))
+    done
+
+    declare -g ${array_name}_COUNT=$cnt
 }
 
 cleanup() {
@@ -834,21 +1093,111 @@ task_cleanup() {
        report_task_end
     else
        report_error
+       # If in debug mode, drop to a shell and let a developer figure it out
+       if grep -q snf_image_debug_helper /proc/cmdline; then
+           echo "Failed. In debug mode, dropping to a shell."
+           start_debug_shell
+       fi
+    fi
+    cleanup
+}
+
+check_yes_no() {
+    local name value
+    name="${1}"
+
+    if [ -z "${!name+dummy}" ]; then
+        # variable is not defined at all
+        return 1
     fi
 
-    cleanup
+
+    # lowercase value
+    value="${!name,,}"
+
+    # Remove the SNF_IMAGE_PROPERTY_ prefix from the name when displaying it.
+    name="${name#SNF_IMAGE_PROPERTY_}"
+
+    if [[ "$value" =~ ^(yes|true|on|1|set)$ ]]; then
+        return 0
+    elif  [[ "$value" =~ ^(no|false|off|0|unset)$ ]]; then
+        return 1
+    elif [ -z "$value" ]; then
+        warn "Variable \`$name' defined but empty. Will treat this as a \`NO'"
+        return 1
+    else
+        warn "Invalid value for variable: \`$name' (=$value). Will treat this as a \`YES'"
+        return 0
+    fi
 }
 
 check_if_excluded() {
     local name exclude
     name="$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
     exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${name}"
-    if [ -n "${!exclude}" ]; then
+    if check_yes_no "$exclude"; then
         warn "Task ${PROGNAME:2} was excluded and will not run."
         exit 0
     fi
 
     return 0
+}
+
+check_if_mounted_excluded() {
+    if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_MOUNTED_TASKS; then
+        warn "Task ${PROGNAME:2} was excluded and will not run."
+        exit 0
+    fi
+
+    return 0
+}
+
+check_if_filesystem_resize_excluded() {
+    if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_FILESYSTEMRESIZE_TASKS; then
+        warn "Task ${PROGNAME:2} was excluded and will not run."
+        exit 0
+    fi
+
+    return 0
+}
+
+check_if_overwritten() {
+    local script ret
+
+    if ! check_yes_no SNF_IMAGE_PROPERTY_ALLOW_MOUNTED_TASK_OVERWRITING; then
+        return 0
+    fi
+    script=$(find -L $SNF_IMAGE_TARGET/root/snf-image/helper \
+             -iname "overwrite_task_${PROGNAME:2}" -type f 2>/dev/null) || true
+    if [ -x "$script" ]; then
+        warn "Task ${PROGNAME:2} was overwritten by file: \`${script:${#SNF_IMAGE_TARGET}}'"
+        export OVERWRITTEN_TASK="$script"
+        set +e
+        $OVERWRITTEN_TASK "pre-exec"
+        ret=$?
+        set -e
+        if [ $ret -eq 101 ]; then
+            # Reserve 101 for the case where the original task should be
+            # executed after the task that overwrote it has finished
+            warn "Running task ${PROGNAME:2} after \`${script:${#SNF_IMAGE_TARGET}}' returned 101"
+
+            # Overwrite exit to make sure the script is executed again at the
+            # end. This is error-prone, since you'll always have to use exit on
+            # normal termination (which we actually did before this) but I
+            # couldn't think of a better way. Adding it in the task_cleanup()
+            # is not an option because you can't control the failures well.
+            exit() {
+                local rc=$1
+                if [ $rc -eq 0 ]; then
+                    warn "Running \`${OVERWRITTEN_TASK:${#SNF_IMAGE_TARGET}}' again after task ${PROGNAME:2}"
+                    $OVERWRITTEN_TASK "post-exec"
+                fi
+                builtin exit $rc
+            }
+        else
+            exit $ret
+        fi
+    fi
 }
 
 return_success() {
@@ -904,6 +1253,48 @@ networking_opts() {
 
     if [[ (! "$index" =~ ^[0-9]+$) && "$prepare" = no ]]; then
         log_error "invalid index: $index"
+    fi
+}
+
+check_windows_computer_name() {
+    local name length msg matched pipefail
+
+    name="${1}"
+    length=$(wc -c <<< "$name")
+
+    # ComputerName restrictions are documented here:
+    #   https://technet.microsoft.com/en-us/library/ff715676.aspx
+
+    msg="Invalid Windows ComputerName: \`$name'."
+
+    # Check if the length of the string exceeds the 15 bytes
+    if [ $length -gt 15 ]; then
+        log_error "$msg It's size is bigger (=$length) than 15 bytes."
+    fi
+
+    pipefail=$(set -o | grep pipefail | gawk '{ print $2 }')
+    set -o pipefail
+    set +e
+    # We only check for invalid ascii characters but this is OK. The name
+    # derives from the instance's name and Ganeti seems to only allows ascii
+    # characters for instance names.
+    invalid_char="$(grep -o -P \
+        '[\x00-\x2c\x2e-\x2f\x3a-\x40\x5b-\x5e\x60\x7b-\x7e]' <<< "$name" \
+        | head -1)"
+    # If grep fails, the pipefail option will make $matched host the return
+    # code of grep
+    matched=$?
+    set -e
+    if [ "$pipefail" = off ]; then
+        set +o pipefail
+    fi
+
+    if [ $matched -eq 0 ]; then
+        log_error "$msg Contains invalid character: \`$(printf "%q" "$invalid_char")'."
+    fi
+
+    if [[ "$name" =~ ^([0-9])+$ ]]; then
+        log_error "$msg Contains only numbers (0-9)."
     fi
 }
 

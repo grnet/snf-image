@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011-2014 GRNET S.A.
+# Copyright (C) 2011-2015 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -137,7 +137,7 @@ esac
 # This is needed for file disks.
 if [ ! -b "$blockdev" ]; then
     original_blockdev="$blockdev"
-    blockdev=$($LOSETUP -sf "$blockdev")
+    blockdev=$($LOSETUP --show -f "$blockdev")
     add_cleanup $LOSETUP -d "$blockdev"
 fi
 
@@ -206,11 +206,15 @@ if [ -n "$IMG_PERSONALITY" ]; then
     snf_export_PERSONALITY="$IMG_PERSONALITY"
 fi
 
-snf_export_DEV=$(get_img_dev)
+if [ -n "${OS_PRODUCT_KEY+dummy}" ]; then
+    snf_export_OS_PRODUCT_KEY="$OS_PRODUCT_KEY"
+fi
+
+assign_disk_devices_to snf_export_DEV
 
 create_floppy "$floppy"
 
-launch_helper "$blockdev" "$floppy"
+launch_helper "$floppy"
 
 report_info "Image customization finished successfully."
 

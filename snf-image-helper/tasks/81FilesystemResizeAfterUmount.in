@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,9 +18,9 @@
 # 02110-1301, USA.
 
 ### BEGIN TASK INFO
-# Provides:		FilesystemResizeMounted
-# RunBefore:            EnforcePersonality
-# RunAfter:		InstallUnattend
+# Provides:		FilesystemResizeUnmounted
+# RunBefore:
+# RunAfter: 		UmountImage
 # Short-Description:	Resize file system to use all the available space
 ### END TASK INFO
 
@@ -29,16 +29,12 @@ set -e
 
 trap task_cleanup EXIT
 report_task_start
-
 # Check if the task should be prevented from running.
 check_if_excluded
+check_if_filesystem_resize_excluded
 
 if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
-fi
-
-if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target directory \`$SNF_IMAGE_TARGET' is missing"
 fi
 
 if [ -z "$SNF_IMAGE_RESIZE_PART" ]; then
@@ -50,34 +46,32 @@ table=$(get_partition_table "$SNF_IMAGE_DEV")
 partition=$(get_partition_by_num "$table" "$SNF_IMAGE_RESIZE_PART")
 id=$(cut -d: -f1 <<< "$partition")
 ptype=$(cut -d: -f5 <<< "$partition")
+
 device="${SNF_IMAGE_DEV}${id}"
 
-if [ "$ptype" = "ntfs" -a "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows" ]; then
-    # Write a diskpart script to %SystemDrive%\Windows\SnfScripts. Sysprep will
-    # try to execute this script during the specialize pass.
-    cat > "$SNF_IMAGE_TARGET/Windows/SnfScripts/ExtendFilesystem" <<EOF
-select disk 0
-select volume $id
-extend filesystem
-exit
-EOF
-elif [[ "$ptype" =~ ^(btrfs|xfs)$ ]]; then
-    target=$(find_mount_target "$device")
-
-    if [ -z "$target" ]; then
-        warn "Can't enlarge $ptype file system in device: \`$device'. File system not mounted."
-        exit 0
-    fi
-
-    if [ "$ptype" = btrfs ]; then
-        set $($BTRFS filesystem show "$device" | grep "$device")
-
-        $BTRFS filesystem resize "$2":max "$target"
-    else # "$ptype" = xfs
-        $XFS_GROWFS "$target"
+if [ "$ptype" = ntfs ]; then
+    # For NTFS on newer Windows, only perform an offline resize if forced. On
+    # Windows XP where online resize is not supported, do this by default.
+    if (check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE || \
+        [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "windows" ]); then
+        # Be extra safe: Refuse to work on Image with a dirty NTFS
+        if ! $NTFSINFO -m "$device" &>/dev/null; then
+            log_error "NTFS is dirty, refusing to continue"
+        fi
+        $NTFSRESIZE -P -f "$device"
+        if check_yes_no SNF_IMAGE_PROPERTY_OFFLINE_NTFSRESIZE_NOCHECK; then
+            warn "Clearing dirty bit after NTFS resize"
+            warn "Please run CHKDSK manually after boot"
+            $NTFSFIX -d "$device"
+        else
+            warn "NTFS filesystem set to dirty after offline resize"
+            warn "Disable with OFFLINE_NTFSRESIZE_NOCHECK (dangerous)"
+        fi
+    else
+        warn "Not performing offline file system resize for NTFS unless forced"
     fi
 else
-    warn "Don't know how to resize mounted device: \`$device'"
+    warn "Only resizing NTFS partitions on this task."
 fi
 
 exit 0
