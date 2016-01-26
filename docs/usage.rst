@@ -43,10 +43,10 @@ that have been tested with *snf-image* and provided here for testing purposes:
    [`diskdump <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump>`_]
    [`md5sum <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.md5sum>`_]
    [`metadata <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.meta>`_]
- * FreeBSD 10.0
-   [`diskdump <https://cdn.synnefo.org/freebsd-10.0-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/freebsd-10.0-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/freebsd-10.0-x86_64.diskdump.meta>`_]
+ * FreeBSD 10.2
+   [`diskdump <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump>`_]
+   [`md5sum <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump.md5sum>`_]
+   [`metadata <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump.meta>`_]
  * OpenBSD 5.5
    [`diskdump <https://cdn.synnefo.org/openbsd-5.5-x86_64.diskdump>`_]
    [`md5sum <https://cdn.synnefo.org/openbsd-5.5-x86_64.diskdump.md5sum>`_]
