@@ -159,13 +159,13 @@ All image formats properties
      * For Windows images, the *Administrator*'s password is reset.
      * For Linux and \*BSD images, the *root* password is reset.
 
- * **DO_SYNC=yes**
+ * **DO_SYNC=bool**
    By default in ResizeUnmounted task, when ``resize2fs`` is executed to
    enlarge a ext[234] file system, ``fsync()`` is disabled to speed up the
    whole process. If for some reason you need to disable this behavior, use the
    *DO_SYNC* image property.
 
- * **IGNORE_UNATTEND=yes**
+ * **IGNORE_UNATTEND=bool**
    When deploying a Windows image, the InstallUnattend configuration task will
    install an Answer File for Unattended Installation (the one shipped with
    *snf-image* or the one pointed out by the *UNATTEND* configuration
@@ -175,14 +175,14 @@ All image formats properties
    exists in the above-mentioned location. For more information on "answer
    files" please refer to :ref:`windows-deployment`.
 
- * **ALLOW_MOUNTED_TASK_OVERWRITING=yes**
+ * **ALLOW_MOUNTED_TASK_OVERWRITING=bool**
    If this property is defined with yes, then the presence of an executable
    file under */root/snf-image/helper/overwrite_task_<TASK>* inside the image
    will make *snf-image* execute the code hosted there instead of the default
    one. See :ref:`Overwriting Configuration Tasks<overwriting-configuration-tasks>`
    for more info.
 
- * **OFFLINE_NTFSRESIZE=yes**
+ * **OFFLINE_NTFSRESIZE=bool**
    When deploying a Windows Image, perform an offline NTFS resize, instead of
    setting up the Unattend.xml file so SYSPREP executes a custom DISKPART
    script to perform an online resize during the first boot. Note NTFS is left
@@ -191,7 +191,7 @@ All image formats properties
    disable this behavior (this is dangerous). For more information on "answer
    files" please refer to :ref:`windows-deployment`.
 
- * **OFFLINE_NTFSRESIZE_NOCHECK=yes**
+ * **OFFLINE_NTFSRESIZE_NOCHECK=bool**
    Set this property to yes to skip the NTFS check performed by Windows upon
    the first boot when performing an offline NTFS resize (see the
    *OFFLINE_NTFSRESIZE* property). Skipping the initial filesystem check is
@@ -228,23 +228,23 @@ All image formats properties
    you want to write a custom configuration task check
    :ref:`Configuration Tasks Environment<configuration-tasks-environment>`.
 
- * **EXCLUDE_ALL_TASKS=yes**
+ * **EXCLUDE_ALL_TASKS=bool**
    If this property is defined with a yes value, the image will not be
    configured at all, during the deployment. This is really handy because it
    gives the ability to deploy images hosting operating systems whose
    configuration is not supported by *snf-image*.
 
- * **EXCLUDE_MOUNTED_TASKS=yes**
+ * **EXCLUDE_MOUNTED_TASKS=bool**
    If this property is defined, then only the tasks that are meant to run
    before the VM's disk gets mounted (namely *FixPartitionTable* and
    *FilesystemResizeUmounted*) will be allowed to run during deployment.
 
- * **EXCLUDE_FilesystemResize_TASKS=yes**
+ * **EXCLUDE_FilesystemResize_TASKS=bool**
    If this property is defined with a yes value, the 3 filesystem resize tasks
    (*FilesystemResizeUnmounted*, *FilesystemResizeMounted*,
    *FilesystemResizeAfterUmount*) will be prevented from running.
 
- * **EXCLUDE_TASK_<task_name>=yes**
+ * **EXCLUDE_TASK_<task_name>=bool**
    This family of properties gives the ability to exclude individual
    configuration tasks from running. Hence, if the property
    *EXCLUDE_TASK_DeleteSSHKeys* with a value other than null is passed to
@@ -256,6 +256,10 @@ All image formats properties
    *snf-image*. If you exclude task A but not task B which depends on A, you
    will probably end up with an unsuccessful deployment because B will fail and
    exit in an abnormal way. You can read more about configuration tasks here.
+
+.. note:: All boolean properties are treated as follows: yes is assumed to be
+ either yes, true, 1, on, and set while no is assumed to be no, false, 0, off,
+ and unset. An empty or not-set property is treated as false.
 
 img_properties OS parameter
 +++++++++++++++++++++++++++
