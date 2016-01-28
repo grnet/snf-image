@@ -23,6 +23,8 @@ Options
 
 -h  Print this message
 
+-n  Don't shrink the resulting image (useful when debugging)
+
 -p PACKAGE
     Install this deb package in the helper image, instead of the default
 

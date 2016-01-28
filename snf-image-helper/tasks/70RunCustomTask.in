@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2015 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,13 +18,14 @@
 # 02110-1301, USA.
 
 ### BEGIN TASK INFO
-# Provides:		SELinuxAutorelabel
-# RunBefore:            EnforcePersonality
-# RunAfter:             MountImage
-# Short-Description:	Force the system to relabel at next boot
+# Provides:		RunCustomTask
+# RunBefore:		UmountImage
+# RunAfter:		FilesystemResizeMounted
+# Short-Description:	Run a user defined task on the image
 ### END TASK INFO
 
 set -e
+
 . "@commondir@/common.sh"
 
 trap task_cleanup EXIT
@@ -32,22 +33,29 @@ report_task_start
 
 # Check if the task should be prevented from running.
 check_if_excluded
+check_if_mounted_excluded
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-	log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"	
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
 
-if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "linux" ]; then
-    distro=$(get_base_distro $SNF_IMAGE_TARGET)
+# Check if the image overwrites the task
+check_if_overwritten
 
-    if [ "$distro" = "redhat" ]; then
-        # we have to force a filesystem relabeling for SELinux after messing
-        # around with the filesystem in redhat derived OSs
-        echo "Enforce an automatic relabeling in the initial boot process..."
-        touch "$SNF_IMAGE_TARGET/.autorelabel"
-    fi
+if [ -z "$SNF_IMAGE_PROPERTY_CUSTOM_TASK" ]; then
+    warn "No custom task specified to run"
+    exit 0
 fi
+
+custom_task="$(mktemp)"
+add_cleanup rm "$custom_task"
+chmod +x "$custom_task"
+
+$BASE64 --decode > "$custom_task" <<< "$SNF_IMAGE_PROPERTY_CUSTOM_TASK"
+
+$custom_task
 
 exit 0
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
+

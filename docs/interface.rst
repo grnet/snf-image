@@ -13,11 +13,17 @@ following OS Parameters:
    the image (:ref:`details <image-id>`)
  * **img_passwd** (optional): the password to be injected into the image
    (:ref:`details <image-passwd>`)
+ * **img_passwd_hash** (optional): the hash of the password to be injected into
+   the image (:ref:`details <image-passwd-hash>`)
  * **img_properties** (optional): additional image properties used to customize
    the image (:ref:`details <image-properties>`)
  * **img_personality** (optional): files to be injected into the image's file
    system (:ref:`details <image-personality>`)
  * **config_url** (optional): the URL to download configuration data from
+ * **os_product_key** (optional): a product key to be used to license a Windows
+   deployment (windows-only)
+ * **os_answer_file** (optional): an answer file used by Windows to automate
+   the setup process, instead the default one (windows-only)
 
 .. _image-format:
 
@@ -89,8 +95,22 @@ Image Password (img_passwd)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The value of this parameter is the password to be injected into the image. If
-this parameter is not set at all, then the *ChangePassword* task (see
+this parameter is not set at all and **img_passwd_hash** is missing too, then
+the *ChangePassword* task (see
 :ref:`Image Configuration Tasks <image-configuration-tasks>`) will not run.
+This parameter cannot be defined in conjunction with **img_passwd_hash**.
+
+.. _image-passwd-hash:
+
+Image Password Hash (img_passwd_hash)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The value of this parameter is the hash of the password to be injected into the
+image. If this parameter is not set at all and **img_passwd** is missing too,
+then the *ChangePassword* task (see
+:ref:`Image Configuration Tasks <image-configuration-tasks>`) will not run.
+This parameter is not applicable on Windows images and cannot be defined in
+conjunction with **img_passwd**.
 
 .. _image-properties:
 
@@ -113,8 +133,9 @@ A list of all properties follows:
 Diskdump only properties
 ++++++++++++++++++++++++
 
- * **OSFAMILY=linux|windows|freebsd|netbsd|openbsd**
-   This specifies whether the image is a Linux, a Windows or a \*BSD Image.
+ * **OSFAMILY=linux|windows|windows-legacy|freebsd|netbsd|openbsd**
+   This specifies whether the image is a Linux, a Windows or a \*BSD Image. For
+   Windows OSes prior to Vista, *windows-legacy* should be used.
    *{ext,ntfs}dump* formats are self descriptive regarding this property.
  * **ROOT_PARTITION=n**
    This specifies the partition number of the root partition. As mentioned
@@ -138,13 +159,13 @@ All image formats properties
      * For Windows images, the *Administrator*'s password is reset.
      * For Linux and \*BSD images, the *root* password is reset.
 
- * **DO_SYNC=yes**
+ * **DO_SYNC=bool**
    By default in ResizeUnmounted task, when ``resize2fs`` is executed to
    enlarge a ext[234] file system, ``fsync()`` is disabled to speed up the
    whole process. If for some reason you need to disable this behavior, use the
    *DO_SYNC* image property.
 
- * **IGNORE_UNATTEND=yes**
+ * **IGNORE_UNATTEND=bool**
    When deploying a Windows image, the InstallUnattend configuration task will
    install an Answer File for Unattended Installation (the one shipped with
    *snf-image* or the one pointed out by the *UNATTEND* configuration
@@ -153,6 +174,29 @@ All image formats properties
    the external answer file is always performed, even if such a file already
    exists in the above-mentioned location. For more information on "answer
    files" please refer to :ref:`windows-deployment`.
+
+ * **ALLOW_MOUNTED_TASK_OVERWRITING=bool**
+   If this property is defined with yes, then the presence of an executable
+   file under */root/snf-image/helper/overwrite_task_<TASK>* inside the image
+   will make *snf-image* execute the code hosted there instead of the default
+   one. See :ref:`Overwriting Configuration Tasks<overwriting-configuration-tasks>`
+   for more info.
+
+ * **OFFLINE_NTFSRESIZE=bool**
+   When deploying a Windows Image, perform an offline NTFS resize, instead of
+   setting up the Unattend.xml file so SYSPREP executes a custom DISKPART
+   script to perform an online resize during the first boot. Note NTFS is left
+   dirty and will be checked automatically on first boot when performing an
+   offline NTFS resize. Set the *OFFLINE_NTFSRESIZE_NOCHECK* property to yes to
+   disable this behavior (this is dangerous). For more information on "answer
+   files" please refer to :ref:`windows-deployment`.
+
+ * **OFFLINE_NTFSRESIZE_NOCHECK=bool**
+   Set this property to yes to skip the NTFS check performed by Windows upon
+   the first boot when performing an offline NTFS resize (see the
+   *OFFLINE_NTFSRESIZE* property). Skipping the initial filesystem check is
+   dangerous, as it may lead to bugs of the offline NTFS resize procedure going
+   undetected.
 
  * **PASSWD_HASHING_METHOD=md5|sha1|blowfish|sha256|sha512**
    This property can be used on Unix instances to specify the method to be used
@@ -163,25 +207,44 @@ All image formats properties
    `here <http://pythonhosted.org/passlib/modular_crypt_format.html#mcf-identifiers>`_
    for more info).
 
- * **SWAP=<partition id>:<size>**
-   If this property is defined, *snf-image* will create a swap partition with
-   the specified size in MB. The *partition id* is the number that the Linux
+ * **SWAP=<partition id>:<size>|<disk letter>**
+   If this property is defined, *snf-image* will create a swap device in the
+   VM. If the first form is used, then a swap partition with the specified size
+   in MB will be created. The *partition id* is the number that the Linux
    kernel will assign to this partition. For example, if you have a disk with
-   an MSDOS  partition table on it and one primary partition, the image
-   property *SWAP=2:512* would instruct *snf-image* to create a 512MB long
-   primary partition for swap with id=2. On the other hand, if the *SWAP*
-   property had this form: *SWAP=5:512*, since primary partitions may have an
-   id from 1 to 4, *snf-image* would create a 512MB extended partition with
-   id=2 and a logical swap partition with id=5 in it with the same size. This
-   property only applies to Linux instances.
+   an MSDOS partition table on it and one primary partition, an image property:
+   *SWAP=2:512* would instruct *snf-image* to create a 512MB long primary
+   partition for swap with id=2. On the other hand, if the *SWAP* property was
+   defined like this: *SWAP=5:512*, since primary partitions may have an id
+   from 1 to 4, *snf-image* would create a 512MB extended partition with id=2
+   and a logical swap partition of the same size with id=5 in it. If the second
+   form is specified, then a whole secondary disk will be configured
+   to be swap. Defining *SWAP=c* will configure the third disk of the VM to be
+   swap.This property only applies to Linux instances.
 
- * **EXCLUDE_ALL_TASKS=yes**
-   If this property is defined with a value other than null, then during the
-   deployment, the image will not be configured at all. This is really handy
-   because it gives the ability to deploy images hosting operating systems
-   whose configuration is not supported by *snf-image*.
+ * **CUSTOM_TASK=<base64_encoded_content>**
+   This property can be used to run a user-defined configuration task. The
+   value of this property should host the base64-encoded body of the task. If
+   you want to write a custom configuration task check
+   :ref:`Configuration Tasks Environment<configuration-tasks-environment>`.
 
- * **EXCLUDE_TASK_<task_name>=yes**
+ * **EXCLUDE_ALL_TASKS=bool**
+   If this property is defined with a yes value, the image will not be
+   configured at all, during the deployment. This is really handy because it
+   gives the ability to deploy images hosting operating systems whose
+   configuration is not supported by *snf-image*.
+
+ * **EXCLUDE_MOUNTED_TASKS=bool**
+   If this property is defined, then only the tasks that are meant to run
+   before the VM's disk gets mounted (namely *FixPartitionTable* and
+   *FilesystemResizeUmounted*) will be allowed to run during deployment.
+
+ * **EXCLUDE_FilesystemResize_TASKS=bool**
+   If this property is defined with a yes value, the 3 filesystem resize tasks
+   (*FilesystemResizeUnmounted*, *FilesystemResizeMounted*,
+   *FilesystemResizeAfterUmount*) will be prevented from running.
+
+ * **EXCLUDE_TASK_<task_name>=bool**
    This family of properties gives the ability to exclude individual
    configuration tasks from running. Hence, if the property
    *EXCLUDE_TASK_DeleteSSHKeys* with a value other than null is passed to
@@ -193,6 +256,10 @@ All image formats properties
    *snf-image*. If you exclude task A but not task B which depends on A, you
    will probably end up with an unsuccessful deployment because B will fail and
    exit in an abnormal way. You can read more about configuration tasks here.
+
+.. note:: All boolean properties are treated as follows: yes is assumed to be
+ either yes, true, 1, on, and set while no is assumed to be no, false, 0, off,
+ and unset. An empty or not-set property is treated as false.
 
 img_properties OS parameter
 +++++++++++++++++++++++++++

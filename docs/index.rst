@@ -29,7 +29,7 @@ successfully deploy many major Linux distributions (Debian, Ubuntu/Kubuntu,
 CentOS, Fedora, OpenSUSE, Slackware, Arch Linux, CoreOS), Windows Server
 flavors (2008 R2, 2012, 20012 R2), as well as BSD systems (FreeBSD, OpenBSD,
 NetBSD). It is also known to work well with current Desktop versions of Windows
-(7, 8, 8.1).
+(7, 8, 8.1) as well as Windows XP.
 
 The snf-image Ganeti OS Definition is released under
 `GPLv2 <http://www.gnu.org/licenses/gpl-2.0.html>`_.
@@ -47,6 +47,7 @@ Contents:
    configuration
    usage
    advanced
+   development
 
 Indices and tables
 ==================

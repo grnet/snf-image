@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2012 GRNET S.A.
+# Copyright (C) 2012-2016 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,11 +28,11 @@ ganeti_os_main
 # we'll first losetup it. This is needed for file disks.
 if [ ! -b "$blockdev" ]; then
     original_blockdev="$blockdev"
-    blockdev=$($LOSETUP -sf "$blockdev")
+    blockdev=$($LOSETUP --show -f "$blockdev")
     add_cleanup $LOSETUP -d "$blockdev"
 fi
 
-dd of="$blockdev" bs=4M
+$DD of="$blockdev" bs=4M
 
 # Execute cleanups
 cleanup

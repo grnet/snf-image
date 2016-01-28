@@ -1,0 +1,192 @@
+#! /bin/bash
+
+# Copyright (C) 2011-2016 GRNET S.A. and individual contributors
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+### BEGIN TASK INFO
+# Provides:		InstallUnattend
+# RunBefore:		EnforcePersonality
+# RunAfter:		MountImage
+# Short-Description:	Installs Unattend.xml for unattended Windows setup
+### END TASK INFO
+
+set -e
+. "@commondir@/common.sh"
+
+trap task_cleanup EXIT
+report_task_start
+
+# Check if the task should be prevented from running.
+check_if_mounted_excluded
+
+if [ -z "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
+fi
+
+# Check if the image overwrites the task
+check_if_overwritten
+
+if [[ ! "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^windows ]]; then
+    exit 0
+fi
+
+target=$SNF_IMAGE_TARGET
+arch=$(get_windows_architecture "$target")
+if [ -z "$arch" ]; then
+    log_error "Unable to determine windows architecture"
+fi
+
+mkdir -p "$target/Windows/Setup/Scripts"
+touch "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+mkdir -p "$target/Windows/SnfScripts"
+
+echo "exit" > "$target/Windows/SnfScripts/ExtendFilesystem"
+echo "del /Q /F C:\Windows\SnfScripts\ExtendFilesystem" >> \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+echo "@echo off" > "$target/Windows/SnfScripts/ChangeAdminPassword.cmd"
+# For security reasons, overwrite the file before deleting...
+spaces=$(printf "%200s");
+echo "echo ${spaces// /X} > C:\Windows\SnfScripts\ChangeAdminPassword.cmd" >> \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+echo "del /Q /F C:\Windows\SnfScripts\ChangeAdminPassword.cmd" >> \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+echo "rmdir C:\Windows\SnfScripts" >> \
+        "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+read nt_version_major nt_version_minor <<<$(get_windows_nt_version "$target")
+
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = windows ]; then
+    if [ $nt_version_major -lt 6 ]; then
+        log_error "Windows image seems older than Vista. Use 'windows-legacy' as OSFAMILY"
+    fi
+
+    # The system must be generalized in order to proceed
+    check_windows_if_sysprepped "$target"
+
+    unattend=$(get_unattend "$target")
+    if test -n "$unattend" && ! check_yes_no SNF_IMAGE_PROPERTY_IGNORE_UNATTEND; then
+        warn "Using the Unattend.xml file found in the image"
+    else
+        rm -f "$unattend"
+        cat "$SNF_IMAGE_UNATTEND" > "$target/unattend.xml"
+        unattend="$target/unattend.xml"
+    fi
+
+    # FIXME: There is no guarantee the answer file is actually named
+    # C:\unattend.xml. These may have to be modified to use the actual
+    # name of the answer file, as returned by get_unattend().
+
+    echo 'del /Q /F C:\unattend.xml' >> \
+            "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+    echo 'del /Q /F C:\windows\panther\unattend.xml' >> \
+            "$target/Windows/Setup/Scripts/SetupComplete.cmd"
+
+    # Check if ChangeAdminPassword.cmd and ExtendFilesystem are executed by
+    # this unattend.xml file. If this is not the case, then add the proper
+    # entries
+    xpath='/_:unattend/_:settings/_:component[@processorArchitecture="'"$arch"'"]/_:RunSynchronous/_:RunSynchronousCommand'
+    commands=$($XMLSTARLET sel -t -v "$xpath/_:Path"  "$unattend") || true
+    max_order=$($XMLSTARLET sel -t -v "($xpath/_:Order[not(. < $xpath/_:Order)])[1]" "$unattend") || true
+    order=$((max_order+1)) || true
+    if ! grep -i ChangeAdminPassword.cmd <<< "$commands" &> /dev/null; then
+        windows_add_synchronous_command "$unattend" "$arch" \
+            "Change user passwords" \
+            "$((order++))" \
+            'C:\Windows\SnfScripts\ChangeAdminPassword.cmd'
+    fi
+
+    if ! grep -i ExtendFilesystem <<< "$commands" &> /dev/null; then
+        windows_add_synchronous_command "$unattend" "$arch" \
+            "Extend the file system" \
+            "$((order++))" \
+            'diskpart.exe /s C:\Windows\SnfScripts\ExtendFilesystem'
+    fi
+
+    if [ -n "${SNF_IMAGE_OS_PRODUCT_KEY+dummy}" ]; then
+        windows_update_unattend_node "$unattend" specialize \
+            "Microsoft-Windows-Shell-Setup" "$arch" ProductKey \
+            "$SNF_IMAGE_OS_PRODUCT_KEY"
+    fi
+
+elif [ "$SNF_IMAGE_PROPERTY_OSFAMILY" = "windows-legacy" ]; then
+    if [ $nt_version_major -ge 6 ]; then
+        log_error "Windows image is not legacy. Use 'windows' as OSFAMILY"
+    fi
+
+    # Check if Mini-Setup is to be started at the next boot
+    check_windows-legacy_if_sysprepped "$target"
+
+    # If using an old-style (XP / Server 2003) SYSPREP.INF answer file,
+    # ensure C:\SnfScripts\SetupComplete.cmd is executed via CmdLines.txt
+    # which must be installed in the InstalledfilesPath from SYSPREP.INF.
+    sysprepinf=$(get_sysprepinf "$target")
+    if test -n "$sysprepinf" && ! check_yes_no SNF_IMAGE_PROPERTY_IGNORE_UNATTEND; then
+        warn "Using the sysprep.inf file found in the image"
+    else
+        rm -f "$sysprepinf"
+        mkdir -p "$target/sysprep"
+        cat "$SNF_IMAGE_SYSPREPINF" > "$target/sysprep/sysprep.inf"
+    fi
+
+    infedit="@scriptsdir@/handle-ini-file.py"
+    installfilespath=$($infedit "$sysprepinf" get Unattended InstallFilesPath)
+    if [ -z "$installfilespath" ]; then
+        # Set InstallFilesPath to C:\SYSPREP\i386 explicitly, if missing
+        "$infedit" "$sysprepinf" set Unattended InstallFilesPath 'C:\SYSPREP\i386'
+        installfilespath=$("$infedit" "$sysprepinf" get Unattended InstallFilesPath)
+    fi
+    if [ -z "$installfilespath" ]; then
+        log_error "Failed to get value of InstallFilesPath in SYSPREP.INF"
+    fi
+    installfilespath=${installfilespath,,}
+
+    if [[ ! "$installfilespath" == 'c:\sysprep\'* ]]; then
+        log_error "InstallFilesPath from SYSPREP.INF not under C:\\SYSPREP\\"
+    fi
+    installfilespath=${installfilespath#c:\\sysprep\\}
+    installfilespath=${installfilespath//\\//}
+
+    # Ensure final location for InstallFilesPath is still under $target
+    oemdir="$target/sysprep/$installfilespath"/'$OEM$'
+    if ! readlink -f "$oemdir"|grep -q "^$target"; then
+        log_error "Invalid value for InstallFilesPath in SYSPREP.INF"
+    fi
+
+    mkdir -p "$oemdir"
+    cmdlinestxt="$oemdir/CmdLines.txt"
+    touch "$cmdlinestxt"
+
+    if ! egrep '^[[:space:]]*\[Commands\][[:space:]]*$' "$cmdlinestxt" >/dev/null; then
+        echo "[Commands]" >> "$cmdlinestxt"
+    fi
+
+    echo '"C:\Windows\SnfScripts\ChangeAdminPassword.cmd"' >>"$cmdlinestxt"
+    echo '"C:\Windows\Setup\Scripts\SetupComplete.cmd"' >>"$cmdlinestxt"
+
+    #Install a product key if defined
+    if [ -n "${SNF_IMAGE_OS_PRODUCT_KEY+dummy}" ]; then
+        "$infedit" "$sysprepinf" set UserData ProductKey "$SNF_IMAGE_OS_PRODUCT_KEY"
+    fi
+fi
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
