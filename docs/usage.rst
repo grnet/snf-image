@@ -51,10 +51,6 @@ that have been tested with *snf-image* and provided here for testing purposes:
    [`diskdump <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump>`_]
    [`md5sum <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump.md5sum>`_]
    [`metadata <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump.meta>`_]
- * OpenBSD 5.5
-   [`diskdump <https://cdn.synnefo.org/openbsd-5.5-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/openbsd-5.5-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/openbsd-5.5-x86_64.diskdump.meta>`_]
 
 Sample Usage
 ^^^^^^^^^^^^
