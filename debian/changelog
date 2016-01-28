@@ -1,3 +1,9 @@
+snf-image (0.19-1~wheezy) wheezy; urgency=low
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Thu, 28 Jan 2016 17:25:13 +0200
+
 snf-image (0.19~rc2-1~wheezy) wheezy; urgency=low
 
   * New upstream version
@@ -382,6 +388,7 @@ snf-image-host (0.1-1) UNRELEASED; urgency=low
   * Initial release
 
  -- Constantinos Venetsanopoulos <cven@grnet.gr>  Tue, 04 Oct 2011 13:04:28 +0300
+
 
 
 
