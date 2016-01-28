@@ -37,7 +37,9 @@ get_img_driver() {
 }
 
 assign_disk_devices_to() {
-    local varname="$1"
+    local varname dev i
+
+    varname="$1"
 
     # This will declare the given variable as an array
     eval $varname=\(\)
