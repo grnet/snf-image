@@ -111,13 +111,13 @@ get_api10_arguments() {
             log_error "Missing OS API Variable: \`EXPORT_DEVICE'"
             exit 1
         fi
-        disk0=$EXPORT_DEVICE
+        export_disk=$EXPORT_DEVICE
     elif [ "$SCRIPT_NAME" = "import" ]; then
         if [ -z "$IMPORT_DEVICE" ]; then
             log_error "Missing OS API Variable: \`IMPORT_DEVICE'"
             exit 1
         fi
-        disk0=$IMPORT_DEVICE
+        import_disk=$IMPORT_DEVICE
     else
         disk0=$(find_disk 0)
     fi
@@ -235,7 +235,9 @@ losetup_disk() {
 }
 
 find_disk() {
-    local idx=$1
+    local idx path uri
+
+    idx=$1
 
     eval path=\$DISK_${idx}_PATH
     eval uri=\$DISK_${idx}_URI
