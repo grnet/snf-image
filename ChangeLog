@@ -1,6 +1,24 @@
+2016-01-28, v0.19
+	* Support Windows XP/2003 (windows-legacy OSFAMILY)
+	* Support 32-bit versions of Windows
+	* Add new os_product_key and os_answer_file OS parameters
+	* Allow offline resizing for NTFS
+	* Cleanup the default Unattend.xml file
+	* Allow defining the Windows time zone in the default Unattend.xml file
+	* Add new image configuration task that executes user defined code
+	* Allow the image itself to overwrite configuration tasks that run
+	  during deployment when the image is mounted
+	* Support Ed24419 ssh keys
+	* Support making swap in secondary disk
+	* Strip down the helper kernel (reduces helper image size)
+	* Support Debian Jessie helpers
+	* Fix bugs and cleanup the code
+	* Update the documentation
+
 2015-03-13, v0.18.1
 	* HELPER: Fix a bug in ConfigureNetwork task that caused a syntax error
 	  if the SUBNET was missing for a NIC
+
 2015-03-03, v0.18
 	* HELPER: Auto-detect OSFAMILY and ROOT_PARTITION properties if missing
 	* HELPER: Add new CofigureNetwork image configuration task
