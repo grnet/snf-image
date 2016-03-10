@@ -702,9 +702,20 @@ mount_all() {
         ;;
     esac
 
+    if [ ! -f "${target}/etc/fstab" ]; then
+        warn "No \`/etc/fstab' found under \`${target}'!"
+        return 0
+    fi
+
     fstab="$(grep -v ^\# "${target}/etc/fstab" \
              | gawk "{ if (match(\$3, \"$fs\")) { print \$2,\$1,\$3 } }" \
              | sort -bd)"
+
+    if [ -z "$fstab" ]; then
+        warn "No useful entries where found in \`/etc/fstab'."
+        return 0
+    fi
+
     # <mpoint> <device> <fs>
     while read -ra entry; do
         # Skip root. It is already mounted
