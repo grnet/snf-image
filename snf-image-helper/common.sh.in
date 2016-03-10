@@ -686,7 +686,7 @@ mount_all() {
 
     case "$osfamily" in
     linux)
-        fs="ext[234]|msdos|vfat|ntfs|btrfs|xfs"
+        fs="auto|ext[234]|msdos|vfat|ntfs|btrfs|xfs"
         ;;
     freebsd)
         fs="ufs|msdosfs|ntfs"
@@ -707,6 +707,7 @@ mount_all() {
         return 0
     fi
 
+    # Note: We swap the 2 first fstab entry fields to sort in accordance with mount points
     fstab="$(grep -v ^\# "${target}/etc/fstab" \
              | gawk "{ if (match(\$3, \"$fs\")) { print \$2,\$1,\$3 } }" \
              | sort -bd)"
@@ -716,7 +717,7 @@ mount_all() {
         return 0
     fi
 
-    # <mpoint> <device> <fs>
+    # entry=(<mpoint> <device> <fs>)
     while read -ra entry; do
         # Skip root. It is already mounted
         if [ "${entry[0]}" = "/" ]; then
@@ -727,11 +728,33 @@ mount_all() {
         types="auto"
 
         if [ "$osfamily" = linux ]; then
-            # Linux persistent block device naming
+
+            # Not sure if this is needed when allowing auto fs but it doesn't harm
+            if [[ "${entry[1]}" =~ ^(none|proc|tmpfs)$ ]]; then
+                warn "Skipping fstab entry: \`${entry[1]} ${entry[0]} ${entry[2]}'"
+                continue
+            fi
+
+            # Skip floppies (the check is needed since we allow auto fs)
+            if [[ "${entry[1]}" =~ ^/dev/(fd[0-9]|floppy) || \
+                  "${entry[0]}" =~ ^/(mnt|media)/floppy ]]; then
+                warn "Skipping fstab entry: \`${entry[1]} ${entry[0]} ${entry[2]}'"
+                continue
+            fi
+
+            # Skip cdroms (the check is needed since we allow auto fs)
+            if [[ "${entry[1]}" =~ ^/dev/cdrom || \
+                  "${entry[0]}" =~ ^/(mnt|media)/cdrom ]]; then
+                warn "Skipping fstab entry: \`${entry[1]} ${entry[0]} ${entry[2]}'"
+                continue
+            fi
+
+           # Linux persistent block device naming
             if [[ ${entry[1]} =~ ^(LABEL|UUID)= ]]; then
                 entry[1]=$(findfs "${entry[1]}")
             else
-                log_error "fstab contains non-persistent block device names"
+                log_error "fstab contains non-persistent block device name: " \
+                    "\`${entry[1]}' for mount point: \`${entry[0]}'"
             fi
         else
             if [[ "$osfamily" =~ ^(open|net)bsd$ ]]; then
