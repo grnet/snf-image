@@ -31,7 +31,7 @@ EOF
 
 add_debconf_signature()
 {
-    TMPCONF=$(mktmep --tmpdir=/etc/default)
+    TMPCONF=$(mktemp --tmpdir=/etc/default)
     mv "$1" "$TMPCONF"
     cat > "$1" <<EOF
 ###DEBCONF###
