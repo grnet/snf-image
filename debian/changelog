@@ -1,3 +1,9 @@
+snf-image (0.19-2~wheezy) wheezy; urgency=low
+
+  * Fix error in postinstall script
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Fri, 08 Jul 2016 12:26:18 +0300
+
 snf-image (0.19-1~wheezy) wheezy; urgency=low
 
   * New upstream version
@@ -388,6 +394,7 @@ snf-image-host (0.1-1) UNRELEASED; urgency=low
   * Initial release
 
  -- Constantinos Venetsanopoulos <cven@grnet.gr>  Tue, 04 Oct 2011 13:04:28 +0300
+
 
 
 
