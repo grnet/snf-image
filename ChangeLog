@@ -1,3 +1,6 @@
+2016-07-20, v0.19.1
+	* Add "auto" to the known Linux file systems
+
 2016-01-28, v0.19
 	* Support Windows XP/2003 (windows-legacy OSFAMILY)
 	* Support 32-bit versions of Windows
