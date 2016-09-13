@@ -47,11 +47,14 @@ networking_tool=$(get_networking_tool "$SNF_IMAGE_TARGET")
 if [ ! -f "$networking_tool" ]; then
     warn "Don't know how to configure the network for this OS"
     exit 0
+else
+    echo "Using $networking_tool"
 fi
 
 export SNF_IMAGE_TARGET
 
 # Initialize the driver
+echo "Running: $networking_tool -i"
 "$networking_tool" -i
 
 for index in $(seq 0 $((SNF_IMAGE_NIC_COUNT-1))); do
@@ -129,11 +132,13 @@ for index in $(seq 0 $((SNF_IMAGE_NIC_COUNT-1))); do
         fi
     fi
 
+    echo "Running: $networking_tool $ARGS"
     "$networking_tool" $ARGS
 
 done
 
 # Finalize the driver
+echo "Running: $networking_tool -f"
 "$networking_tool" -f
 
 
