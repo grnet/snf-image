@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011 GRNET S.A. 
+# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 ### BEGIN TASK INFO
 # Provides:		AssignHostname
 # RunBefore:            EnforcePersonality
-# RunAfter:		InstallUnattend
+# RunAfter:		InstallUnattend & FilesystemResizeMounted
 # Short-Description:	Assign Hostname/Computer Name to the instance
 ### END TASK INFO
 
@@ -32,27 +32,58 @@ report_task_start
 
 # Check if the task should be prevented from running.
 check_if_excluded
+check_if_mounted_excluded
+
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
+fi
+
+# Check if the image overwrites the task
+check_if_overwritten
+
+windows-legacy_hostname() {
+    local target hostname sysprepinf
+    target="$1"
+    hostname="$2"
+
+    check_windows_computer_name "$hostname"
+
+    sysprepinf=$(get_sysprepinf "$target")
+    if [ -z "$sysprepinf" ]; then
+        log_error 'No C:\SYSPREP\SYSPREP.INF found in the instance.'
+    fi
+
+    echo -n "Assigning new computer name..."
+
+    @scriptsdir@/handle-ini-file.py "$sysprepinf" set UserData ComputerName "$hostname"
+
+    echo done
+}
 
 windows_hostname() {
-    local target password unattend tmp_unattend namespace
+    local target hostname unattend arch component
     target="$1"
-    password="$2"
+    hostname="$2"
+
+    check_windows_computer_name "$hostname"
 
     tmp_unattend=$(mktemp)
     add_cleanup rm "$tmp_unattend"
 
     echo -n "Assigning new computer name..."
 
-    namespace="urn:schemas-microsoft-com:unattend"
-
     unattend=$(get_unattend "$target")
     if [ -z "$unattend" ]; then
-        log_error "Unattend.xml is missing."
+        log_error "No Unattend.xml found in the instance."
     fi
-    
-    "$XMLSTARLET" ed -N x=$namespace -u "/x:unattend/x:settings/x:component/x:ComputerName" -v "$password" "$unattend" > "$tmp_unattend"
+    arch=$(get_windows_architecture "$target")
+    if [ -z "$arch" ]; then
+        log_error "Unable to determine windows architecture"
+    fi
 
-    cat "$tmp_unattend" > "$unattend"
+    windows_update_unattend_node "$unattend" specialize \
+        "Microsoft-Windows-Shell-Setup" "$arch" ComputerName "$hostname"
+
     echo done
 }
 

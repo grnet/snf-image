@@ -52,7 +52,8 @@ Although *diskdump* is a lot more flexible than the older formats, there are
 still some rules to follow:
 
  * For Linux:
-   * All block devices in ``/etc/fstab`` should be specified using persistent names (UUID or LABEL)
+   * All block devices in ``/etc/fstab`` should be specified using persistent
+   names (UUID or LABEL)
    * LVM partitions are not supported
    * Only ext{2,3,4} file systems are supported
  * For FreeBSD:
@@ -80,14 +81,20 @@ previously been generalized [#f1]_ with a command like this:
 The pre-included Unattend.xml file that *snf-image* will by default install on
 the VM's hard disk is this one:
 
-.. literalinclude:: ../snf-image-helper/unattend.xml
+.. literalinclude:: ../snf-image-host/unattend.xml.in
    :language: xml
-   :emphasize-lines: 7,21-30
-   :linenos:
 
-The file above is expected to work with all AMD64 releases (Server or Desktop)
-of Microsoft Windows starting from version 6.1. The table below lists the
-releases the developers have confirmed it to work with:
+The file above is expected to work with all releases (Server or Desktop)
+of Microsoft Windows starting from version 6.1. The ``@TIMEZONE@`` containers
+you see are replaced by snf-image with the value of the *WINDOWS_TIMEZONE*
+configuration variable during the deployment. Also, as you may have already
+noticed, all *component* elements of the pre-included Unattend.xml are in 2
+copies. One for *processorArchitecture* *amd64* and one for *x86*. This is done
+in order to support both 32-bit and 64-bit versions of Windows using only one
+file.
+
+The table below lists the releases the developers have confirmed it to work
+with:
 
 +-------+----------------------+----------------------+
 |Version|Marketing name        | Editions             |
@@ -106,19 +113,44 @@ releases the developers have confirmed it to work with:
 +-------+----------------------+----------------------+
 
 Nevertheless, the user may want to use a custom Unattend.xml file that better
-fits his needs. To do so, he can either update the *UNATTEND* configuration
-parameter in ``/etc/default/snf-image`` to point to such a file in the host
-system or put his copy of the file in the root directory of the image's
-%SystemDrive% (*snf-image* will not install an Unattend.xml file if it is
-already present in the image, unless *IGNORE_UNATTEND* image property is
-defined). The latter is the recommended way to do it since it allows to provide
-answer files in a per-image basis.
+fits his needs. To do so, he can either use the *os_answer_file* OS parameter
+during the deployment to specify one or put his copy of the file in the root
+directory of the image's %SystemDrive%. *snf-image* will not install an
+Unattend.xml file if it is already present in the image, unless
+*IGNORE_UNATTEND* image property is defined.
 
-.. warning::
-  When using custom Unattend.xml files, keep in mind that the highlighted
-  entries (lines 7 & 21-30) are crucial for *snf-image* to work. You may remove
-  or add settings in the file but the highlighted entries must be present.
+Windows Legacy Deployment
++++++++++++++++++++++++++
 
+For Windows OSes prior to Windows Vista, the System Preparation Tool (Sysprep)
+utility is completely different than the one used on later versions. It is not
+installed with the OS itself. It's located in the Windows product CD in the
+``/Sypport/Tools/Deploy.cab`` file and needs to be extracted under the
+``%SYSTEMDRIVE%\Sysprep`` folder by the user. The  commands that needs to be
+executed in order to put the system in a state ready for cloning looks like
+this one:
+
+.. code-block:: console
+
+  Sysprep -mini -quiet
+
+The answer file which is typically called Sysprep.inf has an INI format. The
+one *snf-image* hosts and will install under ``C:\Sysprep\Sysprep.inf`` is this
+one:
+
+.. literalinclude:: ../snf-image-host/sysprep.inf.in
+   :language: ini
+
+The ``@TIMEZONE_INDEX@`` container will be replaced during the installation of
+the file by the index value of the time zone which is specified through the
+*WINDOWS_TIMEZONE* configuration variable. For more info check `here
+<https://msdn.microsoft.com/en-us/library/ms912391%28v=winembedded.11%29.aspx>`_.
+This file is known to work with Windows XP and in order for the deployment to
+be completely unattended, the user must provide a Windows Product key using the
+*os_product_key* OS parameter *snf-image* offers. As with the newer Windows
+versions, the user is free to use his custom copy of *sysprep.inf* either by
+putting it inside the image (under ``C:\Sysprep\Sysprep.inf``) or by using the
+*os_answer_file* OS parameter.
 
 Progress Monitoring Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -213,6 +245,104 @@ standard error output stream of *snf-image-helper*. Valid *error* messages look
 like this:
 
 ``{"subtype": "error", "type": "image-helper", "messages": ["The image contains a(n) MSDOS partition table.  For FreeBSD images only GUID Partition Tables are supported."], "timestamp": 1379507910.799365}``
+
+.. _configuration-tasks-environment:
+
+Configuration Tasks Enviroment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When an *snf-image-helper* configuration task runs, it expects to find the
+required information in its environment. In the table below we describe the
+environment variables that are present when the configuration tasks run.
+
+
++---------------------+-------------------------------------------------------+
+|Name [#]_            |Details                                                |
++=====================+=======================================================+
+|DEV_COUNT            |The number of the instance's disks.                    |
++---------------------+-------------------------------------------------------+
+|DEV_%N               |The device file of the Nth disk.                       |
++---------------------+-------------------------------------------------------+
+|DEV                  |The device file of the first disk (we keep this for    |
+|                     |backward compatibility)                                |
++---------------------+-------------------------------------------------------+
+|PERSONALITY          |The value of the img_personality OS parameter.         |
++---------------------+-------------------------------------------------------+
+|HOSTNAME             |The instance's name.                                   |
++---------------------+-------------------------------------------------------+
+|PASSWD               |The value of the img_passwd OS parameter.              |
++---------------------+-------------------------------------------------------+
+|PASSWD_HASH          |The value of the img_passwd_hash OS parameter.         |
++---------------------+-------------------------------------------------------+
+|OS_PRODUCT_KEY       |The value of the os_product_key parameter.             |
++---------------------+-------------------------------------------------------+
+|PROPERTY_*           |The value of a specific image property that was        |
+|                     |specified in json through the img_properties OS        |
+|                     |parameter.                                             |
++---------------------+-------------------------------------------------------+
+|RESIZE_PART          |The number of the partition that will be enlarged.     |
++---------------------+-------------------------------------------------------+
+|TARGET               |The directory the instance's file systems are mounted  |
+|                     |under.                                                 |
++---------------------+-------------------------------------------------------+
+|NIC_COUNT            |The number of network interface controllers of the     |
+|                     |instance.                                              |
++---------------------+-------------------------------------------------------+
+|NIC_%N_*             |The Ganeti provided environment variable for the Nth   |
+|                     |network interface controller. Check                    |
+|                     |`here <http://docs.ganeti.org/ganeti/current/man/ganeti|
+|                     |-os-interface.html>`_                                  |
++---------------------+-------------------------------------------------------+
+|DHCP_TAGS            |The value of the DHCP_TAGS configuration parameter (see|
+|                     |:ref:`Configuration Parameters                         |
+|                     |<configuration-parameters>`)                           |
++---------------------+-------------------------------------------------------+
+|STATEFUL_DHCPV6_TAGS |The value of the STATEFUL_DHCPV6_TAGS configuration    |
+|                     |parameter (see  :ref:`Configuration Parameters         |
+|                     |<configuration-parameters>`)                           |
++---------------------+-------------------------------------------------------+
+|STATELESS_DHCPV6_TAGS|The value of the STATELESS_DHCPV6_TAGS configuration   |
+|                     |parameter (see :ref:`Configuration Parameters          |
+|                     |<configuration-parameters>`)                           |
++---------------------+-------------------------------------------------------+
+|UNATTEND             |The path to the Windows setup answer file              |
+|                     |(Unattend.xml)                                         |
++---------------------+-------------------------------------------------------+
+|SYSPREPINF           |The path to the Windows legacy setup answer file       |
+|                     |(sysprep.inf)                                          |
++---------------------+-------------------------------------------------------+
+
+.. [#] all environment variable names are prefixed with *SNF_IMAGE_*
+
+.. _overwriting-configuration-tasks:
+
+Overwriting Configuration Tasks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+One way to extend snf-image to work on images that are not directly supported
+by it, is the overwriting mechanism for the :ref:`configuration tasks
+<image-configuration-tasks>`. If the ``ALLOW_MOUNTED_TASK_OVERWRITING`` image
+property is defined with yes, then the presence of an executable under the path
+``/root/snf-image/helper/overwrite_task_<TASK>`` inside the image's file system
+will make *snf-image-helper* interrupt the execution of the actual
+configuration task and the image's file will be executed instead.  This
+executable should make use of the :ref:`Configuration Tasks Environment
+<configuration-tasks-environment>`. Also keep in mind that this only works for
+configuration tasks that run while the image is mounted (have a priority
+between 31 and 79).
+
+Return Code and post execution
+++++++++++++++++++++++++++++++
+
+If the return code of the execution of the image-defined executable is
+non-zero, *snf-image* will translate this as a failure of the configuration
+task. The only exception to this is the return code **101**, which will make
+*snf-image* execute the original configuration task and then the image's
+executable once again. The first time the image's executable will be called
+with **pre-exec** as its first argument and the second with **post-exec**. This
+way the executable itself can decide if it is going to be executed in
+conjunction with the original configuration task and in which order (before,
+after or in both cases).
 
 .. rubric:: Footnotes
 

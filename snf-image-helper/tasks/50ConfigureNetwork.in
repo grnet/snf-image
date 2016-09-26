@@ -20,7 +20,7 @@
 ### BEGIN TASK INFO
 # Provides:             ConfigureNetwork
 # RunBefore:            EnforcePersonality
-# RunAfter:             InstallUnattend
+# RunAfter:             FilesystemResizeMounted
 # Short-Description:    Configure the VM's network interfaces
 ### END TASK INFO
 
@@ -33,10 +33,14 @@ report_task_start
 
 # Check if the task should be prevented from running.
 check_if_excluded
+check_if_mounted_excluded
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
+
+# Check if the image overwrites the task
+check_if_overwritten
 
 distro=$(get_base_distro "$SNF_IMAGE_TARGET")
 
@@ -50,24 +54,24 @@ export SNF_IMAGE_TARGET
 # Initialize the driver
 "@networkingdir@/$distro.sh" -i
 
-for index in $(seq 0 $((NIC_COUNT-1))); do
+for index in $(seq 0 $((SNF_IMAGE_NIC_COUNT-1))); do
     dhcp=no
     dhcp6=no
     ipv4=no
     ipv6=no
 
-    eval export TYPE=\"\$NIC_${index}_FRONTEND_TYPE\"
-    eval export IP=\"\$NIC_${index}_IP\"
-    eval export LINK=\"\$NIC_${index}_LINK\"
-    eval export MAC=\"\$NIC_${index}_MAC\"
-    eval export MODE=\"\$NIC_${index}_MODE\"
-    eval export NAME=\"\$NIC_${index}_NAME\"
-    eval export GATEWAY=\"\$NIC_${index}_NETWORK_GATEWAY\"
-    eval export GATEWAY6=\"\$NIC_${index}_NETWORK_GATEWAY6\"
-    eval export NETWORK_NAME=\"\$NIC_${index}_NETWORK_NAME\"
-    eval export SUBNET=\"\$NIC_${index}_NETWORK_SUBNET\"
-    eval export SUBNET6=\"\$NIC_${index}_NETWORK_SUBNET6\"
-    eval export TAGS=\"\$NIC_${index}_NETWORK_TAGS\"
+    eval export TYPE=\"\$SNF_IMAGE_NIC_${index}_FRONTEND_TYPE\"
+    eval export IP=\"\$SNF_IMAGE_NIC_${index}_IP\"
+    eval export LINK=\"\$SNF_IMAGE_NIC_${index}_LINK\"
+    eval export MAC=\"\$SNF_IMAGE_NIC_${index}_MAC\"
+    eval export MODE=\"\$SNF_IMAGE_NIC_${index}_MODE\"
+    eval export NAME=\"\$SNF_IMAGE_NIC_${index}_NAME\"
+    eval export GATEWAY=\"\$SNF_IMAGE_NIC_${index}_NETWORK_GATEWAY\"
+    eval export GATEWAY6=\"\$SNF_IMAGE_NIC_${index}_NETWORK_GATEWAY6\"
+    eval export NETWORK_NAME=\"\$SNF_IMAGE_NIC_${index}_NETWORK_NAME\"
+    eval export SUBNET=\"\$SNF_IMAGE_NIC_${index}_NETWORK_SUBNET\"
+    eval export SUBNET6=\"\$SNF_IMAGE_NIC_${index}_NETWORK_SUBNET6\"
+    eval export TAGS=\"\$SNF_IMAGE_NIC_${index}_NETWORK_TAGS\"
 
    # Relative to the card type index
     : $((${TYPE}_index++))

@@ -71,6 +71,26 @@ AC_ARG_WITH([multistrap-config],
 )
 AC_SUBST(MULTISTRAP_CONFIG, $multistrap_config)
 
+# --with-xen-cmd
+AC_ARG_WITH([xen-cmd],
+  [AS_HELP_STRING([--with-xen-cmd=XEN_CLI_TOOL],
+      [the default Xen CLI tool
+      [xl]]
+    )],
+    [if test "$withval" != "yes" -a "$withval" != "no"; then
+        if test "$withval" != xm -a "$withval" != xl; then
+            AC_MSG_ERROR([valid values for --with-xen-cmd are 'xm' and 'xl'])
+        fi
+	xen_cmd="$withval"
+        AC_MSG_NOTICE(using Xen CLI tool: $withval)
+     elif test "$withval" != "no"; then
+         AC_MSG_ERROR([you must specify a CLI tool if --with-xen-cmd is specified])
+    fi],
+    [xen_cmd="xl"]
+)
+
+AC_SUBST(XEN_CMD, $xen_cmd)
+
 # --with-multistrap-aptprefdir
 AC_ARG_WITH([multistrap-aptprefdir],
   [AS_HELP_STRING([--with-multistrap-aptprefdir=MULTISTRAP_APTPREFDIR],

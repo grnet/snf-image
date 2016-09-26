@@ -4,17 +4,20 @@ dist_tasks_SCRIPTS = \
 		10FixPartitionTable \
 		20FilesystemResizeUnmounted \
 		30MountImage \
-		40AddSwap \
-		40DeleteSSHKeys \
-		40DisableRemoteDesktopConnections \
-		40InstallUnattend \
-		40SELinuxAutorelabel \
+		35InstallUnattend \
+		40FilesystemResizeMounted \
+		50AddSwap \
 		50AssignHostname \
 		50ChangePassword \
 		50ConfigureNetwork \
-		50FilesystemResizeMounted \
+		50DeleteSSHKeys \
+		50DisableRemoteDesktopConnections \
+		50SELinuxAutorelabel \
 		60EnforcePersonality \
-		80UmountImage
+		70RunCustomTask \
+		80UmountImage \
+		81FilesystemResizeAfterUmount
+
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
