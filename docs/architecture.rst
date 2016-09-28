@@ -149,31 +149,22 @@ if any of the environment variables *SNF_IMAGE_DEV*,
 *SNF_IMAGE_PROPERTY_ROOT_PARTITION* or *SNF_IMAGE_TARGET* is unset or has a
 non-sane value.
 
-**AddSwap**: Formats the swap partition added by *FixPartitionTable* task and
-adds an appropriate swap entry in the system's ``/etc/fstab``. The script will
-only run if *SNF_IMAGE_PROPERTY_SWAP* is present and will fail if
-*SNF_IMAGE_TARGET* in not defined.
-
-**DeleteSSHKeys**: On Linux and \*BSD instances, this script will clear out any
-ssh keys found in the instance's disk. For Debian and Ubuntu systems, the keys
-are also recreated. Besides removing files that comply to the
-``/etc/ssh/ssh_*_key`` pattern, the script will also parses
-``/etc/ssh/sshd_config`` file for custom keys. The only variable this script
-depends on is *SNF_IMAGE_TARGET*.
-
-**DisableRemoteDesktopConnections**: This script temporary disables RDP
-connections on Windows instances by changing the value of *fDenyTSConnection*
-registry key. RDP connections will be enabled back during the specialize pass
-of the Windows setup. The task will fail if *SNF_IMAGE_TARGET* is not defined.
-
 **InstallUnattend**: Installs the Unattend.xml files on Windows instances. This
 is needed by Windows in order to perform an unattended setup. The
 *SNF_IMAGE_TARGET* variables needs to be present for this task to run.
 
-**SELinuxAutorelabel**: Creates *.autorelabel* file in Red Hat images. This is
-needed if SELinux is enabled to enforce an automatic file system relabeling
-during the first boot. The only environment variable required by this task is
-*SNF_IMAGE_TARGET*.
+**FilesystemResizeMounted**: For Windows VMs this task injects a script into
+the VM's file system that will enlarge the last file system to cover up the
+whole partition. The script will run during the specialize pass of the Windows
+setup. For Linux VMs this task is used to extend the last file system in case
+its type is Btrfs or XFS, since those file systems require to be mounted in
+order to resize them. If the *SNF_IMAGE_TARGET* variable is missing, the task
+will fail.
+
+**AddSwap**: Formats the swap partition added by *FixPartitionTable* task and
+adds an appropriate swap entry in the system's ``/etc/fstab``. The script will
+only run if *SNF_IMAGE_PROPERTY_SWAP* is present and will fail if
+*SNF_IMAGE_TARGET* in not defined.
 
 **AssignHostname**: Assigns or changes the hostname of the instance. The task
 will fail if the Linux distribution is not supported and ``/etc/hostname`` is
@@ -202,16 +193,25 @@ variables are exported to the task. The only variable required by this task is
 adjust the *DHCP_TAGS* and the *\*_DHCPV6_TAGS* configuration parameters (see
 :doc:`/configuration`).
 
-**FilesystemResizeMounted**: For Windows VMs this task injects a script into
-the VM's file system that will enlarge the last file system to cover up the
-whole partition. The script will run during the specialize pass of the Windows
-setup. For Linux VMs this task is used to extend the last file system in case
-its type is Btrfs or XFS, since those file systems require to be mounted in
-order to resize them. If the *SNF_IMAGE_TARGET* variable is missing, the task
-will fail.
+**DeleteSSHKeys**: On Linux and \*BSD instances, this script will clear out any
+ssh keys found in the instance's disk. For Debian and Ubuntu systems, the keys
+are also recreated. Besides removing files that comply to the
+``/etc/ssh/ssh_*_key`` pattern, the script will also parses
+``/etc/ssh/sshd_config`` file for custom keys. The only variable this script
+depends on is *SNF_IMAGE_TARGET*.
+
+**DisableRemoteDesktopConnections**: This script temporary disables RDP
+connections on Windows instances by changing the value of *fDenyTSConnection*
+registry key. RDP connections will be enabled back during the specialize pass
+of the Windows setup. The task will fail if *SNF_IMAGE_TARGET* is not defined.
+
+**SELinuxAutorelabel**: Creates *.autorelabel* file in Red Hat images. This is
+needed if SELinux is enabled to enforce an automatic file system relabeling
+during the first boot. The only environment variable required by this task is
+*SNF_IMAGE_TARGET*.
 
 **EnforcePersonality**: Injects the files specified by the
-*SNF_IMAGE_PROPERTY_OSFAMILY* variable into the file system. If the variable is
+*SNF_IMAGE_PERSONALITY* variable into the file system. If the variable is
 missing a warning is produced. Only *SNF_IMAGE_TARGET* is required for this
 task to run.
 
@@ -222,48 +222,63 @@ a warning is produced.
 **UmountImage**: Umounts the file systems previously mounted by MountImage. The
 only environment variable required is *SNF_IMAGE_TARGET*.
 
+**FilesystemResizeAfterUmount**: This is used for doing offline resize if the
+file system in the last partition is NTFS. This is done after umount and not
+before mounting the file system, because *ntfsresize* (which is used to perform
+the actual resize) will mark the file system as dirty at the end and mounting
+it afterwards is not recommended. This is done in order to force a chkdsk the
+next time Windows boots. Offline NTFS resize is favored on windows-legacy and
+non-windows OSes that do not support online resize. If you want to force
+offline resize on newer Windows systems, the *OFFLINE_NTFSRESIZE* image
+property must be defined.
 
-+-------------------------------+---+--------------------------------------------+----------------------------------------------+
-|                               |   |               Dependencies                 |          Environment Variables [#]_          |
-+          Name                 |   +------------------+-------------------------+-------------------------+--------------------+
-|                               |Pr.|        Run-After |        Run-Before       |        Required         |   Optional         |
-+===============================+===+==================+=========================+=========================+====================+
-|FixPartitionTable              |10 |                  |FilesystemResizeUnmounted|DEV                      |                    |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|FilesystemResizeUnmounted      |20 |FixPartitionTable |MountImage               |DEV                      |                    |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|MountImage                     |30 |                  |UmountImage              |DEV                      |                    |
-|                               |   |                  |                         |TARGET                   |                    |
-|                               |   |                  |                         |PROPERTY_ROOT_PARTITION  |                    |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|AddSwap                        |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
-|                               |   |                  |                         |                         |PROPERTY_SWAP       |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|DeleteSSHKeys                  |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|DisableRemoteDesktopConnections|40 |EnforcePersonality|UmountImage              |TARGET                   |PROPERTY_OSFAMILY   |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|InstallUnattend                |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|SELinuxAutorelabel             |40 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|AssignHostname                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |                    |
-|                               |   |                  |                         |HOSTNAME                 |PROPERTY_OSFAMILY   |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|ChangePassword                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_USERS      |
-|                               |   |                  |                         |                         |PROPERTY_OSFAMILY   |
-|                               |   |                  |                         |                         |PASSWD              |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|ConfigureNetwork               |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |NIC_*               |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|FilesystemResizeMounted        |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY   |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|EnforcePersonality             |60 |MountImage        |UmountImage              |TARGET                   |PERSONALITY         |
-|                               |   |                  |                         |                         |PROPERTY_OSFAMILY   |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|RunCustomTask                  |70 |MountImage        |UmountImage              |TARGET                   |PROPERTY_CUSTOM_TASK|
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
-|UmountImage                    |80 |MountImage        |                         |TARGET                   |                    |
-+-------------------------------+---+------------------+-------------------------+-------------------------+--------------------+
++-------------------------------+---+--------------------------------------------+-----------------------------------------------------+
+|                               |   |               Dependencies                 |          Environment Variables [#]_                 |
++          Name                 |   +------------------+-------------------------+-------------------------+---------------------------+
+|                               |Pr.|        Run-After |        Run-Before       |        Required         |   Optional                |
++===============================+===+==================+=========================+=========================+===========================+
+|FixPartitionTable              |10 |                  |FilesystemResizeUnmounted|DEV                      |                           |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|FilesystemResizeUnmounted      |20 |FixPartitionTable |MountImage               |DEV                      |RESIZE_PART                |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|MountImage                     |30 |                  |UmountImage              |DEV                      |                           |
+|                               |   |                  |                         |TARGET                   |                           |
+|                               |   |                  |                         |PROPERTY_ROOT_PARTITION  |                           |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|InstallUnattend                |35 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|FilesystemResizeMounted        |40 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
+|                               |   |                  |                         |                         |RESIZE_PART                |
+|                               |   |                  |                         |                         |PROPERTY_OFFLINE_NTFSRESIZE|
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|AddSwap                        |50 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
+|                               |   |                  |                         |                         |PROPERTY_SWAP              |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|AssignHostname                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |                           |
+|                               |   |                  |                         |HOSTNAME                 |PROPERTY_OSFAMILY          |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|ChangePassword                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_USERS             |
+|                               |   |                  |                         |                         |PROPERTY_OSFAMILY          |
+|                               |   |                  |                         |                         |PASSWD                     |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|ConfigureNetwork               |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |NIC_*                      |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|DeleteSSHKeys                  |50 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|DisableRemoteDesktopConnections|50 |EnforcePersonality|UmountImage              |TARGET                   |PROPERTY_OSFAMILY          |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|SELinuxAutorelabel             |50 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|EnforcePersonality             |60 |MountImage        |UmountImage              |TARGET                   |PERSONALITY                |
+|                               |   |                  |                         |                         |PROPERTY_OSFAMILY          |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|RunCustomTask                  |70 |MountImage        |UmountImage              |TARGET                   |PROPERTY_CUSTOM_TASK       |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|UmountImage                    |80 |MountImage        |                         |TARGET                   |                           |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|FilesystemResizeAfterUmount    |81 |UmountImage       |                         |DEV                      |RESIZE_PART                |
+|                               |   |                  |                         |                         |PROPERTY_OSFAMILY          |
+|                               |   |                  |                         |                         |PROPERTY_OFFLINE_NTFSRESIZE|
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
 
 .. [#] all environment variables are prefixed with *SNF_IMAGE_*
