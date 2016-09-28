@@ -173,6 +173,11 @@ SUSE and Gentoo derived distributions. The hostname is read from
 *SNF_IMAGE_HOSTNAME* variable. In addition to the latter, *SNF_IMAGE_TARGET* is
 also required.
 
+**ChangeMachineId**: On Linux instances, this script will generate a new random
+machine ID and will place it in ``/etc/machine-id``. For more info check
+`here <https://www.freedesktop.org/software/systemd/man/machine-id.html>`_. The
+task will fail if *SNF_IMAGE_TARGET* is missing.
+
 **ChangePassword**: Changes the password for a list of existing users. On Linux 
 systems this is accomplished by directly altering the instance's
 ``/etc/shadow`` file. On Windows systems a script is injected into the VM's
@@ -256,6 +261,8 @@ property must be defined.
 +-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
 |AssignHostname                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |                           |
 |                               |   |                  |                         |HOSTNAME                 |PROPERTY_OSFAMILY          |
++-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
+|ChangeMachineId                |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
 +-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
 |ChangePassword                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_USERS             |
 |                               |   |                  |                         |                         |PROPERTY_OSFAMILY          |
