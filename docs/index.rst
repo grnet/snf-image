@@ -27,7 +27,7 @@ snf-image also supports Image customization via hooks. Hooks allow for:
 snf-image is being used in large scale production environments with Ganeti to
 successfully deploy many major Linux distributions (Debian, Ubuntu/Kubuntu,
 CentOS, Fedora, OpenSUSE, Slackware, Arch Linux, CoreOS), Windows Server
-flavors (2008 R2, 2012, 20012 R2), as well as BSD systems (FreeBSD, OpenBSD,
+flavors (2008 R2, 2012, 2012 R2), as well as BSD systems (FreeBSD, OpenBSD,
 NetBSD). It is also known to work well with current Desktop versions of Windows
 (7, 8, 8.1) as well as Windows XP.
 

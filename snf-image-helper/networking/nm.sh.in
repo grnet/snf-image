@@ -1,0 +1,86 @@
+#! /bin/bash
+
+# Copyright (C) 2016 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+# Script for configuring network manager connections
+
+set -e
+. "@commondir@/common.sh"
+
+networking_opts "$@"
+
+SYSTEM_CONNECTIONS="$SNF_IMAGE_TARGET/etc/NetworkManager/system-connections/"
+
+if [ "$initialize" = yes ]; then
+    exit 0
+fi
+
+if [ "$finalize" = yes ]; then
+    exit 0
+fi
+
+if [ "$ipv4" = "none" ]; then
+    ipv4_section+="method=disabled"
+elif [ "$ipv4" = "dhcp" ]; then
+    ipv4_section+="method=auto"
+else
+    ipv4_section+="method=manual
+address1=$IP/${SUBNET##*/}"
+
+    if [ -n "$GATEWAY" ]; then
+        ipv4_section+=",$GATEWAY"
+    fi
+fi
+
+if [ "$ipv6" != 'none' ]; then
+    ipv6_section="method=auto"
+else
+    ipv6_section="method=disabled"
+fi
+
+connection="$SYSTEM_CONNECTIONS/Wired connection $index"
+cat > "$connection" <<EOF
+[connection]
+id=Wired connection $index
+uuid=$(cat /proc/sys/kernel/random/uuid)
+type=ethernet
+autoconnect=true
+
+[ethernet]
+mac-address=$MAC
+mac-address-blacklist=
+
+[ipv4]
+dns-search=
+$ipv4_section
+
+[ipv6]
+addr-gen-mode=eui64
+dns-search=
+ip6-privacy=0
+$ipv6_section
+EOF
+
+# For security, the 'keyfile' plugin that will read the connection files found
+# under /etc/NetworkManager/system-connections will ignore files that are
+# readable or writeable by any user or group other than 'root' since private
+# keys and passphrases may be stored in plaintext inside the file.
+chown 0:0 "$connection"
+chmod 600 "$connection"
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
