@@ -8,6 +8,7 @@ dist_tasks_SCRIPTS = \
 		40FilesystemResizeMounted \
 		50AddSwap \
 		50AssignHostname \
+		50ChangeMachineId \
 		50ChangePassword \
 		50ConfigureNetwork \
 		50DeleteSSHKeys \

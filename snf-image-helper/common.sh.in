@@ -290,6 +290,26 @@ get_distro() {
     fi
 }
 
+get_networking_tool() {
+    local root_dir distro tool
+    root_dir=$1
+
+    if check_yes_no SNF_IMAGE_PROPERTY_NM_NETWORKING; then
+        tool="nm"
+    else
+        distro=$(get_base_distro "$root_dir")
+        if [ "$distro" = debian ]; then
+            tool=ifupdown
+        elif [ "$distro" = redhat ]; then
+            tool=ifcfg
+        else
+            tool=$distro
+        fi
+    fi
+
+    echo "@networkingdir@/$tool.sh"
+}
+
 get_partition_table() {
     local dev output
     dev="$1"
