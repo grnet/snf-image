@@ -27,6 +27,14 @@ that have been tested with *snf-image* and provided here for testing purposes:
    [`diskdump <https://cdn.synnefo.org/fedora-23-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/fedora-23-x86_64.diskdump.md5sum>`__]
    [`metadata <https://cdn.synnefo.org/fedora-23-x86_64.diskdump.meta>`__]
+ * Ubuntu Desktop LTS 16.04
+   [`diskdump <https://cdn.synnefo.org/ubuntu_desktop-16.04-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/ubuntu_desktop-16.04-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/ubuntu_desktop-16.04-x86_64.diskdump.meta>`__]
+ * Ubuntu Server LTS 16.04
+   [`diskdump <https://cdn.synnefo.org/ubuntu_server-16.04-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/ubuntu_server-16.04-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/ubuntu_server-16.04-x86_64.diskdump.meta>`__]
  * Ubuntu Desktop LTS 14.04
    [`diskdump <https://cdn.synnefo.org/ubuntu_desktop-14.04-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/ubuntu_desktop-14.04-x86_64.diskdump.md5sum>`__]
