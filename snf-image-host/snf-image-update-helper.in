@@ -137,6 +137,16 @@ if [ "x$NO_CHECKSUM" != "xyes" ]; then
         exit 1
     fi
 
+    # The filename listed inside the md5sum file may be different than the one
+    # of the image we have downloaded. This is due to redirections and the fact
+    # that we are not using --remote-header-name which would use the
+    # server-specified Content-Disposition filename instead of extracting a
+    # filename from the URL. This option is not used because some versions of
+    # curl will not attempt to decode %-sequences which may lead to unexpected
+    # filenames. It's better if we just replace the filename inside the md5sum
+    # file with the one we know.
+    sed -i 's/ .\+$/'" $IMAGE"'/' "$IMAGE_DIR/$IMAGE.md5sum"
+
     $MD5SUM -c "$IMAGE_DIR/$IMAGE.md5sum"
 fi
 
