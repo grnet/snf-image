@@ -13,12 +13,18 @@ Installing snf-image using packages
 Debian GNU/Linux
 ^^^^^^^^^^^^^^^^
 
-For Debian 7.x (Wheezy) we provide packages in our APT repository. To use
-our repository add the following lines to file ``/etc/apt/sources.list``:
+We provide Debian packages in our APT repository. To use our packages on
+Debian 7.x (Wheezy) add the following lines to file ``/etc/apt/sources.list``:
 
 ``deb http://apt.dev.grnet.gr wheezy/``
 
 ``deb-src http://apt.dev.grnet.gr wheezy/``
+
+For Debian 8.x (Jessie) add the following lines:
+
+``deb http://apt.dev.grnet.gr jessie/``
+
+``deb-src http://apt.dev.grnet.gr jessie/``
 
 After you update ``/etc/apt/sources.list`` import the repo's GPG key:
 
@@ -39,12 +45,18 @@ the post install phase of the package installation.
 Ubuntu
 ^^^^^^
 
-For Ubuntu 14.04 LTS we provide packages in our APT repository. To use our
-repository add the following lines to file ``/etc/apt/sources.list``:
+We provide Ubuntu packages in our APT repository. To use our packages on
+Ubuntu 14.04 LTS add the following lines to file ``/etc/apt/sources.list``:
 
 ``deb http://apt.dev.grnet.gr trusty/``
 
 ``deb-src http://apt.dev.grnet.gr trusty/``
+
+For Ubuntu 16.04 LTS add the following lines:
+
+``deb http://apt.dev.grnet.gr xenial/``
+
+``deb-src http://apt.dev.grnet.gr xenial/``
 
 After you update ``/etc/apt/sources.list`` import the repo's GPG key:
 
@@ -64,6 +76,9 @@ the post install phase of the package installation.
 
 CentOS
 ^^^^^^
+
+.. warning::
+        CentOS packages are no longer actively supported.
 
 For CentOS 6.5 we provide packages in our Yum repository.
 

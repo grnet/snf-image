@@ -1,0 +1,66 @@
+#! /bin/bash
+
+# Copyright (C) 2016 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+### BEGIN TASK INFO
+# Provides:		ClearMachineId
+# RunBefore:            EnforcePersonality
+# RunAfter:             FilesystemResizeMounted
+# Short-Description:    Regenerate /etc/machine-id file in Linux Systems
+### END TASK INFO
+
+set -e
+. "@commondir@/common.sh"
+
+trap task_cleanup EXIT
+report_task_start
+
+# Check if the task should be prevented from running.
+check_if_excluded
+check_if_mounted_excluded
+
+if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing."
+fi
+
+# Check if the image overwrites the task
+check_if_overwritten
+
+if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "linux" ]; then
+    exit 0
+fi
+
+# Generate a new random UUID
+uuid=$(sed 's/-//g' /proc/sys/kernel/random/uuid)
+
+if [ -f "$SNF_IMAGE_TARGET/etc/machine-id" ]; then
+    echo "$uuid" > "$SNF_IMAGE_TARGET/etc/machine-id"
+else
+    warn "\`/etc/machine-id' file is not present"
+fi
+
+# The machine-id may be also cached by dbus
+if [ -f "$SNF_IMAGE_TARGET/var/lib/dbus/machine-id" ]; then
+    echo "$uuid" > "$SNF_IMAGE_TARGET/var/lib/dbus/machine-id"
+else
+    warn "\`/var/lib/dbus/machine-id' file is not present"
+fi
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

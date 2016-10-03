@@ -228,6 +228,12 @@ All image formats properties
    you want to write a custom configuration task check
    :ref:`Configuration Tasks Environment<configuration-tasks-environment>`.
 
+ * **NM_NETWORKING=bool**
+   If this property is defined with a yes value, the *ConfigureNetwork* task
+   will try to configure the Ganeti-provided NICs by creating Network Manager
+   configuration files, instead of using the distro-specific network
+   configuration mechanism (*ifupdown* for Debian, *ifcfg* for Red Hat, etc.).
+
  * **EXCLUDE_ALL_TASKS=bool**
    If this property is defined with a yes value, the image will not be
    configured at all, during the deployment. This is really handy because it

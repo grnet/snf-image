@@ -42,17 +42,20 @@ fi
 # Check if the image overwrites the task
 check_if_overwritten
 
-distro=$(get_base_distro "$SNF_IMAGE_TARGET")
+networking_tool=$(get_networking_tool "$SNF_IMAGE_TARGET")
 
-if [ ! -f "@networkingdir@/$distro.sh" ]; then
+if [ ! -f "$networking_tool" ]; then
     warn "Don't know how to configure the network for this OS"
     exit 0
+else
+    echo "Using $networking_tool"
 fi
 
 export SNF_IMAGE_TARGET
 
 # Initialize the driver
-"@networkingdir@/$distro.sh" -i
+echo "Running: $networking_tool -i"
+"$networking_tool" -i
 
 for index in $(seq 0 $((SNF_IMAGE_NIC_COUNT-1))); do
     dhcp=no
@@ -129,12 +132,14 @@ for index in $(seq 0 $((SNF_IMAGE_NIC_COUNT-1))); do
         fi
     fi
 
-    "@networkingdir@/$distro.sh" $ARGS
+    echo "Running: $networking_tool $ARGS"
+    "$networking_tool" $ARGS
 
 done
 
 # Finalize the driver
-"@networkingdir@/$distro.sh" -f
+echo "Running: $networking_tool -f"
+"$networking_tool" -f
 
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

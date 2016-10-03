@@ -40,7 +40,7 @@ launch_helper() {
 
     set -- c d e f g h i j k l m n o p q r
     for ((i = 0; i < DISK_COUNT; i++)); do
-        eval disk_path=\"\$DISK_${i}_PATH\"
+        disk_path="$(find_disk $i)"
         case $(stat -L -c %F "$disk_path") in
         "regular file")
             ftype=file

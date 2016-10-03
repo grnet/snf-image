@@ -52,16 +52,16 @@ Although *diskdump* is a lot more flexible than the older formats, there are
 still some rules to follow:
 
  * For Linux:
-   * All block devices in ``/etc/fstab`` should be specified using persistent
-   names (UUID or LABEL)
-   * LVM partitions are not supported
-   * Only ext{2,3,4} file systems are supported
+    * All block devices in ``/etc/fstab`` should be specified using persistent
+      names (UUID or LABEL)
+    * LVM partitions are not supported
+    * Only ext{2,3,4} file systems are supported
  * For FreeBSD:
-   * GUID Partition Tables (GPT) should be used
-   * Only UFS2 file systems are supported
-   * Labels should be omitted in ``/etc/fstab`` entries
+    * GUID Partition Tables (GPT) should be used
+    * Only UFS2 file systems are supported
+    * Labels should be omitted in ``/etc/fstab`` entries
  * For {Open,Net}BSD:
-   * Only FFS file systems should be used
+    * Only FFS file systems should be used
 
 .. _windows-deployment:
 
@@ -144,7 +144,7 @@ one:
 The ``@TIMEZONE_INDEX@`` container will be replaced during the installation of
 the file by the index value of the time zone which is specified through the
 *WINDOWS_TIMEZONE* configuration variable. For more info check `here
-<https://msdn.microsoft.com/en-us/library/ms912391%28v=winembedded.11%29.aspx>`_.
+<https://msdn.microsoft.com/en-us/library/ms912391%28v=winembedded.11%29.aspx>`__.
 This file is known to work with Windows XP and in order for the deployment to
 be completely unattended, the user must provide a Windows Product key using the
 *os_product_key* OS parameter *snf-image* offers. As with the newer Windows
@@ -291,7 +291,7 @@ environment variables that are present when the configuration tasks run.
 |NIC_%N_*             |The Ganeti provided environment variable for the Nth   |
 |                     |network interface controller. Check                    |
 |                     |`here <http://docs.ganeti.org/ganeti/current/man/ganeti|
-|                     |-os-interface.html>`_                                  |
+|                     |-os-interface.html>`__                                 |
 +---------------------+-------------------------------------------------------+
 |DHCP_TAGS            |The value of the DHCP_TAGS configuration parameter (see|
 |                     |:ref:`Configuration Parameters                         |
