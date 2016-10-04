@@ -12,45 +12,53 @@ that have been tested with *snf-image* and provided here for testing purposes:
 
 
  * Debian Jessie Base System
-   [`diskdump <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump.meta>`__]
  * Debian Jessie Desktop
-   [`diskdump <https://cdn.synnefo.org/debian_desktop-8.0-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/debian_desktop-8.0-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/debian_desktop-8.0-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/debian_desktop-8.0-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/debian_desktop-8.0-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/debian_desktop-8.0-x86_64.diskdump.meta>`__]
  * CentOS 7.x
-   [`diskdump <https://cdn.synnefo.org/centos-7-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/centos-7-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/centos-7-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/centos-7-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/centos-7-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/centos-7-x86_64.diskdump.meta>`__]
  * Fedora Desktop 23
-   [`diskdump <https://cdn.synnefo.org/fedora-23-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/fedora-23-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/fedora-23-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/fedora-23-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/fedora-23-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/fedora-23-x86_64.diskdump.meta>`__]
+ * Ubuntu Desktop LTS 16.04
+   [`diskdump <https://cdn.synnefo.org/ubuntu_desktop-16.04-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/ubuntu_desktop-16.04-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/ubuntu_desktop-16.04-x86_64.diskdump.meta>`__]
+ * Ubuntu Server LTS 16.04
+   [`diskdump <https://cdn.synnefo.org/ubuntu_server-16.04-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/ubuntu_server-16.04-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/ubuntu_server-16.04-x86_64.diskdump.meta>`__]
  * Ubuntu Desktop LTS 14.04
-   [`diskdump <https://cdn.synnefo.org/ubuntu_desktop-14.04-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/ubuntu_desktop-14.04-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/ubuntu_desktop-14.04-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/ubuntu_desktop-14.04-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/ubuntu_desktop-14.04-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/ubuntu_desktop-14.04-x86_64.diskdump.meta>`__]
  * Ubuntu Server LTS 14.04
-   [`diskdump <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump.meta>`__]
  * OpenSUSE Desktop 13.2
-   [`diskdump <https://cdn.synnefo.org/opensuse_desktop-13.2-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/opensuse_desktop-13.2-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/opensuse_desktop-13.2-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/opensuse_desktop-13.2-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/opensuse_desktop-13.2-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/opensuse_desktop-13.2-x86_64.diskdump.meta>`__]
  * Oracle Linux 7.x
-   [`diskdump <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.meta>`__]
  * FreeBSD 10.2
-   [`diskdump <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump.meta>`__]
  * NetBSD 7.0
-   [`diskdump <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump>`_]
-   [`md5sum <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump.md5sum>`_]
-   [`metadata <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump.meta>`_]
+   [`diskdump <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump.meta>`__]
 
 Sample Usage
 ^^^^^^^^^^^^

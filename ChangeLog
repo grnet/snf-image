@@ -1,3 +1,12 @@
+2016-10-4, v0.20.1
+	* Fix a "no properly formatted MD5 checksum lines found" bug in
+          snf-image-update-helper
+
+2016-10-3, v0.20
+	* Add support for NetworkManager in CofigureNetwork configuration task
+	* Add a new Linux configuration task for regenerating the machine ID
+	* Update the documentation
+
 2016-07-20, v0.19.1
 	* Add "auto" to the known Linux file systems
 
