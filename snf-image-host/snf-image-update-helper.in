@@ -145,7 +145,7 @@ if [ "x$NO_CHECKSUM" != "xyes" ]; then
     # curl will not attempt to decode %-sequences which may lead to unexpected
     # filenames. It's better if we just replace the filename inside the md5sum
     # file with the one we know.
-    sed -i 's/ .\+$/'" $IMAGE"'/' "$IMAGE_DIR/$IMAGE.md5sum"
+    sed -i 's/  .\+$/'"  $IMAGE"'/' "$IMAGE_DIR/$IMAGE.md5sum"
 
     $MD5SUM -c "$IMAGE_DIR/$IMAGE.md5sum"
 fi
