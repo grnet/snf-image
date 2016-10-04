@@ -29,6 +29,6 @@ files
 /etc/default/snf-image
     Configuration file for snf-image
 
-/etc/defaults/snf-image-update-helper
+/etc/default/snf-image-update-helper
     Contains the default download URL
 
