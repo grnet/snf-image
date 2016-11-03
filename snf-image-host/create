@@ -205,6 +205,10 @@ if [ -n "${OS_PRODUCT_KEY+dummy}" ]; then
     snf_export_OS_PRODUCT_KEY="$OS_PRODUCT_KEY"
 fi
 
+if [ -n "${AUTH_KEYS+dummy}" ]; then
+    snf_export_AUTH_KEYS="$AUTH_KEYS"
+fi
+
 assign_disk_devices_to snf_export_DEV
 
 create_floppy "$floppy"

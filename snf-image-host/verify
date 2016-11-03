@@ -24,7 +24,7 @@ set -e
 
 check_required() {
     local required_params="IMG_ID IMG_FORMAT"
-    local osparams="$required_params IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE"
+    local osparams="$required_params IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE AUTH_KEYS"
     local osp
 
     source_variant
