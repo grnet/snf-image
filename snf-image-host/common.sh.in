@@ -31,6 +31,7 @@ KVM="kvm"
 MD5SUM="md5sum"
 BLOCKDEV="blockdev"
 DD="dd"
+QEMU_NBD="qemu-nbd"
 
 # Temporary use stderr as monitoring file descriptor.
 # `create' will overwrite this
@@ -234,6 +235,42 @@ losetup_disk() {
     fi
 }
 
+map_uri() {
+    # Use qemu-nbd to map a URI to a block device
+    local disk bdev max i rc
+
+    disk="$1"
+
+    modprobe nbd # just to be on the safe side
+
+    if [ -f /sys/module/nbd/parameters/nbds_max ]; then
+        max=$(cat /sys/module/nbd/parameters/nbds_max)
+    else
+        log_error "NBD module is not loaded correctly"
+        exit 1
+    fi
+
+    for ((i=0; i<max; i++)); do
+        set +e
+        $QEMU_NBD -c "/dev/nbd$i" "$disk"
+        rc=$?
+        set -e
+        if [ $rc -eq 0 ]; then
+            add_cleanup $QEMU_NBD -d "/dev/nbd$i"
+            break
+        else
+            log_warning "Unable to map \`$disk' to /dev/nbd$i"
+        fi
+    done
+
+    if [ $i -eq $max ]; then
+        log_error "Could not find suitable NBD device to map: \`$disk'"
+        exit 1
+    fi
+
+    echo "/dev/nbd$i"
+}
+
 find_disk() {
     local idx path uri
 
@@ -245,10 +282,11 @@ find_disk() {
     # Here we check if we have a valid disk path (block device or regular file)
     if [ -b "$path" -o -f "$path" ]; then
         echo $path
-    # Otherwise we choose the userspace URI and
-    # hope that snf-image can handle it
     elif [ -n "$uri" ]; then
-        echo $uri
+        #TODO: Mapping a userspace disk URI to a block device is not the best
+        # thing to do, but until we implement another way to copy the content
+        # of the image into the VM's disk this must be done.
+        map_uri $uri
     else
         log_error "Disk information not exported by Ganeti"
         exit 1
