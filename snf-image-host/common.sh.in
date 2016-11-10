@@ -241,6 +241,7 @@ map_uri() {
 
     disk="$1"
 
+    # FIXME: we probably need to check if NBD is compiled as a module.
     modprobe nbd # just to be on the safe side
 
     if [ -f /sys/module/nbd/parameters/nbds_max ]; then
