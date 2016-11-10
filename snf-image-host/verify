@@ -46,6 +46,13 @@ check_required() {
         fi
     done
 
+    if [[ ! "${IMG_FORMAT}" =~ ^(disk|ext|ntfs)dump$ ]]; then
+        log_error "Invalid OS API Parameter img_format (=${IMG_FORMAT})."
+        log_error "Valid values are \`diskdump', \`extdump' and \`ntfsdump'"
+        exit 1
+    fi
+
+
     if [ -n "${OS_PRODUCT_KEY+dummy}" ]; then
         if [[ ! "${OS_PRODUCT_KEY}" =~ ^([a-zA-Z0-9]{5}-){4}[a-zA-Z0-9]{5}$ ]]; then
             log_error "Invalid OS API Parameter: os_product_key."
