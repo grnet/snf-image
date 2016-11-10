@@ -13,7 +13,7 @@ Vcs-Browser: https://code.grnet.gr/git/snf-image
 
 Package: snf-image
 Architecture: all
-Depends: ${misc:Depends}, kpartx, curl, mbr, python, python-prctl, python-scapy
+Depends: ${misc:Depends}, kpartx, curl, mbr, python, python-prctl, python-scapy, qemu-utils
 Breaks: snf-image-host (<< 0.8)
 Replaces: snf-image-host
 Conflicts: snf-image-host
