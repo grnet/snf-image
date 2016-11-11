@@ -1,0 +1,24 @@
+#!/bin/bash -e
+
+. @osdir@/common.sh
+
+
+GET_SIZE=false
+
+while getopts "s" opt; do
+    case $opt in
+        s) GET_SIZE=true ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+IMAGE_NAME=$1
+
+if $GET_SIZE; then
+    $CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2
+else
+    $CURL $(printf "%q" "$IMAGE_NAME")
+fi
+
+exit 0

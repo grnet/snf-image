@@ -1,0 +1,41 @@
+#!/bin/bash -e
+
+. @osdir@/common.sh
+
+# For security reasons pass the various options to pithcat as
+# environment variables.
+export PITHCAT_DB="$PITHOS_DB"
+export PITHCAT_DATA="$PITHOS_DATA"
+export PITHCAT_BACKEND_STORAGE="$PITHOS_BACKEND_STORAGE"
+export PITHCAT_RADOS_CEPH_CONF="$PITHOS_RADOS_CEPH_CONF"
+export PITHCAT_RADOS_POOL_MAPS="$PITHOS_RADOS_POOL_MAPS"
+export PITHCAT_RADOS_POOL_BLOCKS="$PITHOS_RADOS_POOL_BLOCKS"
+export PITHCAT_ARCHIPELAGO_CONF="$PITHOS_ARCHIPELAGO_CONF"
+
+GET_SIZE=false
+
+while getopts "s" opt; do
+    case $opt in
+        s) GET_SIZE=true ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+IMAGE_NAME=$1
+
+cmd_args=""
+if [ -n "${PITHCAT_UMASK+dummy}" ]; then
+    cmd_args="--umask=$PITHCAT_UMASK"
+fi
+cmd_args+=" $(printf "%q" "${IMAGE_NAME}")"
+
+if $GET_SIZE; then
+    @osdir@/pithcat -s $cmd_args
+else
+    @osdir@/pithcat $cmd_args
+fi
+
+exit 0
+
+

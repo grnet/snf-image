@@ -307,8 +307,8 @@ create_floppy() {
     umount "$target"
 }
 
-get_backend_type() {
-    local id=$1
+get_src_backend_type() {
+    local id=$IMG_ID
 
     if [[ "$id" =~ ^pithos: ]]; then
         echo "pithos"
@@ -318,10 +318,32 @@ get_backend_type() {
         echo "network"
     elif [ "$id" = "null" ]; then
         echo "null"
+    # This matches a custom backend with IMG_ID:
+    #   <backend name>:<some custom identifier>
+    elif [[ "$id" =~ ^.*: ]]; then
+        # Find the backend name by stripping everything after the first colon
+        echo "${id%%:*}"
     else
-        echo "local"
+        echo "file"
     fi
 }
+
+get_dst_backend_type() {
+    local path=$DISK_0_PATH
+    local uri=$DISK_0_URI
+
+    # If we have a valid local path then use the file backend
+    if [ -b "$path" -o -f "$path" ]; then
+        echo "file"
+    # Otherwise if a URI with proper format is exported by Ganeti use a custom backend
+    elif [[ "$uri" =~ ^.*: ]]; then
+        echo "${uri%%:*}"
+    else
+        log_error "Cannot find a matching backend for destination disk"
+        exit 1
+    fi
+}
+
 
 canonicalize() {
     local name="$1"

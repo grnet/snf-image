@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011-2015 GRNET S.A.
+# Copyright (C) 2011-2016 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,9 +26,8 @@ ganeti_os_main
 
 parameter_check
 
-IMAGE_NAME="$IMG_ID"
-IMAGE_TYPE="$IMG_FORMAT"
-BACKEND_TYPE=$(get_backend_type $IMG_ID)
+SRC_BACKEND_TYPE=$(get_src_backend_type)
+DST_BACKEND_TYPE=$(get_dst_backend_type)
 
 if [ "$IMAGE_DEBUG" = "yes" ]; then
     PS4='$(date "+%s.%N ($LINENO) + ")'
@@ -60,121 +59,62 @@ trap "" SIGPIPE
 
 trap report_and_cleanup EXIT
 
-echo "Processing image with ID: \`$IMG_ID' and type: \`$IMAGE_TYPE'" >&2
+echo "Processing image with ID: \`$IMG_ID' and type: \`$IMG_FORMAT'" >&2
 
-case $BACKEND_TYPE in
-    local)
-        if [[ "$IMAGE_NAME" =~ ^local:// ]]; then
-            IMAGE_NAME="${IMAGE_NAME:8}"
-        elif [[ "$IMAGE_NAME" =~ ^file:// ]]; then
-            IMAGE_NAME="${IMAGE_NAME:7}"
-            log_warning "The file:// backend identifier is deprecated and" \
-                        "will be removed in the future. Use local:// instead."
-        fi
+echo "Using source backend \`$SRC_BACKEND_TYPE' and destination backend \`$DST_BACKEND_TYPE'" >&2
 
-        canonical_image_dir="$(canonicalize "$IMAGE_DIR")"
-        if [ ! -d "$canonical_image_dir" ]; then
-            log_error "The IMAGE_DIR directory: \`$IMAGE_DIR' does not exist."
-            report_error "Unable to retrieve image file."
-            exit 1
-        fi
-
-        image_file="$IMAGE_DIR/$IMAGE_NAME"
-        if [ ! -e "$image_file" ]; then
-            if [ -e "$image_file.$IMAGE_TYPE" ] ; then
-                image_file="$image_file.$IMAGE_TYPE"
-                log_warning "The \`.$IMAGE_TYPE' extension is missing from" \
-                    "the local backend id. This id form is deprecated and" \
-                    "will be remove in the future."
-            else
-                log_error "Image file \`$image_file' does not exist."
-                report_error "Unable to retrieve image file."
-                exit 1
-            fi
-        fi
-
-        canonical_image_file="$(canonicalize "$image_file")"
-
-        if [[ "$canonical_image_file" != "$canonical_image_dir"* ]]; then
-            log_error "Image ID points to a file outside the image directory: \`$IMAGE_DIR'"
-            report_error "Invalid image ID"
-            exit 1
-        fi
-
-        image_size="$(stat -L -c %s "$image_file")"
-        ;;
-    null)
-        image_file=/dev/null
-        image_size=0
-        # Treat it as local file from now on...
-        BACKEND_TYPE="local"
-        ;;
-    network)
-        image_cmd="$CURL $(printf "%q" "$IMAGE_NAME")"
-        image_size=$($CURL -sI "$IMAGE_NAME" | grep ^Content-Length: | cut -d" " -f2)
-        ;;
-    pithos)
-        # For security reasons pass the various options to pithcat as
-        # environment variables.
-        export PITHCAT_DB="$PITHOS_DB"
-        export PITHCAT_DATA="$PITHOS_DATA"
-        export PITHCAT_BACKEND_STORAGE="$PITHOS_BACKEND_STORAGE"
-        export PITHCAT_RADOS_CEPH_CONF="$PITHOS_RADOS_CEPH_CONF"
-        export PITHCAT_RADOS_POOL_MAPS="$PITHOS_RADOS_POOL_MAPS"
-        export PITHCAT_RADOS_POOL_BLOCKS="$PITHOS_RADOS_POOL_BLOCKS"
-        export PITHCAT_ARCHIPELAGO_CONF="$PITHOS_ARCHIPELAGO_CONF"
-        cmd_args=""
-        if [ -n "${PITHCAT_UMASK+dummy}" ]; then
-            cmd_args="--umask=$PITHCAT_UMASK"
-        fi
-        cmd_args+=" $(printf "%q" "${IMAGE_NAME}")"
-        image_cmd="./pithcat $cmd_args"
-        image_size=$(./pithcat -s  $cmd_args)
-        ;;
-esac
-
-case "$IMAGE_TYPE" in
-    ntfsdump|extdump)
-        # Create a corresponding blockdev if required
-        blockdev=$(losetup_disk "$disk0")
-
-        # Create partitions on blockdev
-        format_disk0 "$blockdev" "$IMAGE_TYPE"
-
-        # Install a new MBR
-        $INSTALL_MBR -p 1 -i n "$blockdev"
-
-        target="$(map_disk0 "$blockdev")-1" #the root device
-        add_cleanup unmap_disk0 "$blockdev"
+case "$IMG_FORMAT" in
+    ntfsdump|extdump|diskdump)
         snf_export_PROPERTY_ROOT_PARTITION=1
-        if [ "$IMAGE_TYPE" = "ntfsdump" ]; then
+        if [ "$IMG_FORMAT" = "ntfsdump" ]; then
             snf_export_PROPERTY_OSFAMILY="windows"
         else
             snf_export_PROPERTY_OSFAMILY="linux"
         fi
         ;;
-    diskdump)
-        target="$disk0"
-        ;;
     *)
-        log_error "Unknown Image format: \`$IMAGE_TYPE'"
+        log_error "Unknown Image format: \`$IMG_FORMAT'"
         report_error "Unknown Image Format"
         exit 1
         ;;
 esac
 
-report_info "Starting image copy..."
-monitor="./copy-monitor.py -o $MONITOR_FD -r $image_size"
-if [ "$BACKEND_TYPE" = "local" ]; then
-    # dd the dump to its new home :-)
-    # Deploying an image file on a target block device is a streaming copy
-    # operation. Enable the direct I/O flag on the output fd to avoid polluting
-    # the host cache with useless data.
-    $monitor $DD bs=4M if="$image_file" of="$target" oflag=direct iflag=fullblock
+if [ "$SRC_BACKEND_TYPE" = "null" ]; then
+    report_info "Skipping image copy since no image provided (IMG_ID=null)..."
 else
-    $image_cmd | $monitor $DD bs=4M of="$target" oflag=direct iflag=fullblock
+    src_script=backends/src/${SRC_BACKEND_TYPE}
+    dst_script=backends/dst/${DST_BACKEND_TYPE}
+
+    if [ ! -x $src_script ]; then
+        log_error "Missing src script for backend type \`$SRC_BACKEND_TYPE'"
+        report_error "Unable to retrieve image"
+        exit 1
+    fi
+
+    if [ ! -x $dst_script ]; then
+        log_error "Missing dst script for backend type \`$DST_BACKEND_TYPE'"
+        report_error "Unable to copy image"
+        exit 1
+    fi
+
+    image_size=$($src_script -s $IMG_ID $IMG_FORMAT)
+
+    if [ -z "$image_size" ]; then
+        log_error "src script did not return a valid image size"
+        report_error "Unable to retrieve image size"
+        exit 1
+    fi
+
+    monitor="$PWD/copy-monitor.py -o $MONITOR_FD -r $image_size"
+
+    report_info "Starting image copy..."
+
+    $src_script $IMG_ID $IMG_FORMAT | $monitor $DD bs=1M | $dst_script $disk0 $IMG_FORMAT
+
+    report_info "Image copy finished."
+
 fi
-report_info "Image copy finished."
+
 
 # Create a floppy image
 floppy=$(mktemp --tmpdir floppy.XXXXXX)
