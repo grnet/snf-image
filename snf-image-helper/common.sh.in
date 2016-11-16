@@ -1266,10 +1266,9 @@ networking_opts() {
     initialize=no
     finalize=no
 
-    while getopts "h?ifn:4:6:" opt; do
+    while getopts "hifn:4:6:" opt; do
         case "$opt" in
-        h|\?)
-            echo $usage >&2
+        h)  echo $usage >&2
             exit 0
             ;;
         i)  initialize=yes
@@ -1282,8 +1281,16 @@ networking_opts() {
             ;;
         6)  ipv6=$OPTARG
             ;;
+        \?) exit 1
+            ;;
         esac
     done
+
+    shift $((OPTIND - 1))
+    if [ $# -ne 0 ]; then
+        log_error "Unknown arguments: $@" >&2
+        exit 1
+    fi
 
     if [ -z "$index" -a "$initialize" = no -a "$finalize" = no ]; then
         log_error "Either -i, -f or -n must be specified"
