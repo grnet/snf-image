@@ -185,6 +185,7 @@ snf_export_HOSTNAME="$instance"
 snf_export_DHCP_TAGS="$DHCP_TAGS"
 snf_export_STATEFUL_DHCPV6_TAGS="$STATEFUL_DHCPV6_TAGS"
 snf_export_STATELESS_DHCPV6_TAGS="$STATELESS_DHCPV6_TAGS"
+snf_export_DEFAULT_NIC_CONFIG="$DEFAULT_NIC_CONFIG"
 
 if [ -n "${IMG_PASSWD+dummy}" ]; then
     snf_export_PASSWD="$IMG_PASSWD"
