@@ -123,6 +123,20 @@ some external programs in ``/etc/default/snf-image``:
   # card's NETWORK_TAGS variable.
   # STATELESS_DHCPV6_TAGS="nfdhcpd stateless_dhcpv6"
 
+  # DEFAULT_NIC_CONFIG: This option defines the network configuration to be
+  # performed if there is a default NIC attached to the instance with no further
+  # information associated with it. This will happen if the user creates an
+  # instance and does not define any of the --net and --no-nics input arguments.
+  # In this case Ganeti will create a NIC with a random MAC and set up according
+  # to the cluster level NIC parameters. The user may want to leave this NIC
+  # unconfigured (by leaving this option empty), perform "dhcp" or use one of the
+  # various IPv6 auto configuration methods. The supported IPv6 methods are:
+  # "dhcpv6" (Stateful DHCPv6), "slaac_dhcp" (Stateless DHCPv6) and "slaac"
+  # (Stateless Autoconfiguration). IPv4 and IPv6 configuration methods can be
+  # defined in conjunction using the plus (`+') sign. IPv4 must precede (e.g.:
+  # "dhcp+slaac_dhcp").
+  # DEFAULT_NIC_CONFIG="dhcp"
+
   # UNATTEND: This variable overwrites the unattend.xml file used when deploying
   # a Windows image. snf-image-helper will use its own unattend.xml file if this
   # variable is empty.
@@ -167,6 +181,9 @@ The most common configuration parameters the user may need to overwrite are:
  * **PROGRESS_MONITOR**: To specify an executable that will handle the
    monitoring messages exported by *snf-image*
  * **DHCP_TAGS**: To specify which Ganeti networks support DHCP
+ * **DEFAULT_NIC_CONFIG**: To specify a configuration method for the default
+   NIC Ganeti will attach on instances that were created without using the
+   *--net* or *--no-nics* input arguments.
  * **STATELESS_DHCPV6_TAGS**: To specify which Ganeti networks support SLAAC
    and stateless DHCPv6
  * **STATEFUL_DHCPV6_TAGS**: To specify which Ganeti networks support DHCPv6
