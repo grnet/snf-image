@@ -24,7 +24,7 @@ set -e
 
 check_required() {
     local required_params="IMG_ID IMG_FORMAT"
-    local osparams="$required_params IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE"
+    local osparams="$required_params IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE AUTH_KEYS"
     local osp
 
     source_variant
@@ -45,6 +45,13 @@ check_required() {
              exit 1
         fi
     done
+
+    if [[ ! "${IMG_FORMAT}" =~ ^(disk|ext|ntfs)dump$ ]]; then
+        log_error "Invalid OS API Parameter img_format (=${IMG_FORMAT})."
+        log_error "Valid values are \`diskdump', \`extdump' and \`ntfsdump'"
+        exit 1
+    fi
+
 
     if [ -n "${OS_PRODUCT_KEY+dummy}" ]; then
         if [[ ! "${OS_PRODUCT_KEY}" =~ ^([a-zA-Z0-9]{5}-){4}[a-zA-Z0-9]{5}$ ]]; then
