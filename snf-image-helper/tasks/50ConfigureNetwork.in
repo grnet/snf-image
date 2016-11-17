@@ -112,28 +112,47 @@ for index in $(seq 0 $((SNF_IMAGE_NIC_COUNT-1))); do
         ipv6=yes
     fi
 
-    ARGS="-n $index"
+    ARGS=("-n" "$index")
 
     if [ "$ipv4" = yes ]; then
         if [ "$dhcp" = yes ]; then
-            ARGS+=" -4 dhcp"
+            ARGS+=("-4" "dhcp")
         else
-            ARGS+=" -4 static"
+            ARGS+=("-4" "static")
         fi
     fi
 
     if [ "$ipv6" = yes ]; then
         if [ "$dhcp6" = stateful ]; then
-            ARGS+=" -6 dhcp"
+            ARGS+=("-6" "dhcp")
         elif [ "$dhcp6" = stateless ]; then
-            ARGS+=" -6 slaac_dhcp"
+            ARGS+=("-6" "slaac_dhcp")
         else
-            ARGS+=" -6 slaac"
+            ARGS+=("-6" "slaac")
         fi
     fi
 
-    echo "Running: $networking_tool $ARGS"
-    "$networking_tool" $ARGS
+    if [ $SNF_IMAGE_NIC_COUNT -eq 1 -a "$ipv4" = "no" -a "$ipv6" = "no" ]; then
+        # This looks like being the default NIC.
+        keys=(dhcp {dhcp+,}{dhcpv6,slaac,slaac_dhcp})
+        values=("-4 dhcp" {"-4 dhcp ",}{"-6 dhcp","-6 slaac","-6 slaac_dhcp"})
+        declare -A default_nic_action
+        for((i=0; i<${#keys[@]}; i++)); do
+            default_nic_action["${keys[$i]}"]="${values[$i]}"
+        done
+
+        warn "Detected a default NIC with no further info associated with it."
+
+        if [ -z "$SNF_IMAGE_DEFAULT_NIC_CONFIG" ]; then
+            warn "No configuration for default NIC is defined"
+        else
+            warn "Performing configuration for default NIC: $SNF_IMAGE_DEFAULT_NIC_CONFIG"
+            ARGS+=(${default_nic_action["$SNF_IMAGE_DEFAULT_NIC_CONFIG"]})
+        fi
+    fi
+
+    echo "Running: $networking_tool ${ARGS[@]}"
+    "$networking_tool" "${ARGS[@]}"
 
 done
 

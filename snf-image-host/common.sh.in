@@ -137,7 +137,8 @@ get_api20_arguments() {
         local osparams osp
 
         osparams=(IMG_ID IMG_FORMAT IMG_PASSWD IMG_PASSWD_HASH IMG_PROPERTIES
-                  IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE)
+                  IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE
+                  AUTH_KEYS)
 
         # Store OSP_VAR in VAR
         for param in "${osparams[@]}"; do
@@ -561,6 +562,21 @@ fi
 : ${DHCP_TAGS:="auto dhcp nfdhcpd"}
 : ${STATEFUL_DHCPV6_TAGS:="dhcpv6 stateful_dhcpv6"}
 : ${STATELESS_DHCPV6_TAGS:="nfdhcpd stateless_dhcpv6"}
+: ${DEFAULT_NIC_CONFIG:="dhcp"}
+
+found=no
+for val in "" dhcp {dhcp+,}{dhcpv6,slaac,slaac_dhcp}; do
+    if [ "$DEFAULT_NIC_CONFIG" = "$val" ]; then
+        found=yes
+        break
+    fi
+done
+
+if [ "$found" = "no" ]; then
+    log_error "DEFAULT_NIC_CONFIG (=\`$DEFAULT_NIC_CONFIG') has invalid value."
+    log_error "Valid values are: \`'" dhcp {dhcp+,}{dhcpv6,slaac,slaac_dhcp}
+    exit 1
+fi
 
 SCRIPT_NAME=$(basename $0)
 
