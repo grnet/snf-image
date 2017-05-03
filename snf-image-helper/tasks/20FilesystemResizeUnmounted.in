@@ -80,10 +80,27 @@ if [[ "$ptype" == ext[234] ]]; then
     # otherwise we almost always end up with a corrupted filesystem and an
     # un-bootable VM.
     if [ "$state" = "clean" ]; then
+
+	# If the file system hasn't been unmounted cleanly, the needs_recovery
+	# will be set.
+	if grep needs_recovery <($TUNE2FS -l "$device") &> /dev/null; then
+	    warn "The file system seems to need journal recovery."
+	fi
+
         # NOTE: We use automatic repair (-p) because otherwise e2fsck complains
         # that it needs a terminal for interactive repairs.
         $E2FSCK -p "$device" || \
             log_error "Filesytem was clean but fsck exited with error code $?"
+
+	# We force a file system resize here if the file system is clean, even
+	# if resize2fs complains. By default resize2fs will refuse to resize a
+	# file system that has been mounted after the last fs check, but since
+	# we are sure the file system is clean it's safe enough to bypass this.
+	# e2fsck will normaly replay the journal and exit if the file system is
+	# clean, which means that resize2fs will still complain unless we
+	# "force" a file system check. This is something we generally don't
+	# want, since it's I/O intensive and time consuming for large file
+	# systems.
         $EATMYDATA $RESIZE2FS -f "$device"
     else
         log_error "The file system state of partition: \`$device' " \
