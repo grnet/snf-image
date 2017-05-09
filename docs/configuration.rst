@@ -5,7 +5,7 @@ The user may configure the behavior of *snf-image* by uncommenting and
 overwriting the default value for some configuration parameters and the path of
 some external programs in ``/etc/default/snf-image``:
 
-.. code-block:: console
+.. code::
 
   # snf-image defaults file
 
