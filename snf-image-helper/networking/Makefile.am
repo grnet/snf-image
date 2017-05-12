@@ -1,6 +1,6 @@
 networkingdir=$(libdir)/$(PACKAGE)/networking
 
-dist_networking_SCRIPTS = ifupdown.sh ifcfg.sh freebsd.sh openbsd.sh netbsd.sh nm.sh
+dist_networking_SCRIPTS = ifupdown.sh ifcfg.sh freebsd.sh openbsd.sh netbsd.sh nm.sh cloud-init.sh
 
 edit = sed \
            -e 's|@sysconfdir[@]|$(sysconfdir)|g' \

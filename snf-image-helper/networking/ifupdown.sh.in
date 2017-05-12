@@ -21,7 +21,7 @@
 set -e
 . "@commondir@/common.sh"
 
-INTERFACES="$SNF_IMAGE_TARGET/etc/network/interfaces"
+: ${INTERFACES:="$SNF_IMAGE_TARGET/etc/network/interfaces"}
 
 networking_opts "$@"
 
