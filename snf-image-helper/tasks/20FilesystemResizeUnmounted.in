@@ -27,12 +27,7 @@
 set -e
 . "@commondir@/common.sh"
 
-trap task_cleanup EXIT
-report_task_start
-
-# Check if the task should be prevented from running.
-check_if_excluded
-check_if_filesystem_resize_excluded
+task_init_as excludable fs_resize_excludable
 
 if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"
