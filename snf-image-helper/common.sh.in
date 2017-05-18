@@ -56,6 +56,7 @@ MSG_TYPE_TASK_END="TASK_END"
 
 STDERR_LINE_SIZE=10
 
+
 add_cleanup() {
     local cmd=""
     for arg; do cmd+=$(printf "%q " "$arg"); done
@@ -158,6 +159,10 @@ prepare_helper() {
 task_init_as() {
     declare -A attr
     export TASKNAME="$PROGNAME"
+
+    if check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
+        export CLOUD_INIT_CONFNAME="98_snf-image-${TASKNAME}.cfg"
+    fi
 
     trap task_cleanup EXIT
     report_task_start
@@ -1122,6 +1127,23 @@ detect_image_properties() {
             break
         fi
     done
+}
+
+get_cloud_init_config() {
+    local target cfg_d confname
+    target="$1"
+    confname="$2"
+
+    for i in "" "local"; do
+        cfg_d="$target/$i/etc/cloud/cloud.cfg.d"
+
+        if [ -d "$cfg_d" ]; then
+            echo "$cfg_d/$confname"
+            return
+        fi
+    done
+
+    log_error "Unable to find directory to host the cloud-init configuration"
 }
 
 encode_array() {
