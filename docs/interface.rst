@@ -306,7 +306,7 @@ properties to *snf-image* looks like this:
 
 .. code-block:: console
 
-   ``gnt-instance add -O img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"2"\,"USERS":"root guest"}',img_format=diskdump,img_id=...``
+   gnt-instance add -O img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"2"\,"USERS":"root guest"}',img_format=diskdump,img_id=...
 
 .. _image-personality:
 
@@ -346,20 +346,22 @@ The JSON string below defines two files (*/tmp/test1*, */tmp/test2*) whose
 content is ``test1\n`` and ``test2\n``, they are both owned by *root:root* and
 their permissions are ``-rw-r--r--`` (0644):
 
-| [
-|     {
-|         "path": "/tmp/test1",
-|         "contents": "dGVzdDENCg==",
-|         "owner": "root",
-|         "group": "root",
-|         "mode": 420
-|     },
-|     {
-|         "path": "/tmp/test2",
-|         "contents": "dGVzdDINCg==",
-|         "owner": "root",
-|         "group": "root",
-|         "mode": 420
-|     }
-| ]
+.. code-block:: javascript
+
+  [
+      {
+          "path": "/tmp/test1",
+          "contents": "dGVzdDENCg==",
+          "owner": "root",
+          "group": "root",
+          "mode": 420
+      },
+      {
+          "path": "/tmp/test2",
+          "contents": "dGVzdDINCg==",
+          "owner": "root",
+          "group": "root",
+          "mode": 420
+      }
+  ]
 
