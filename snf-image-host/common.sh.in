@@ -138,7 +138,7 @@ get_api20_arguments() {
 
         osparams=(IMG_ID IMG_FORMAT IMG_PASSWD IMG_PASSWD_HASH IMG_PROPERTIES
                   IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE
-                  AUTH_KEYS)
+                  AUTH_KEYS CLOUD_USERDATA)
 
         # Store OSP_VAR in VAR
         for param in "${osparams[@]}"; do

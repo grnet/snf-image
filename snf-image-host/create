@@ -216,6 +216,10 @@ if [ -n "${AUTH_KEYS+dummy}" ]; then
     snf_export_AUTH_KEYS="$AUTH_KEYS"
 fi
 
+if [ -n "${CLOUD_USERDATA+dummy}" ]; then
+    snf_export_CLOUD_USERDATA="$CLOUD_USERDATA"
+fi
+
 assign_disk_devices_to snf_export_DEV
 
 create_floppy "$floppy"

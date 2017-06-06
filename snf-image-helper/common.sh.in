@@ -46,6 +46,7 @@ NTFSINFO=ntfsinfo
 NTFSRESIZE=ntfsresize
 NTFSFIX=ntfsfix
 E2FSCK=e2fsck
+BASE64=base64
 
 CLEANUP=( )
 ERRORS=( )

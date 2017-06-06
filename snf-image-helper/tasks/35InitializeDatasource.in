@@ -71,7 +71,13 @@ fi
 SEED=$(get_cloud_init_seed "$SNF_IMAGE_TARGET")
 
 echo "instance-id: $SNF_IMAGE_HOSTNAME" > "$SEED/meta-data"
-touch "$SEED/user-data"
+
+if [ -n "$SNF_IMAGE_CLOUD_USERDATA" ]; then
+    $BASE64 -d > "$SEED/user-data" <<< "$SNF_IMAGE_CLOUD_USERDATA"
+else
+    warn "No cloud user-data provided"
+    touch "$SEED/user-data"
+fi
 
 # Remove the created files that may contain sensitive user data at first boot
 SCRIPT="$SNF_IMAGE_TARGET/var/lib/cloud/scripts/per-once/clear_seed.sh"
