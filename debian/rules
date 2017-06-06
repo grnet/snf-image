@@ -8,7 +8,7 @@ override_dh_auto_clean:
 	cd snf-image-host; rm -f autotools/{missing,install-sh} \
 	rm -f Makefile.in aclocal.m4 configure config.status config.log
 	dh_auto_clean -Dsnf-image-helper
-	cd snf-image-helper ; rm -rf autotools; \
+	cd snf-image-helper ; rm -rf autotools/{missing,install-sh}; \
 	rm -f Makefile.in aclocal.m4 configure config.status config.log tasks/Makefile.in
 	rm -f debian/version_pinning.pref
 	rm -f debian/snf-image.templates
