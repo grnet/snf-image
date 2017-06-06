@@ -5,8 +5,8 @@ Maintainer: Nikos Skalkotos <skalkoto@grnet.gr>
 Build-Depends: debhelper (>= 7.0.50~), automake, autotools-dev, kpartx,
  gdisk, eatmydata, mbr, curl, xmlstarlet, parted, libhivex-bin,
  libwin-hivex-perl, python, python-prctl, python-scapy, python-support,
- python-sphinx
-Standards-Version: 3.9.5
+ python-sphinx, python-yaml
+Standards-Version: 3.9.6
 Homepage: https://code.grnet.gr/projects/snf-image
 Vcs-Git: git://code.grnet.gr/git/snf-image
 Vcs-Browser: https://code.grnet.gr/git/snf-image
@@ -39,7 +39,8 @@ Package: snf-image-helper
 Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}, xmlstarlet, libwin-hivex-perl,
  e2fsprogs (>= 1.41.12), ntfs-3g, ntfsprogs, parted, libhivex-bin,
- eatmydata, socat, iproute, xenstore-utils, gdisk, ufsutils, python
+ eatmydata, socat, iproute, xenstore-utils, gdisk, ufsutils, python,
+ python-yaml
 Description: Requisite for the snf-image Ganeti OS Provider
  This package needs to be installed in the Helper VM that is
  used by the snf-image Ganeti OS Provider. It implements the
