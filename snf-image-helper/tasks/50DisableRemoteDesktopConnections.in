@@ -27,7 +27,7 @@
 set -e
 . "@commondir@/common.sh"
 
-task_init_as excludable mounted_excludable overwritable
+task_init_as excludable mounted_excludable overwritable cloudinit_excludable
 
 # This task will change the value of `fDenyTSConnections' registry key located
 # under `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\'

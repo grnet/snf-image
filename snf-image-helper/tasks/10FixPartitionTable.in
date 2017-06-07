@@ -27,7 +27,7 @@
 set -e
 . "@commondir@/common.sh"
 
-task_init_as excludable
+task_init_as excludable cloudinit_excludable
 
 if [ ! -b "$SNF_IMAGE_DEV" ]; then
     log_error "Device file:\`${SNF_IMAGE_DEV}' is not a block device"

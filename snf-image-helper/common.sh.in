@@ -160,6 +160,9 @@ prepare_helper() {
 task_init_as() {
     declare -A attr
     export TASKNAME="$PROGNAME"
+    local exclude exclude_msg
+    exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
+    exclude_msg="Task ${PROGNAME:2} was excluded and will not run."
 
     if check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
         export CLOUD_INIT_CONFNAME="98_snf-image-${TASKNAME}.cfg"
@@ -174,20 +177,37 @@ task_init_as() {
     done
 
     if [ -n "${attr[excludable]}" ]; then
-        check_if_excluded
+        if check_yes_no "$exclude"; then
+            warn "$exclude_msg"
+            exit 0
+        fi
     fi
 
     if [ -n "${attr[fs_resize_excludable]}" ]; then
-        check_if_filesystem_resize_excluded
+        if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_FILESYSTEMRESIZE_TASKS; then
+            warn "$exclude_msg"
+            exit 0
+        fi
     fi
 
     if [ -n "${attr[mounted_excludable]}" ]; then
-        check_if_mounted_excluded
+        if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_MOUNTED_TASKS; then
+            warn "$exclude_msg"
+            exit 0
+        fi
+    fi
+
+    if [ -n "${attr[cloudinit_excludable]}" ]; then
+        if check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
+            warn "Task ${PROGNAME:2} not running when cloud-init enabled."
+            exit 0
+        fi
     fi
 
     if [ -n "${attr[overwritable]}" ]; then
         check_if_overwritten
     fi
+
 }
 
 report_error() {
@@ -1256,36 +1276,6 @@ check_yes_no() {
         warn "Invalid value for variable: \`$name' (=$value). Will treat this as a \`YES'"
         return 0
     fi
-}
-
-check_if_excluded() {
-    local name exclude
-    name="$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
-    exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${name}"
-    if check_yes_no "$exclude"; then
-        warn "Task ${PROGNAME:2} was excluded and will not run."
-        exit 0
-    fi
-
-    return 0
-}
-
-check_if_mounted_excluded() {
-    if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_MOUNTED_TASKS; then
-        warn "Task ${PROGNAME:2} was excluded and will not run."
-        exit 0
-    fi
-
-    return 0
-}
-
-check_if_filesystem_resize_excluded() {
-    if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_FILESYSTEMRESIZE_TASKS; then
-        warn "Task ${PROGNAME:2} was excluded and will not run."
-        exit 0
-    fi
-
-    return 0
 }
 
 check_if_overwritten() {
