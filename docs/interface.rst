@@ -26,6 +26,8 @@ following OS Parameters:
    deployment (windows-only)
  * **os_answer_file** (optional): an answer file used by Windows to automate
    the setup process, instead the default one (windows-only)
+ * **cloud_userdata** (optional): base64 encoded data to be used as cloud-init
+   user-data.
 
 .. _image-format:
 
@@ -238,6 +240,11 @@ All image formats properties
    form is specified, then a whole secondary disk will be configured
    to be swap. Defining *SWAP=c* will configure the third disk of the VM to be
    swap.This property only applies to Linux instances.
+
+ * **CLOUD_INIT=bool**
+   If this property is set, the configuration tasks will try to inject suitable
+   cloud-init configuration into the instance instead of directly altering
+   system files. This implies that the image has enabled cloud-init support.
 
  * **CUSTOM_TASK=<base64_encoded_content>**
    This property can be used to run a user-defined configuration task. The
