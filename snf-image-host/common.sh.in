@@ -255,12 +255,20 @@ losetup_disk() {
         echo "$disk"
     elif [ -f "$disk" ] ; then
         bdev=$($LOSETUP --show -f "$disk")
-        add_cleanup $LOSETUP -d "$bdev"
         echo $bdev
     else
         log_error "Cannot losetup $disk: not a regular file"
         report_error "Could not use disk provided by Ganeti"
         exit 1
+    fi
+}
+
+unlosetup_disk() {
+    local bdev
+    bdev="$1"
+
+    if [[ -b "$bdev" && "$bdev" = /dev/loop* ]]; then
+        $LOSETUP -d "$bdev"
     fi
 }
 

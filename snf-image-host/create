@@ -137,6 +137,7 @@ case "$IMAGE_TYPE" in
     ntfsdump|extdump)
         # Create a corresponding blockdev if required
         blockdev=$(losetup_disk "$disk0")
+        add_cleanup unlosetup_disk "$blockdev"
 
         # Create partitions on blockdev
         format_disk0 "$blockdev" "$IMAGE_TYPE"
