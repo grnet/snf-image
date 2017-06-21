@@ -90,7 +90,24 @@ send_errors() {
     eval "echo $(printf "%q" "$report") >&${MONITOR_FD}"
 }
 
-get_api10_arguments() {
+create_array() {
+    local prefix postfix i cnt array_name
+
+    prefix=$1
+    postfix=$2
+    cnt="${prefix}_COUNT"
+    array_name="${prefix}_${postfix}"
+
+    declare -g -a ${array_name}
+
+    for ((i = 0; i < ${!cnt}; i++)); do
+        eval ${array_name}\[$i\]=\$\{${prefix}_${i}_${postfix}\}
+    done
+}
+
+get_api20_arguments() {
+    local postfix i
+
     if [ -z "$INSTANCE_NAME" -o -z "$HYPERVISOR" -o -z "$DISK_COUNT" ]; then
         log_error "Missing OS API Variable: (INSTANCE_NAME HYPERVISOR or DISK_COUNT)"
         exit 1
@@ -107,6 +124,20 @@ get_api10_arguments() {
         log_error "At least one disk is needed"
         exit 1
     fi
+
+    # Create bash arrays for all the provided disk info
+    for postfix in PATH URI ACCESS UUID NAME FRONTEND_TYPE BACKEND_TYPE; do
+        create_array DISK $postfix
+    done
+
+    #Check if disks are URIs
+    for ((i = 0; i < DISK_COUNT; i++)); do
+        if ! [ -b "${DISK_PATH[$i]}" -o -f "${DISK_PATH[$i]}" ]; then
+            DISK_PATH[$i]=$(map_uri "${DISK_URI[$i]}")
+            add_cleanup unmap_uri "${DISK_PATH[$i]}"
+        fi
+    done
+
     if [ "$SCRIPT_NAME" = "export" ]; then
         if [ -z "$EXPORT_DEVICE" ]; then
             log_error "Missing OS API Variable: \`EXPORT_DEVICE'"
@@ -120,18 +151,15 @@ get_api10_arguments() {
         fi
         import_disk=$IMPORT_DEVICE
     else
-        disk0=$(find_disk 0)
+        disk0=${DISK_PATH[0]}
     fi
     if [ "$SCRIPT_NAME" = "rename" -a -z "$OLD_INSTANCE_NAME" ]; then
         log_error "Missing OS API Variable: \`OLD_INSTANCE_NAME'"
         exit 1
     fi
+
     old_name=$OLD_INSTANCE_NAME
     disk_type=$INSTANCE_HV_disk_type
-}
-
-get_api20_arguments() {
-    get_api10_arguments
 
     if [ "$SCRIPT_NAME" = "create" ]; then
         local osparams osp
@@ -258,7 +286,6 @@ map_uri() {
         rc=$?
         set -e
         if [ $rc -eq 0 ]; then
-            add_cleanup $QEMU_NBD -d "/dev/nbd$i"
             break
         else
             log_warning "Unable to map \`$disk' to /dev/nbd$i"
@@ -273,27 +300,17 @@ map_uri() {
     echo "/dev/nbd$i"
 }
 
-find_disk() {
-    local idx path uri
+unmap_uri() {
+    local bdev
+    bdev="$1"
 
-    idx=$1
-
-    eval path=\$DISK_${idx}_PATH
-    eval uri=\$DISK_${idx}_URI
-
-    # Here we check if we have a valid disk path (block device or regular file)
-    if [ -b "$path" -o -f "$path" ]; then
-        echo $path
-    elif [ -n "$uri" ]; then
-        #TODO: Mapping a userspace disk URI to a block device is not the best
-        # thing to do, but until we implement another way to copy the content
-        # of the image into the VM's disk this must be done.
-        map_uri $uri
+    if [[ -b "$bdev" && "$bdev" = /dev/nbd* ]]; then
+        $QEMU_NBD -d "$bdev"
     else
-        log_error "Disk information not exported by Ganeti"
-        exit 1
+        log_warning "Cannot unmap: ${bdev}. File does not exist"
     fi
 }
+
 
 create_floppy() {
     local img target IFS index name tm
