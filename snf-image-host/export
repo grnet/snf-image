@@ -27,6 +27,7 @@ ganeti_os_main
 # If the device we will export from, is not a real block device,
 # we'll first losetup it. This is needed for file disks.
 blockdev=$(losetup_disk "$export_disk")
+add_cleanup unlosetup_disk "$blockdev"
 
 # Export disk's predicted size to Ganeti.
 # Used to provide a time estimate of the export process to the user.

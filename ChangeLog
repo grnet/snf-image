@@ -1,3 +1,6 @@
+2017-06-21, v0.21.1
+	* Fix a bug where clean up was never called for qemu-nbd and losetup
+
 2016-11-17, v0.21
 	* Add a new auth_keys OS parameter for injecting SSH keys to the
 	  instance during creation

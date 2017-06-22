@@ -65,7 +65,7 @@ launch_helper() {
 
     disks=""
     for ((i=0; i < DISK_COUNT; i++)); do
-        disks+=" -drive file=$(find_disk $i),format=raw,if=none,cache=none,id=drive$i"
+        disks+=" -drive file=${DISK_PATH[$i]},format=raw,if=none,cache=none,id=drive$i"
         disks+=" -device $(get_img_driver),id=disk$i,drive=drive$i"
     done
 
