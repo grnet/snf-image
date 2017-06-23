@@ -15,6 +15,8 @@ following OS Parameters:
    (:ref:`details <image-passwd>`)
  * **img_passwd_hash** (optional): the hash of the password to be injected into
    the image (:ref:`details <image-passwd-hash>`)
+ * **auth_keys** (optional): keys to be injected into the instance for remote
+   log in (:ref:`details <authorized-keys>`)
  * **img_properties** (optional): additional image properties used to customize
    the image (:ref:`details <image-properties>`)
  * **img_personality** (optional): files to be injected into the image's file
@@ -95,8 +97,8 @@ Image Password (img_passwd)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The value of this parameter is the password to be injected into the image. If
-this parameter is not set at all and **img_passwd_hash** is missing too, then
-the *ChangePassword* task (see
+this parameter is not set at all and **img_passwd_hash** and **auth_keys** are
+missing too, then the *ChangePassword* task (see
 :ref:`Image Configuration Tasks <image-configuration-tasks>`) will not run.
 This parameter cannot be defined in conjunction with **img_passwd_hash**.
 
@@ -106,11 +108,26 @@ Image Password Hash (img_passwd_hash)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The value of this parameter is the hash of the password to be injected into the
-image. If this parameter is not set at all and **img_passwd** is missing too,
-then the *ChangePassword* task (see
+image. If this parameter is not set at all and **img_passwd** and **auth_keys**
+are missing too, then the *ChangePassword* task (see
 :ref:`Image Configuration Tasks <image-configuration-tasks>`) will not run.
 This parameter is not applicable on Windows images and cannot be defined in
 conjunction with **img_passwd**.
+
+.. _authorized-keys:
+
+Authorized Keys (auth_keys)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The value of this parameter is a list of keys to be injected into the instance,
+to allow password-less SSH log in. The supported format is the
+*authorized_keys* file format of OpenSSH. The affected users are the ones
+defined in the *USERS* image property (see
+:ref:`Image Properties <image-properties>`). If this parameter is not set or is
+empty and **img_passwd** and **img_passwd_hash** are missing too, then the
+*ChangePassword* task (see
+:ref:`Image Configuration Tasks <image-configuration-tasks>`) will not run.
+This parameter is not applicable on Windows images.
 
 .. _image-properties:
 

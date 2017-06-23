@@ -1,6 +1,21 @@
+2017-06-21, v0.21.1
+	* Fix a bug where clean up was never called for qemu-nbd and losetup
+
+2016-11-17, v0.21
+	* Add a new auth_keys OS parameter for injecting SSH keys to the
+	  instance during creation
+	* Add DEFAULT_NIC_CONFIG configuration parameter for configuring the
+	  default NIC
+	* Fix small bugs
+
+2016-11-10, v0.20.2
+	* Fix a bug where the disk was truncated to the size of the image file
+	  if the used disk template was "file" or "sharedfile"
+	* Make image copying work when using userspace disk URIs
+
 2016-10-4, v0.20.1
 	* Fix a "no properly formatted MD5 checksum lines found" bug in
-          snf-image-update-helper
+	  snf-image-update-helper
 
 2016-10-3, v0.20
 	* Add support for NetworkManager in CofigureNetwork configuration task
