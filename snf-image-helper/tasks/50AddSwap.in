@@ -27,19 +27,7 @@
 set -e
 . "@commondir@/common.sh"
 
-trap task_cleanup EXIT
-report_task_start
-
-# Check if the task should be prevented from running.
-check_if_excluded
-check_if_mounted_excluded
-
-if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing."
-fi
-
-# Check if the image overwrites the task
-check_if_overwritten
+task_init_as excludable mounted_excludable overwritable
 
 if [ "$SNF_IMAGE_PROPERTY_OSFAMILY" != "linux" ]; then
     exit 0
@@ -53,9 +41,20 @@ fi
 if [[ "$SNF_IMAGE_PROPERTY_SWAP" =~ ^(([A-Za-z])|(([1-9]([0-9])*):([1-9]([0-9])*)))$ ]]; then
     swap_disk=${BASH_REMATCH[2],,}  # Make it lowercase
     swap_id=${BASH_REMATCH[4]}
+    swap_size=${BASH_REMATCH[6]}
 
     if [ -n "$swap_id" ]; then
-        swap_dev="${SNF_IMAGE_DEV}${swap_id}"
+        if check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
+            # ignore the partition and create a swap file
+            CFG=$(get_cloud_init_config "$SNF_IMAGE_TARGET" "$CLOUD_INIT_CONFNAME")
+            echo "swap:" > "$CFG"
+            echo "  filename: /swap-${RANDOM}.img" >> "$CFG"
+            echo "  size: auto" >> "$CFG"
+            echo "  maxsize: $((swap_size*1024*1024))" >> "$CFG"
+            exit 0
+        else
+            swap_dev="${SNF_IMAGE_DEV}${swap_id}"
+        fi
     else
         letters=( {a..z} )
         for ((i=0; i < ${#letters[@]}; i++)); do
@@ -82,6 +81,7 @@ fi
 $MKSWAP "$swap_dev"
 
 UUID=$(cut -d" " -f2 <<< $($BLKID -s UUID "$swap_dev"))
+
 
 if [ -f "$SNF_IMAGE_TARGET/etc/fstab" ]; then
     echo -e "$UUID\tnone\tswap\tsw\t0\t0" >> "$SNF_IMAGE_TARGET/etc/fstab"

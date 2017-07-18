@@ -166,7 +166,7 @@ get_api20_arguments() {
 
         osparams=(IMG_ID IMG_FORMAT IMG_PASSWD IMG_PASSWD_HASH IMG_PROPERTIES
                   IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE
-                  AUTH_KEYS)
+                  AUTH_KEYS CLOUD_USERDATA)
 
         # Store OSP_VAR in VAR
         for param in "${osparams[@]}"; do
@@ -564,6 +564,7 @@ fi
 : ${VARIANTS_DIR:="@sysconfdir@/ganeti/snf-image/variants"}
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
 : ${IMAGE_DEBUG:="no"}
+: ${CLOUD_INIT_DEBUG:="no"}
 : ${VERSION_CHECK:="@VERSION_CHECK@"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
 : ${HELPER_SOFT_TIMEOUT:=120}

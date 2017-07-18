@@ -37,6 +37,12 @@ elif [ "$IMAGE_DEBUG" != "no" ]; then
     log_warning "Unsupported IMAGE_DEBUG value: \`$IMAGE_DEBUG'"
 fi
 
+if [ "$CLOUD_INIT_DEBUG" = "yes" ]; then
+    snf_export_CLOUD_INIT_DEBUG="$CLOUD_INIT_DEBUG"
+elif [ "$CLOUD_INIT_DEBUG" != "no" ]; then
+    log_warning "Unsupported CLOUD_INIT_DEBUG value: \`$CLOUD_INIT_DEBUG'"
+fi
+
 monitor_pipe=$(mktemp -u)
 mkfifo -m 600 "$monitor_pipe"
 add_cleanup rm -f "$monitor_pipe"
@@ -209,6 +215,10 @@ fi
 
 if [ -n "${AUTH_KEYS+dummy}" ]; then
     snf_export_AUTH_KEYS="$AUTH_KEYS"
+fi
+
+if [ -n "${CLOUD_USERDATA+dummy}" ]; then
+    snf_export_CLOUD_USERDATA="$CLOUD_USERDATA"
 fi
 
 assign_disk_devices_to snf_export_DEV

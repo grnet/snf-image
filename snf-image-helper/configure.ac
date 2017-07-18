@@ -58,6 +58,11 @@ if test -z "$HIVEXREGEDIT" ; then
   AC_MSG_ERROR([hivexregedit not found in $PATH])
 fi
 
+#Python Dependencies
+AM_PATH_PYTHON(2.6)
+
+AC_PYTHON_MODULE(yaml, t)
+
 AC_CONFIG_FILES([
     Makefile
     tasks/Makefile

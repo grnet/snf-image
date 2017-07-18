@@ -8,3 +8,4 @@ auth_keys Keys to append to the users' authorized keys files for remote log in
 os_product_key A product key to be used to license a Windows deployment (windows-only)
 os_answer_file An answer file used by Windows to automate the setup process (windows-only)
 config_url The URL to download configuration data from
+cloud_userdata User-data to inject to cloud-init (base64 encoded)
