@@ -106,6 +106,19 @@ if [ -n "$SNF_IMAGE_PROPERTIES" ]; then
     source "$properties"
 fi
 
+# If defined, this may overwrite a number of image properties
+if [ -n "$SNF_IMAGE_INST_PROPERTIES" ]; then
+    properties=$(mktemp --tmpdir properties.XXXXXX)
+    add_cleanup rm "$properties"
+    if ! echo "$SNF_IMAGE_INST_PROPERTIES" | \
+        "@scriptsdir@/decode-properties.py" "$properties"; then
+
+        log_error "Unable to decode instance properties. " \
+             "Please check if the variable is in valid json format."
+    fi
+    source "$properties"
+fi
+
 # Image mount point...
 target=$(mktemp -d --tmpdir target.XXXXXX)
 add_cleanup rmdir "$target"

@@ -21,6 +21,9 @@ following OS Parameters:
    the image (:ref:`details <image-properties>`)
  * **img_personality** (optional): files to be injected into the image's file
    system (:ref:`details <image-personality>`)
+ * **inst_properties** (optional): instance properties used to customize the
+   image (:ref:`details <instance-properties>`)
+
  * **config_url** (optional): the URL to download configuration data from
  * **os_product_key** (optional): a product key to be used to license a Windows
    deployment (windows-only)
@@ -371,4 +374,18 @@ their permissions are ``-rw-r--r--`` (0644):
           "mode": 420
       }
   ]
+
+.. _instance-properties:
+
+Instance Properties (inst_properties)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This OS parameter has the same format as the :ref:`img_properties
+<image-properties>` one and can be used to overwrite properties defined there.
+There are cases were the image properties do not reflect the instance's state
+and need to be updated. The image property *USERS* exists to provide the list
+of image users whose password needs to be set during image deployment. This
+list may become obsolete, if the instance's creator provides cloud-init
+user-data that create, remove or rename users. In this case he could use this
+OS parameter to update the *USERS* list.
 

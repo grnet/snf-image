@@ -4,6 +4,7 @@ img_passwd The password to be assigned to the user accounts
 img_passwd_hash Hashed version of the password to be assigned to the user accounts (conflicts with img_passwd)
 img_properties The image properties that are used to customize the image (json.dumps format)
 img_personality The files to be injected into the image (base64 encoded in a json.dumps format)
+inst_properties The overwritten image properties based on deployment configuration (json.dumps format)
 auth_keys Keys to append to the users' authorized keys files for remote log in
 os_product_key A product key to be used to license a Windows deployment (windows-only)
 os_answer_file An answer file used by Windows to automate the setup process (windows-only)
