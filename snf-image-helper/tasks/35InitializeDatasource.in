@@ -31,7 +31,7 @@ task_init_as mounted_excludable overwritable
 
 if ! check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
     warn "Cloud-init not enabled for this instance"
-    return 0
+    exit 0
 fi
 
 CFG=$(get_cloud_init_config "$SNF_IMAGE_TARGET" "$CLOUD_INIT_CONFNAME")
