@@ -565,7 +565,6 @@ fi
 : ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
 : ${IMAGE_DEBUG:="no"}
 : ${CLOUD_INIT_DEBUG:="no"}
-: ${VERSION_CHECK:="@VERSION_CHECK@"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
 : ${HELPER_SOFT_TIMEOUT:=120}
 : ${HELPER_HARD_TIMEOUT:=5}
@@ -589,6 +588,10 @@ fi
 : ${STATEFUL_DHCPV6_TAGS:="dhcpv6 stateful_dhcpv6"}
 : ${STATELESS_DHCPV6_TAGS:="nfdhcpd stateless_dhcpv6"}
 : ${DEFAULT_NIC_CONFIG:="dhcp"}
+
+if [ -n "${VERSION_CHECK+dummy}" ]; then
+    log_warning "VERSION_CHECK is deprecated and may be remove in the future"
+fi
 
 found=no
 for val in "" dhcp {dhcp+,}{dhcpv6,slaac,slaac_dhcp}; do

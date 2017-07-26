@@ -8,17 +8,6 @@ AC_CONFIG_SRCDIR(configure)
 
 AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability subdir-objects])
 
-
-# --enable-version-consistency-ckeck
-AC_ARG_ENABLE([version_consistency_check],
-   AS_HELP_STRING([--enable-version-consistency-check],
-    [Check if the host and the helper packages have the same version]),
-    version_check="$enableval", version_check="no"
-)
-if test ${version_check} = yes; then
-    AC_SUBST(VERSION_CHECK, yes)
-fi
-
 # --with-helper-url
 AC_ARG_WITH([helper-url],
   [AS_HELP_STRING([--with-helper-url=URL],
