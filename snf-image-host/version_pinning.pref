@@ -2,8 +2,8 @@ Package: ufsutils
 Pin: version 8.2-3+wheezy+grnet.growfs.fix
 Pin-Priority: 1001
 
-Package: linux-image-4.9.0-3.snf.image.helper.1-amd64
-Pin: version 4.9.30-2+deb9u2.1.snf.image.helper.1
+Package: linux-image-4.2.0-0.snf.image.helper.1-amd64
+Pin: version 4.2.5-1~bpo8+b1.1
 Pin-Priority: 1001
 
 Package: openbsd-utils
