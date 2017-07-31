@@ -28,38 +28,67 @@ set -e
 
 . "@commondir@/common.sh"
 
-trap task_cleanup EXIT
-report_task_start
+task_init_as excludable mounted_excludable overwritable
 
-# Check if the task should be prevented from running.
-check_if_excluded
-check_if_mounted_excluded
-
-# Default mode for directories
-DIRMODE="750"
-
-if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
-fi
-
-# Check if the image overwrites the task
-check_if_overwritten
+DIRMODE=750
 
 if [ -z "$SNF_IMAGE_PERSONALITY" ]; then
     warn "This image has no personality (0 files to inject)"
     exit 0
 fi
 
+if check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
+
+    tmpdir=$(env TMPDIR="$SNF_IMAGE_TARGET/var/lib/cloud/scripts/per-once" mktemp -d)
+    echo "$SNF_IMAGE_PERSONALITY" |
+        @scriptsdir@/inject-files.py -d -t "$tmpdir"
+
+    script="$SNF_IMAGE_TARGET/var/lib/cloud/scripts/per-once/inject_files-${RANDOM}.sh"
+
+    cat > $script <<EOF
+#!/bin/bash
+
+while read -d \$'\0' src; do
+    read -d \$'\0' owner
+    read -d \$'\0' group
+    read -d \$'\0' mode
+    read -d \$'\0' dest
+
+    if [ -n "\$owner" ]; then
+        owner="-g \$owner"
+    fi
+
+    if [ -n "\$group" ]; then
+        group="-g \$group"
+    fi
+
+    if [ -n "\$mode" ]; then
+        mode="-m \$mode"
+    fi
+
+    mkdir -p \`dirname \$dest\`
+
+    install \$uid \$gid \$mode "${tmpdir##$SNF_IMAGE_TARGET}/\$src" "\$dest"
+done < "${tmpdir##$SNF_IMAGE_TARGET}/manifest"
+
+rm -rf "${tmpdir##$SNF_IMAGE_TARGET}" "\$0"
+EOF
+
+chmod +x "$script"
+exit 0
+
+fi
+
 if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^windows ]]; then
     echo "$SNF_IMAGE_PERSONALITY" |
-        @scriptsdir@/inject-files.py "$SNF_IMAGE_TARGET"
+        @scriptsdir@/inject-files.py -t "$SNF_IMAGE_TARGET"
     exit 0
 else
 
     tmpdir=$(mktemp -d)
     add_cleanup rm -rf "$tmpdir"
     echo "$SNF_IMAGE_PERSONALITY" |
-        @scriptsdir@/inject-files.py -d "$tmpdir"
+        @scriptsdir@/inject-files.py -d -t "$tmpdir"
 
     { while read -d $'\0' src; do
         read -d $'\0' owner

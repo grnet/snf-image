@@ -27,19 +27,7 @@
 set -e
 . "@commondir@/common.sh"
 
-trap task_cleanup EXIT
-report_task_start
-
-# Check if the task should be prevented from running.
-check_if_excluded
-check_if_mounted_excluded
-
-if [ ! -d "$SNF_IMAGE_TARGET" ]; then
-    log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
-fi
-
-# Check if the image overwrites the task
-check_if_overwritten
+task_init_as excludable mounted_excludable overwritable
 
 windows-legacy_hostname() {
     local target hostname sysprepinf
@@ -165,6 +153,19 @@ netbsd_hostname() {
     fi
 }
 
+cloud_init_hostname() {
+    local target hostname seed metadata
+    target="$1"
+    hostname="$2"
+    seed="$(get_cloud_init_seed "$target")"
+    metadata="$seed/meta-data"
+
+    cat >> "$metadata" <<-EOF
+	local-hostname: $hostname
+	EOF
+}
+
+
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing"
 fi
@@ -173,7 +174,11 @@ if [ -z "$SNF_IMAGE_HOSTNAME" ]; then
     log_error "Hostname is missing"
 fi
 
-${SNF_IMAGE_PROPERTY_OSFAMILY}_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
+if check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
+    cloud_init_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
+else
+    ${SNF_IMAGE_PROPERTY_OSFAMILY}_hostname "$SNF_IMAGE_TARGET" "$SNF_IMAGE_HOSTNAME"
+fi
 
 exit 0
 

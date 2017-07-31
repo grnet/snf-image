@@ -39,7 +39,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'snf-image'
-copyright = u'2011-2016 GRNET S.A. All rights reserved'
+copyright = u'2011-2017 GRNET S.A. All rights reserved'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

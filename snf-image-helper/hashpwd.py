@@ -45,10 +45,10 @@ METHOD = {
     'blowfish': (passlib.hash.bcrypt, {}),
     'sha256': (
         passlib.hash.sha256_crypt,
-        {'rounds': 5000, 'implicit_rounds': True, 'salt': random_salt()}),
+        {'rounds': 5000, 'salt': random_salt()}),
     'sha512': (
         passlib.hash.sha512_crypt,
-        {'rounds': 5000, 'implicit_rounds': True, 'salt': random_salt()}),
+        {'rounds': 5000, 'salt': random_salt()}),
     'sha1': (passlib.hash.sha1_crypt, {})
 }
 

@@ -1,3 +1,16 @@
+2017-07-31, v0.22
+	* Add support for cloud-init images (introduced a new CLOUD_INIT image
+	  property)
+	* Add a new cloud_userdata OS parameter for defining user data that
+	  will be acted upon by cloud-init
+	* Add a new inst_properties OS parameter for overwriting individual
+	  image properties
+	* Add new CLOUD_INIT_DEBUG configuration parameter
+	* Obsolete VERSION_CHECK configuration parameter
+	* Move to Debian stretch helper
+	* Fix bugs
+	* Update the documentation
+
 2017-06-21, v0.21.1
 	* Fix a bug where clean up was never called for qemu-nbd and losetup
 

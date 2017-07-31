@@ -48,6 +48,7 @@ Contents:
    usage
    advanced
    development
+   design
 
 Indices and tables
 ==================

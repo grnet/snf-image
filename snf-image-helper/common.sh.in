@@ -45,6 +45,8 @@ BASE64=base64
 NTFSINFO=ntfsinfo
 NTFSRESIZE=ntfsresize
 NTFSFIX=ntfsfix
+E2FSCK=e2fsck
+BASE64=base64
 
 CLEANUP=( )
 ERRORS=( )
@@ -54,6 +56,7 @@ MSG_TYPE_TASK_START="TASK_START"
 MSG_TYPE_TASK_END="TASK_END"
 
 STDERR_LINE_SIZE=10
+
 
 add_cleanup() {
     local cmd=""
@@ -152,6 +155,59 @@ prepare_helper() {
     esac
 
     export HYPERVISOR
+}
+
+task_init_as() {
+    declare -A attr
+    export TASKNAME="$PROGNAME"
+    local exclude exclude_msg
+    exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
+    exclude_msg="Task ${PROGNAME:2} was excluded and will not run."
+
+    if check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
+        export CLOUD_INIT_CONFNAME="98_snf-image-${TASKNAME}.cfg"
+    fi
+
+    trap task_cleanup EXIT
+    report_task_start
+
+    while (( "$#" )); do
+        attr["$1"]=yes
+        shift
+    done
+
+    if [ -n "${attr[excludable]}" ]; then
+        if check_yes_no "$exclude"; then
+            warn "$exclude_msg"
+            exit 0
+        fi
+    fi
+
+    if [ -n "${attr[fs_resize_excludable]}" ]; then
+        if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_FILESYSTEMRESIZE_TASKS; then
+            warn "$exclude_msg"
+            exit 0
+        fi
+    fi
+
+    if [ -n "${attr[mounted_excludable]}" ]; then
+        if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_MOUNTED_TASKS; then
+            warn "$exclude_msg"
+            exit 0
+        fi
+    fi
+
+    if [ -n "${attr[cloudinit_excludable]}" ]; then
+        if check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
+            warn "Task ${PROGNAME:2} not running when cloud-init enabled."
+            exit 0
+        fi
+    fi
+
+    if [ -n "${attr[overwritable]}" ]; then
+        check_if_overwritten
+    fi
+
 }
 
 report_error() {
@@ -357,7 +413,9 @@ is_extended_partition() {
     local dev="$1"
     local part_num="$2"
 
-    id=$($SFDISK --force --print-id "$dev" "$part_num")
+    id=$($SFDISK --force --part-type "$dev" "$part_num")
+    # Trim the result. Newer versions of sfdisk add spaces.
+    id=$(echo $id)
     if [ "$id" = "5" -o "$id" = "f" ]; then
         echo "yes"
     else
@@ -1022,7 +1080,11 @@ examine_msdos_partition() {
     part="$2"
 
     num=$(cut -f1 -d: <<< "$part")
-    id=$($SFDISK --force --print-id "$dev" "$num") || true
+
+    id=$($SFDISK --force --part-type "$dev" "$num") || true
+    # Trim the result. Newer versions of sfdisk add spaces.
+    id=$(echo $id)
+
     fs=$($BLKID -s TYPE -o value "$dev$num") || true
 
     case "$id" in
@@ -1092,6 +1154,43 @@ detect_image_properties() {
             break
         fi
     done
+}
+
+get_cloud_init_config() {
+    local target cfg_d cfg confname rm_cfg
+    target="$1"
+    confname="$2"
+    rm_cfg="$target/var/lib/cloud/scripts/per-once/rm_$(basename "$confname").sh"
+
+    mkdir -p $(dirname "$rm_cfg")
+
+    for i in "" "local"; do
+        cfg_d="$target/$i/etc/cloud/cloud.cfg.d"
+
+        if [ -d "$cfg_d" ]; then
+            cfg="$cfg_d/$confname"
+
+            echo "$cfg_d/$confname"
+
+            # Make sure the files created by snf-image are removed at first boot
+            { printf "#!/bin/sh\nrm -f %s" "${cfg##$target}"; } > "$rm_cfg"
+            if [ -z "$SNF_IMAGE_CLOUD_INIT_DEBUG" ]; then
+                chmod +x "$rm_cfg"
+            fi
+
+            return
+        fi
+    done
+
+    log_error "Unable to find directory to host the cloud-init configuration"
+}
+
+get_cloud_init_seed() {
+    local target seed
+    target="$1"
+    seed="$target/var/lib/cloud/seed/nocloud-net"
+    mkdir -p "$seed"
+    echo "$seed"
 }
 
 encode_array() {
@@ -1185,42 +1284,17 @@ check_yes_no() {
     fi
 }
 
-check_if_excluded() {
-    local name exclude
-    name="$(tr [a-z] [A-Z] <<< ${PROGNAME:2})"
-    exclude="SNF_IMAGE_PROPERTY_EXCLUDE_TASK_${name}"
-    if check_yes_no "$exclude"; then
-        warn "Task ${PROGNAME:2} was excluded and will not run."
-        exit 0
-    fi
-
-    return 0
-}
-
-check_if_mounted_excluded() {
-    if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_MOUNTED_TASKS; then
-        warn "Task ${PROGNAME:2} was excluded and will not run."
-        exit 0
-    fi
-
-    return 0
-}
-
-check_if_filesystem_resize_excluded() {
-    if check_yes_no SNF_IMAGE_PROPERTY_EXCLUDE_FILESYSTEMRESIZE_TASKS; then
-        warn "Task ${PROGNAME:2} was excluded and will not run."
-        exit 0
-    fi
-
-    return 0
-}
-
 check_if_overwritten() {
     local script ret
+
+    if [ ! -d "$SNF_IMAGE_TARGET" ]; then
+        log_error "Target dir: \`$SNF_IMAGE_TARGET' is missing."
+    fi
 
     if ! check_yes_no SNF_IMAGE_PROPERTY_ALLOW_MOUNTED_TASK_OVERWRITING; then
         return 0
     fi
+
     script=$(find -L $SNF_IMAGE_TARGET/root/snf-image/helper \
              -iname "overwrite_task_${PROGNAME:2}" -type f 2>/dev/null) || true
     if [ -x "$script" ]; then
