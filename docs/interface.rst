@@ -21,11 +21,16 @@ following OS Parameters:
    the image (:ref:`details <image-properties>`)
  * **img_personality** (optional): files to be injected into the image's file
    system (:ref:`details <image-personality>`)
+ * **inst_properties** (optional): instance properties used to customize the
+   image (:ref:`details <instance-properties>`)
+
  * **config_url** (optional): the URL to download configuration data from
  * **os_product_key** (optional): a product key to be used to license a Windows
    deployment (windows-only)
  * **os_answer_file** (optional): an answer file used by Windows to automate
    the setup process, instead the default one (windows-only)
+ * **cloud_userdata** (optional): base64 encoded data to be used as cloud-init
+   user-data.
 
 .. _image-format:
 
@@ -239,6 +244,11 @@ All image formats properties
    to be swap. Defining *SWAP=c* will configure the third disk of the VM to be
    swap.This property only applies to Linux instances.
 
+ * **CLOUD_INIT=bool**
+   If this property is set, the configuration tasks will try to inject suitable
+   cloud-init configuration into the instance instead of directly altering
+   system files. This implies that the image has enabled cloud-init support.
+
  * **CUSTOM_TASK=<base64_encoded_content>**
    This property can be used to run a user-defined configuration task. The
    value of this property should host the base64-encoded body of the task. If
@@ -306,7 +316,7 @@ properties to *snf-image* looks like this:
 
 .. code-block:: console
 
-   ``gnt-instance add -O img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"2"\,"USERS":"root guest"}',img_format=diskdump,img_id=...``
+   gnt-instance add -O img_properties='{"OSFAMILY":"linux"\,"ROOT_PARTITION":"2"\,"USERS":"root guest"}',img_format=diskdump,img_id=...
 
 .. _image-personality:
 
@@ -346,20 +356,36 @@ The JSON string below defines two files (*/tmp/test1*, */tmp/test2*) whose
 content is ``test1\n`` and ``test2\n``, they are both owned by *root:root* and
 their permissions are ``-rw-r--r--`` (0644):
 
-| [
-|     {
-|         "path": "/tmp/test1",
-|         "contents": "dGVzdDENCg==",
-|         "owner": "root",
-|         "group": "root",
-|         "mode": 420
-|     },
-|     {
-|         "path": "/tmp/test2",
-|         "contents": "dGVzdDINCg==",
-|         "owner": "root",
-|         "group": "root",
-|         "mode": 420
-|     }
-| ]
+.. code-block:: javascript
+
+  [
+      {
+          "path": "/tmp/test1",
+          "contents": "dGVzdDENCg==",
+          "owner": "root",
+          "group": "root",
+          "mode": 420
+      },
+      {
+          "path": "/tmp/test2",
+          "contents": "dGVzdDINCg==",
+          "owner": "root",
+          "group": "root",
+          "mode": 420
+      }
+  ]
+
+.. _instance-properties:
+
+Instance Properties (inst_properties)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This OS parameter has the same format as the :ref:`img_properties
+<image-properties>` one and can be used to overwrite properties defined there.
+There are cases were the image properties do not reflect the instance's state
+and need to be updated. The image property *USERS* exists to provide the list
+of image users whose password needs to be set during image deployment. This
+list may become obsolete, if the instance's creator provides cloud-init
+user-data that create, remove or rename users. In this case he could use this
+OS parameter to update the *USERS* list.
 

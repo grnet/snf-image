@@ -20,17 +20,14 @@
 ### BEGIN TASK INFO
 # Provides:		MountImage
 # RunBefore:		UmountImage
+# RunAfter:
 # Short-Description:	Mount the partition that hosts the image
 ### END TASK INFO
 
 set -e
 . "@commondir@/common.sh"
 
-trap task_cleanup EXIT
-report_task_start
-
-# Check if the task should be prevented from running
-check_if_mounted_excluded
+task_init_as mounted_excludable
 
 if [ ! -d "$SNF_IMAGE_TARGET" ]; then
     log_error "Target dir:\`$SNF_IMAGE_TARGET' is missing"

@@ -21,7 +21,7 @@ dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-helper
 
 os_DATA = ${srcdir}/common.sh
 
-example_DATA = defaults multistrap.conf version_pinning.pref kconfig-4.2.5-1~bpo8+1
+example_DATA = defaults multistrap.conf version_pinning.pref kconfig-4.9.30-2+deb9u2.1.snf.image.helper.1
 
 edit = sed \
 	   -e 's|@sysconfdir[@]|$(sysconfdir)|g' \
@@ -31,7 +31,6 @@ edit = sed \
 	   -e 's|@defaultdir[@]|$(defaultdir)|g' \
 	   -e 's|@VERSION[@]|$(VERSION)|g' \
 	   -e 's|@HELPER_PACKAGE_VERSION[@]|$(HELPER_PACKAGE_VERSION)|g' \
-	   -e 's|@VERSION_CHECK[@]|$(VERSION_CHECK)|g' \
 	   -e 's|@HELPER_DIR[@]|$(HELPER_DIR)|g' \
 	   -e 's|@HELPER_URL[@]|$(HELPER_URL)|g' \
 	   -e 's|@AWK[@]|$(AWK)|g' \
@@ -59,4 +58,4 @@ install-exec-local:
 	touch "$(DESTDIR)$(variantsdir)/default.conf"
 	
 
-CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS) defaults version_pinning.pref
+CLEANFILES = $(os_DATA) $(dist_bin_SCRIPTS) defaults

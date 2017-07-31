@@ -127,19 +127,25 @@ Image Configuration Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Configuration tasks are scripts called by *snf-image-helper* inside the helper
-VM to accomplish various configuration steps on the newly created instance. See
-below for a description of each one of them:
+VM to accomplish various configuration steps on the newly created instance. If
+*SNF_IMAGE_PROPERTY_CLOUD_INIT* environment variable is set, the configuration
+tasks will, instead of directly altering the instance's system files, inject
+cloud-init configuration into the instance. See below for a description of each
+one of them:
 
 **FixPartitionTable**: Enlarges the last partition in the partition table of
 the instance, to consume all the available space and optionally adds a swap
 partition in the end. The task will fail if the environment variable
 *SNF_IMAGE_DEV*, which specifies the device file of the instance's hard disk,
-is missing.
+is missing. This task will not run if *SNF_IMAGE_PROPERTY_CLOUD_INIT* is set.
+Cloud-init will handle the partition resizing by itself.
 
 **FilesystemResizeUnmounted**: Extends the file system of the last partition to
 cover up the whole partition. This only works for ext{2,3,4}, FFS and UFS2 file
 systems. Any other file system type is ignored and a warning is triggered. The
-task will fail if *SNF_IMAGE_DEV* environment variable is missing.
+task will fail if *SNF_IMAGE_DEV* environment variable is missing. This task
+will not run if *SNF_IMAGE_PROPERTY_CLOUD_INIT* is set. Cloud-init will perform
+the file system resize.
 
 **MountImage**: Mounts the root partition of the instance, specified by the
 *SNF_IMAGE_PROPERTY_ROOT_PARTITION* variable. On Linux systems after the root
@@ -149,9 +155,14 @@ if any of the environment variables *SNF_IMAGE_DEV*,
 *SNF_IMAGE_PROPERTY_ROOT_PARTITION* or *SNF_IMAGE_TARGET* is unset or has a
 non-sane value.
 
+**InitializeDatasource**: This task will create the needed files for cloud-init
+to use the NoCloud datasource. This task will not run unless
+*SNF_IMAGE_PROPERTY_CLOUD_INIT* is set.
+
 **InstallUnattend**: Installs the Unattend.xml files on Windows instances. This
 is needed by Windows in order to perform an unattended setup. The
-*SNF_IMAGE_TARGET* variables needs to be present for this task to run.
+*SNF_IMAGE_TARGET* variables needs to be present for this task to run. This
+task will not run if *SNF_IMAGE_PROPERTY_CLOUD_INIT* is set.
 
 **FilesystemResizeMounted**: For Windows VMs this task injects a script into
 the VM's file system that will enlarge the last file system to cover up the
@@ -159,36 +170,43 @@ whole partition. The script will run during the specialize pass of the Windows
 setup. For Linux VMs this task is used to extend the last file system in case
 its type is Btrfs or XFS, since those file systems require to be mounted in
 order to resize them. If the *SNF_IMAGE_TARGET* variable is missing, the task
-will fail.
+will fail. This task will not run if *SNF_IMAGE_PROPERTY_CLOUD_INIT* is set.
+Cloud-init will perform the file system live resize.
 
 **AddSwap**: Formats the swap partition added by *FixPartitionTable* task and
 adds an appropriate swap entry in the system's ``/etc/fstab``. The script will
 only run if *SNF_IMAGE_PROPERTY_SWAP* is present and will fail if
-*SNF_IMAGE_TARGET* in not defined.
+*SNF_IMAGE_TARGET* in not defined. Under cloud-init this task will enable swap
+using the *cc_mounts* module.
 
 **AssignHostname**: Assigns or changes the hostname of the instance. The task
 will fail if the Linux distribution is not supported and ``/etc/hostname`` is
 not present on the file system. For now, we support Debian, Red Hat, Slackware,
 SUSE and Gentoo derived distributions. The hostname is read from
 *SNF_IMAGE_HOSTNAME* variable. In addition to the latter, *SNF_IMAGE_TARGET* is
-also required.
+also required. For cloud-init, the configuration is performed by setting the
+*local-hostname* key of the datasource's metadata.
 
 **ChangeMachineId**: On Linux instances, this script will generate a new random
 machine ID and will place it in ``/etc/machine-id``. For more info check
 `here <https://www.freedesktop.org/software/systemd/man/machine-id.html>`_. The
 task will fail if *SNF_IMAGE_TARGET* is missing.
 
-**ChangePassword**: Changes the password for a list of existing users. On Linux 
-systems this is accomplished by directly altering the instance's
-``/etc/shadow`` file. On Windows systems a script is injected into the VM's
-hard disk. This script will be executed during the specialize pass of the
-Windows setup. On \*BSD systems ``/etc/master.passwd`` is altered,
+**ChangePassword**: Changes the authentication credentials for a list of
+existing users. On Linux systems this is accomplished by directly altering the
+instance's ``/etc/shadow`` file. On Windows systems a script is injected into
+the VM's hard disk. This script will be executed during the specialize pass of
+the Windows setup. On \*BSD systems ``/etc/master.passwd`` is altered,
 ``/etc/spwd.db`` is removed and a script is injected into the VM's hard disk
 that will recreate the aforementioned file during the first boot. The list of
 users whose passwords will changed is determined by the
-*SNF_IMAGE_PROPERTY_USERS* variable (see :ref:`image-properties`). For this
-task to run *SNF_IMAGE_TARGET* and *SNF_IMAGE_PASSWD* variables need to be
-present.
+*SNF_IMAGE_PROPERTY_USERS* variable (see :ref:`image-properties`). On Unix
+systems, if the variable *SNF_IMAGE_AUTH_KEYS* is set, the content of this
+variable is injected to the authorized keys file of each user. For this task to
+run *SNF_IMAGE_TARGET* and *SNF_IMAGE_PASSWD* variables need to be present. For
+cloud-init, the configuration is performed using the *ssh_pwauth* and
+*chpasswd* keys of the *cc_set_passwords* module, as well as, the
+*public-keys* key of the datasource's meta-data.
 
 **ConfigureNetwork**: Edit the OS's native network configuration files to
 configure the instance's NICs. This works for most Linux and all the supported
@@ -196,19 +214,26 @@ configure the instance's NICs. This works for most Linux and all the supported
 variables are exported to the task. The only variable required by this task is
 *SNF_IMAGE_TARGET*. For this task to work correctly, the user may need to
 adjust the *DHCP_TAGS* and the *\*_DHCPV6_TAGS* configuration parameters (see
-:doc:`/configuration`).
+:doc:`/configuration`). When working with cloud-init enabled images, this task
+is performed through cloud-init using the *Network Config Version 1* format,
+only if *snf-image-helper* is not aware of how to setup the network by itself.
+On known distros like Debian or CentOS, snf-image-helper will prevent
+cloud-init from performing the configuration.
 
 **DeleteSSHKeys**: On Linux and \*BSD instances, this script will clear out any
 ssh keys found in the instance's disk. For Debian and Ubuntu systems, the keys
 are also recreated. Besides removing files that comply to the
 ``/etc/ssh/ssh_*_key`` pattern, the script will also parses
 ``/etc/ssh/sshd_config`` file for custom keys. The only variable this script
-depends on is *SNF_IMAGE_TARGET*.
+depends on is *SNF_IMAGE_TARGET*. The task will fail if *SNF_IMAGE_TARGET* is
+missing. If *SNF_IMAGE_PROPERTY_CLOUD_INIT* is set, this task will just set
+cloud-init's *ssh_deltekeys* configuration key.
 
 **DisableRemoteDesktopConnections**: This script temporary disables RDP
 connections on Windows instances by changing the value of *fDenyTSConnection*
 registry key. RDP connections will be enabled back during the specialize pass
 of the Windows setup. The task will fail if *SNF_IMAGE_TARGET* is not defined.
+This task will not run if *SNF_IMAGE_PROPERTY_CLOUD_INIT* is set.
 
 **SELinuxAutorelabel**: Creates *.autorelabel* file in Red Hat images. This is
 needed if SELinux is enabled to enforce an automatic file system relabeling
@@ -218,7 +243,8 @@ during the first boot. The only environment variable required by this task is
 **EnforcePersonality**: Injects the files specified by the
 *SNF_IMAGE_PERSONALITY* variable into the file system. If the variable is
 missing a warning is produced. Only *SNF_IMAGE_TARGET* is required for this
-task to run.
+task to run. For cloud-init the file injection is performed through the
+*write_files* key.
 
 **RunCustomTask**: Run a user-defined task specified by the
 *SNF_IMAGE_PROPERTY_CUSTOM_TASK* variable. If the variable is missing or empty,
@@ -235,57 +261,72 @@ it afterwards is not recommended. This is done in order to force a chkdsk the
 next time Windows boots. Offline NTFS resize is favored on windows-legacy and
 non-windows OSes that do not support online resize. If you want to force
 offline resize on newer Windows systems, the *OFFLINE_NTFSRESIZE* image
-property must be defined.
+property must be defined. This task will not run if
+*SNF_IMAGE_PROPERTY_CLOUD_INIT* is set.
 
-+-------------------------------+---+--------------------------------------------+-----------------------------------------------------+
-|                               |   |               Dependencies                 |          Environment Variables [#]_                 |
-+          Name                 |   +------------------+-------------------------+-------------------------+---------------------------+
-|                               |Pr.|        Run-After |        Run-Before       |        Required         |   Optional                |
-+===============================+===+==================+=========================+=========================+===========================+
-|FixPartitionTable              |10 |                  |FilesystemResizeUnmounted|DEV                      |                           |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|FilesystemResizeUnmounted      |20 |FixPartitionTable |MountImage               |DEV                      |RESIZE_PART                |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|MountImage                     |30 |                  |UmountImage              |DEV                      |                           |
-|                               |   |                  |                         |TARGET                   |                           |
-|                               |   |                  |                         |PROPERTY_ROOT_PARTITION  |                           |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|InstallUnattend                |35 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|FilesystemResizeMounted        |40 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
-|                               |   |                  |                         |                         |RESIZE_PART                |
-|                               |   |                  |                         |                         |PROPERTY_OFFLINE_NTFSRESIZE|
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|AddSwap                        |50 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
-|                               |   |                  |                         |                         |PROPERTY_SWAP              |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|AssignHostname                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |                           |
-|                               |   |                  |                         |HOSTNAME                 |PROPERTY_OSFAMILY          |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|ChangeMachineId                |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|ChangePassword                 |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |PROPERTY_USERS             |
-|                               |   |                  |                         |                         |PROPERTY_OSFAMILY          |
-|                               |   |                  |                         |                         |PASSWD                     |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|ConfigureNetwork               |50 |InstallUnattend   |EnforcePersonality       |TARGET                   |NIC_*                      |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|DeleteSSHKeys                  |50 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|DisableRemoteDesktopConnections|50 |EnforcePersonality|UmountImage              |TARGET                   |PROPERTY_OSFAMILY          |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|SELinuxAutorelabel             |50 |MountImage        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|EnforcePersonality             |60 |MountImage        |UmountImage              |TARGET                   |PERSONALITY                |
-|                               |   |                  |                         |                         |PROPERTY_OSFAMILY          |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|RunCustomTask                  |70 |MountImage        |UmountImage              |TARGET                   |PROPERTY_CUSTOM_TASK       |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|UmountImage                    |80 |MountImage        |                         |TARGET                   |                           |
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
-|FilesystemResizeAfterUmount    |81 |UmountImage       |                         |DEV                      |RESIZE_PART                |
-|                               |   |                  |                         |                         |PROPERTY_OSFAMILY          |
-|                               |   |                  |                         |                         |PROPERTY_OFFLINE_NTFSRESIZE|
-+-------------------------------+---+------------------+-------------------------+-------------------------+---------------------------+
++-------------------------------+---+-------------------------------------------------+-----------------------------------------------------+
+|                               |   |               Dependencies                      |          Environment Variables [#]_                 |
++          Name                 |   +------------------+------------------------------+-------------------------+---------------------------+
+|                               |Pr.|        Run-After |        Run-Before            |        Required         |   Optional                |
++===============================+===+=======================+=========================+=========================+===========================+
+|FixPartitionTable              |10 |                       |FilesystemResizeUnmounted|DEV                      |                           |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|FilesystemResizeUnmounted      |20 |FixPartitionTable      |MountImage               |DEV                      |RESIZE_PART                |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|MountImage                     |30 |                       |UmountImage              |DEV                      |                           |
+|                               |   |                       |                         |TARGET                   |                           |
+|                               |   |                       |                         |PROPERTY_ROOT_PARTITION  |                           |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|InitializeDatasource           |35 |MountImage             |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
+|                               |   |                       |                         |                         |PROPERTY_CLOUD_INIT        |
+|                               |   |                       |                         |                         |CLOUD_USERDATA             |
+|                               |   |                       |                         |                         |CLOUD_INIT_DEBUG           |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|InstallUnattend                |35 |MountImage             |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|FilesystemResizeMounted        |40 |InstallUnattend        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
+|                               |   |                       |                         |                         |RESIZE_PART                |
+|                               |   |                       |                         |                         |PROPERTY_OFFLINE_NTFSRESIZE|
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|AddSwap                        |50 |MountImage             |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
+|                               |   |                       |                         |                         |PROPERTY_SWAP              |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|AssignHostname                 |50 |InstallUnattend        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
+|                               |   |                       |                         |HOSTNAME                 |PROPERTY_CLOUD_INIT        |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|ChangeMachineId                |50 |InstallUnattend        |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|ChangePassword                 |50 |InstallUnattend        |EnforcePersonality       |TARGET                   |PROPERTY_USERS             |
+|                               |   |                       |                         |                         |PROPERTY_OSFAMILY          |
+|                               |   |                       |                         |                         |PASSWD                     |
+|                               |   |                       |                         |                         |PASSWD_HASH                |
+|                               |   |                       |                         |                         |AUTH_KEYS                  |
+|                               |   |                       |                         |                         |PROPERTY_CLOUD_INIT        |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|ConfigureNetwork               |50 |InstallUnattend        |EnforcePersonality       |TARGET                   |NIC_*                      |
+|                               |   |                       |                         |                         |PROPERTY_CLOUD_INIT        |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|DeleteSSHKeys                  |50 |MountImage             |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|EnableDatasources              |50 |FileSystemResizeMounted|EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
+|                               |   |                       |                         |                         |PROPERTY_CLOUD_INIT        |
+|                               |   |                       |                         |                         |CLOUD_DATASOURCES          |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|DisableRemoteDesktopConnections|50 |EnforcePersonality     |UmountImage              |TARGET                   |PROPERTY_OSFAMILY          |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|SELinuxAutorelabel             |50 |MountImage             |EnforcePersonality       |TARGET                   |PROPERTY_OSFAMILY          |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|EnforcePersonality             |60 |MountImage             |UmountImage              |TARGET                   |PERSONALITY                |
+|                               |   |                       |                         |                         |PROPERTY_OSFAMILY          |
+|                               |   |                       |                         |                         |PROPERTY_CLOUD_INIT        |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|RunCustomTask                  |70 |MountImage             |UmountImage              |TARGET                   |PROPERTY_CUSTOM_TASK       |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|UmountImage                    |80 |MountImage             |                         |TARGET                   |                           |
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
+|FilesystemResizeAfterUmount    |81 |UmountImage            |                         |DEV                      |RESIZE_PART                |
+|                               |   |                       |                         |                         |PROPERTY_OSFAMILY          |
+|                               |   |                       |                         |                         |PROPERTY_OFFLINE_NTFSRESIZE|
++-------------------------------+---+-----------------------+-------------------------+-------------------------+---------------------------+
 
 .. [#] all environment variables are prefixed with *SNF_IMAGE_*

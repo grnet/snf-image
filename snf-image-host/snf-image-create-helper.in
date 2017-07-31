@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011 GRNET S.A.
+# Copyright (C) 2011-2017 GRNET S.A.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ usage() {
 
     cat <<EOF
 
-Usage: $0 [options]
+Usage: $0 [options] <snf-image-helper-pkg>
 
 This script runs multistrap and creates a small Debian image populated with
 the snf-image-helper package. This image is needed for Ganeti's \`snf-image'
@@ -43,9 +43,6 @@ OPTIONS:
 
     -n Don't shrink the resulting image (useful when debugging)
 
-    -p PACKAGE
-        Install this deb package in the helper image, instead of the default
-
     -y  Assume Yes to all queries and do not prompt
 
 EOF
@@ -53,7 +50,7 @@ EOF
     exit "$rc"
 }
 
-while getopts "d:hnp:y" opt; do
+while getopts "d:hny" opt; do
     case $opt in
         d) HELPER_DIR="$OPTARG"
             ;;
@@ -61,14 +58,20 @@ while getopts "d:hnp:y" opt; do
             ;;
         n) NO_SHRINK="yes"
             ;;
-        p) HELPER_PKG="$OPTARG"
-            ;;
         y) NO_PROMPT="yes"
             ;;
         ?) log_error "Use \`-h' for help"; exit 1
             ;;
     esac
 done
+
+if [ $# -ne 1 ]; then
+    log_error "snf-image-helper pkg not provided!"
+    usage 1
+else
+    HELPER_PKG=$1
+    shift
+fi
 
 if [ -n "$HELPER_PKG" ]; then
     if [ ! -f "$HELPER_PKG" ]; then
@@ -139,7 +142,7 @@ truncate -s 2G "$helper_img"
 echo "done"
 
 echo Creating and configuring filesystem...
-mkfs.ext2 -F "$helper_img" 2>&1 | sed -e 's/^/MKFS.EXT2: /g'
+mkfs.ext4 -F "$helper_img" 2>&1 | sed -e 's/^/MKFS.EXT2: /g'
 # The helper vm should never do file system checks...
 tune2fs -i 0 -c 0 "$helper_img" 2>&1 | sed -e 's/^/TUNE2FS: /g'
 
@@ -153,6 +156,12 @@ add_cleanup ignore_failure umount "$target"
 
 do_multistrap "$target"
 
+echo "Installing snf-image-helper pkg in the new image..."
+cp "$HELPER_PKG" "$target/tmp/"
+pkg_name=$(basename "$HELPER_PKG")
+chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
+rm "$target/tmp/$pkg_name"
+
 # Save the package list
 chroot "$target" dpkg-query -W  > "$HELPER_DIR/packages"
 
@@ -163,7 +172,7 @@ cat > "$target/etc/fstab" <<EOF
 # /etc/fstab: static file system information.
 #
 # <file system>   <mount point>   <type>  <options>       <dump>  <pass>
-UUID=$root_uuid         /               ext3    defaults        0       1
+UUID=$root_uuid         /               ext4    defaults        0       1
 proc              /proc           proc    defaults        0       0
 EOF
 
@@ -173,7 +182,7 @@ ln -sf /proc/mounts "$target/etc/mtab"
 echo "done"
 
 echo -n "Extracting kernel..."
-if [ ! -L "$target/vmlinuz" -o ! -L "$target/vmlinuz" ]; then
+if [ ! -L "$target/vmlinuz" -o ! -L "$target/initrd.img" ]; then
     echo -e "\033[1;31mfailed\033[0m"
     log_error "vmlinuz or initrd.img link in root is missing."
     log_error "I don't know how to find a usable kernel/initrd pair."
@@ -181,11 +190,8 @@ if [ ! -L "$target/vmlinuz" -o ! -L "$target/vmlinuz" ]; then
 fi
 echo "done"
 
-# Make sure extended globbing is enabled
-shopt -s extglob
-
-kernel=$(ls "$target"/boot/vmlinuz-+([0-9.])-+([a-z0-9.])-amd64)
-initrd=$(ls "$target"/boot/initrd.img-+([0-9.])-+([a-z0-9.])-amd64)
+kernel="$target/$(chroot "$target" readlink -f /vmlinuz)"
+initrd="$target/$(chroot "$target" readlink -f /initrd.img)"
 
 echo "Moving $(basename "$kernel") and $(basename "$initrd") to \`$HELPER_DIR'"
 cp "$kernel" "$initrd" "$HELPER_DIR"
@@ -193,40 +199,10 @@ cp "$kernel" "$initrd" "$HELPER_DIR"
 kernel=$(basename "$kernel")
 initrd=$(basename "$initrd")
 
-(cd "$HELPER_DIR"; ln -fs "$kernel" kernel; ln -fs "$initrd" initrd)
-
-pkg_installed=$(grep snf-image-helper "$HELPER_DIR/packages" > /dev/null && echo yes) || true
-
-if [ -z "$HELPER_PKG" -a -z "$pkg_installed" ]; then
-    log_error "No helper package was specified and non was found by the apt."
-    exit 1
-fi
-
-if [ -r "$HELPER_PKG" ]; then
-    echo "Installing snf-image-helper pkg in the new image..."
-    cp "$HELPER_PKG" "$target/tmp/"
-    pkg_name=$(basename "$HELPER_PKG")
-    chroot "$target" dpkg -i "/tmp/$pkg_name" 2>&1 | sed -e 's/^/DPKG: /g'
-    rm "$target/tmp/$pkg_name"
-
-    # Recreate package list
-    chroot "$target" dpkg-query -W  > "$HELPER_DIR/packages"
-else
-    echo "snf-image-helper pkg was installed from the apt repository."
-fi
-
-helper_version="$(grep ^snf-image-helper[[:space:]] "$HELPER_DIR/packages" | cut -f2)"
-host_version="$(dpkg-query -W -f "\${Version}\n" snf-image)"
-
-if [ "$VERSION_CHECK" = yes -a -z "$HELPER_PKG" ]; then
-    if [ "$host_version" != "$helper_version" ]; then
-        log_error "snf-image version (=$host_version) and " \
-            "snf-image-helper version (=$helper_version) don't match."
-        exit 1
-    fi
-fi
-
 umount "$target"
+
+ln -sf "$kernel" "$HELPER_DIR/kernel"
+ln -sf "$initrd" "$HELPER_DIR/initrd"
 
 if [ "$NO_SHRINK" != yes ]; then
     echo "Shrinking the created image:" >&2

@@ -43,18 +43,18 @@ that have been tested with *snf-image* and provided here for testing purposes:
    [`diskdump <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump.md5sum>`__]
    [`metadata <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump.meta>`__]
- * OpenSUSE Desktop 13.2
-   [`diskdump <https://cdn.synnefo.org/opensuse_desktop-13.2-x86_64.diskdump>`__]
-   [`md5sum <https://cdn.synnefo.org/opensuse_desktop-13.2-x86_64.diskdump.md5sum>`__]
-   [`metadata <https://cdn.synnefo.org/opensuse_desktop-13.2-x86_64.diskdump.meta>`__]
+ * OpenSUSE Server 42.2
+   [`diskdump <https://cdn.synnefo.org/opensuse_server-42.2-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/opensuse_server-42.2-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/opensuse_server-42.2-x86_64.diskdump.meta>`__]
  * Oracle Linux 7.x
    [`diskdump <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.md5sum>`__]
    [`metadata <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.meta>`__]
- * FreeBSD 10.2
-   [`diskdump <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump>`__]
-   [`md5sum <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump.md5sum>`__]
-   [`metadata <https://cdn.synnefo.org/freebsd-10.2-x86_64.diskdump.meta>`__]
+ * FreeBSD 11.0
+   [`diskdump <https://cdn.synnefo.org/freebsd-11.0-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/freebsd-11.0-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/freebsd-11.0-x86_64.diskdump.meta>`__]
  * NetBSD 7.0
    [`diskdump <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump.md5sum>`__]
