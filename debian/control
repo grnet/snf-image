@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 7.0.50~), dh-python, automake, autotools-dev,
  kpartx, gdisk, eatmydata, mbr, curl, xmlstarlet, parted, libhivex-bin,
  libwin-hivex-perl, python, python-prctl, python-scapy, python-sphinx,
  python-yaml
-Standards-Version: 3.9.6
+Standards-Version: 3.9.8
 Homepage: https://github.com/grnet/snf-image
 Vcs-Git: git://github.com/grnet/snf-image.git
 Vcs-Browser: https://github.com/grnet/snf-image
