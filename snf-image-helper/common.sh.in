@@ -414,6 +414,8 @@ is_extended_partition() {
     local part_num="$2"
 
     id=$($SFDISK --force --part-type "$dev" "$part_num")
+    # Trim the result. Newer versions of sfdisk add spaces.
+    id=$(echo $id)
     if [ "$id" = "5" -o "$id" = "f" ]; then
         echo "yes"
     else
@@ -1078,7 +1080,11 @@ examine_msdos_partition() {
     part="$2"
 
     num=$(cut -f1 -d: <<< "$part")
+
     id=$($SFDISK --force --part-type "$dev" "$num") || true
+    # Trim the result. Newer versions of sfdisk add spaces.
+    id=$(echo $id)
+
     fs=$($BLKID -s TYPE -o value "$dev$num") || true
 
     case "$id" in
