@@ -5,7 +5,7 @@ The user may configure the behavior of *snf-image* by uncommenting and
 overwriting the default value for some configuration parameters and the path of
 some external programs in ``/etc/default/snf-image``:
 
-.. code-block:: console
+.. code::
 
   # snf-image defaults file
 
@@ -14,6 +14,14 @@ some external programs in ``/etc/default/snf-image``:
 
   # IMAGE_DEBUG: turn on debugging output for the scripts
   # IMAGE_DEBUG=no
+
+  # CLOUD_INIT_DEBUG: Turn cloud-init debug level on. If set to 'yes' and the
+  # instance is cloud-init enabled, snf-image-helper will inject into the
+  # instance a logging configuration for cloud-init that will log all messages
+  # with priority DEBUG or higher to /var/log/snf-image/cloud-init-debug.log.
+  # It will also prevent some cloud-init configuration files injected by
+  # snf-image-helper that contain sensitive data from being cleared out.
+  # CLOUD_INIT_DEBUG=no
 
   # VERSION_CHECK: Check if snf-image and snf-image-helper have the same version.
   # This is useful if snf-image is installed as Debian package and not from
