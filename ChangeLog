@@ -1,3 +1,19 @@
+2017-08-02, v0.22.1
+	* Fix a bug in the computation of the file where user keys are placed.
+
+2017-07-31, v0.22
+	* Add support for cloud-init images (introduced a new CLOUD_INIT image
+	  property)
+	* Add a new cloud_userdata OS parameter for defining user data that
+	  will be acted upon by cloud-init
+	* Add a new inst_properties OS parameter for overwriting individual
+	  image properties
+	* Add new CLOUD_INIT_DEBUG configuration parameter
+	* Obsolete VERSION_CHECK configuration parameter
+	* Move to Debian stretch helper
+	* Fix bugs
+	* Update the documentation
+
 2017-06-21, v0.21.1
 	* Fix a bug where clean up was never called for qemu-nbd and losetup
 
@@ -13,11 +29,11 @@
 	  if the used disk template was "file" or "sharedfile"
 	* Make image copying work when using userspace disk URIs
 
-2016-10-4, v0.20.1
+2016-10-04, v0.20.1
 	* Fix a "no properly formatted MD5 checksum lines found" bug in
 	  snf-image-update-helper
 
-2016-10-3, v0.20
+2016-10-03, v0.20
 	* Add support for NetworkManager in CofigureNetwork configuration task
 	* Add a new Linux configuration task for regenerating the machine ID
 	* Update the documentation
