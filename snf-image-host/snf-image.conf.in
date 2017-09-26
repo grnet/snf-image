@@ -1,8 +1,5 @@
 # snf-image defaults file
 
-# IMAGE_DIR: directory location for disk images
-# IMAGE_DIR="@localstatedir@/lib/snf-image"
-
 # IMAGE_DEBUG: turn on debugging output for the scripts
 # IMAGE_DEBUG=no
 
@@ -66,35 +63,6 @@
 # now the supported ones are 'xm' and 'xl'.
 # XEN_CMD="@XEN_CMD@"
 
-# PITHOS_DB: Pithos database in SQLAlchemy format
-# PITHOS_DB="sqlite:////@localstatedir@/lib/pithos/backend.db"
-
-# PITHOS_BACKEND_STORAGE: Select Pithos backend storage. Possible values are
-# 'nfs' and 'rados'. According to the value you select, you need to set the
-# corresponding variables that follow.
-# If you select 'nfs' that's 'PITHOS_DATA'. If you select 'rados' then you need
-# to set all the "*_RADOS_*" ones.
-# PITHOS_BACKEND_STORAGE="nfs"
-
-# PITHOS_DATA: Directory where Pithos data are hosted
-# PITHOS_DATA="/@localstatedir@/lib/pithos/data"
-
-# PITHOS_RADOS_CEPH_CONF: RADOS configuration file
-# PITHOS_RADOS_CEPH_CONF="@sysconfdir@/ceph/ceph.conf"
-
-# PITHOS_RADOS_POOL_MAPS: RADOS pool for storing Pithos maps
-# PITHOS_RADOS_POOL_MAPS="maps"
-
-# PITHOS_RADOS_POOL_BLOCKS: RADOS pool for storing Pithos blocks
-# PITHOS_RADOS_POOL_BLOCKS="blocks"
-
-# PITHOS_ARCHIPELAGO_CONF: Archipelago configuration file
-# PITHOS_ARCHIPELAGO_CONF="@sysconfdir@/archipelago/archipelago.conf"
-
-# PITHCAT_UMASK: If set, it will change the file mode mask of the pithcat
-# process to the specified one.
-# PITHCAT_UMASK=<not set>
-
 # PROGRESS_MONITOR: External program that monitors the progress of the image
 # deployment. The snf-image monitor messages will be redirected to the standard
 # input of this program.
@@ -153,11 +121,10 @@
 # MD5SUM="md5sum"
 # KVM="kvm"
 # LOSETUP="losetup"
-# KPARTX="kpartx"
-# SFDISK="sfdisk"
 # INSTALL_MBR="install-mbr"
 # TIMEOUT="timeout"
 # CURL="curl"
 # TAR="tar"
 # BLOCKDEV="blockdev"
 # DD="dd"
+# PARTED="parted"
