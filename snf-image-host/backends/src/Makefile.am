@@ -2,7 +2,7 @@ sbackendsdir=$(backendsdir)/src
 sbackendconfdir=$(confdir)/backends/src/
 
 dist_sbackends_SCRIPTS = ${srcdir}/local ${srcdir}/null ${srcdir}/network
-dist_sbackendconf_DATA=local.conf
+dist_sbackendconf_DATA=local.conf local.priority null.priority network.priority
 
 export osdir sbackendsdir confdir
 
@@ -20,4 +20,4 @@ edit = sed \
 		   $(edit) $${srcdir}$@.in >$@.tmp
 	mv $@.tmp $@
 
-CLEANFILES = $(dist_sbackends_SCRIPTS) $(dist_sbackendconf_DATA)
+CLEANFILES = $(dist_sbackends_SCRIPTS) local.conf
