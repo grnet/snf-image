@@ -29,7 +29,6 @@ KVM="kvm"
 MD5SUM="md5sum"
 BLOCKDEV="blockdev"
 DD="dd"
-QEMU_NBD="qemu-nbd"
 PARTED="parted"
 
 CONFDIR=@confdir@
@@ -135,8 +134,7 @@ get_api20_arguments() {
     #Check if disks are URIs
     for ((i = 0; i < DISK_COUNT; i++)); do
         if ! [ -b "${DISK_PATH[$i]}" -o -f "${DISK_PATH[$i]}" ]; then
-            DISK_PATH[$i]=$(map_uri "${DISK_URI[$i]}")
-            add_cleanup unmap_uri "${DISK_PATH[$i]}"
+            DISK_PATH[$i]="${DISK_URI[$i]}"
         fi
     done
 
@@ -266,54 +264,6 @@ unlosetup_disk() {
         $LOSETUP -d "$bdev"
     fi
 }
-
-map_uri() {
-    # Use qemu-nbd to map a URI to a block device
-    local disk bdev max i rc
-
-    disk="$1"
-
-    # FIXME: we probably need to check if NBD is compiled as a module.
-    modprobe nbd # just to be on the safe side
-
-    if [ -f /sys/module/nbd/parameters/nbds_max ]; then
-        max=$(cat /sys/module/nbd/parameters/nbds_max)
-    else
-        log_error "NBD module is not loaded correctly"
-        exit 1
-    fi
-
-    for ((i=0; i<max; i++)); do
-        set +e
-        $QEMU_NBD -c "/dev/nbd$i" "$disk"
-        rc=$?
-        set -e
-        if [ $rc -eq 0 ]; then
-            break
-        else
-            log_warning "Unable to map \`$disk' to /dev/nbd$i"
-        fi
-    done
-
-    if [ $i -eq $max ]; then
-        log_error "Could not find suitable NBD device to map: \`$disk'"
-        exit 1
-    fi
-
-    echo "/dev/nbd$i"
-}
-
-unmap_uri() {
-    local bdev
-    bdev="$1"
-
-    if [[ -b "$bdev" && "$bdev" = /dev/nbd* ]]; then
-        $QEMU_NBD -d "$bdev"
-    else
-        log_warning "Cannot unmap: ${bdev}. File does not exist"
-    fi
-}
-
 
 create_floppy() {
     local img target IFS index name tm

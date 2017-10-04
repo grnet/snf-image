@@ -1,2 +1,2 @@
 export osdir confdir backendsdir sbackendsdir
-SUBDIRS = src
+SUBDIRS = src dst

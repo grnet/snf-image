@@ -2,13 +2,15 @@ osname=snf-image
 osdir=$(OS_DIR)/$(osname)
 backendsdir=$(osdir)/backends
 sbackendsdir=$(backendsdir)/src
+dbackendsdir=$(backendsdir)/dst
 exampledir=$(datarootdir)/doc/$(PACKAGE)
 confdir=$(sysconfdir)/snf-image/
 aptprefdir=$(confdir)/apt.pref.d
 variantsdir=$(sysconfdir)/ganeti/snf-image/variants
 xenscriptsdir=$(sysconfdir)/xen/scripts
 
-export osdir confdir backendsdir sbackendsdir
+export osdir confdir backendsdir sbackendsdir dbackendsdir
+
 
 SUBDIRS = backends
 
@@ -40,6 +42,7 @@ edit = sed \
 	   -e 's|@osdir[@]|$(osdir)|g' \
 	   -e 's|@backendsdir[@]|$(backendsdir)|g' \
 	   -e 's|@sbackendsdir[@]|$(sbackendsdir)|g' \
+	   -e 's|@dbackendsdir[@]|$(dbackendsdir)|g' \
 	   -e 's|@osname[@]|$(osname)|g' \
 	   -e 's|@VERSION[@]|$(VERSION)|g' \
 	   -e 's|@HELPER_PACKAGE_VERSION[@]|$(HELPER_PACKAGE_VERSION)|g' \

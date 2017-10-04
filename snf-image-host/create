@@ -69,12 +69,16 @@ echo "Processing image with ID: \`$IMG_ID' and type: \`$IMAGE_TYPE'" >&2
 
 src_backend=$(get_backend src "$IMG_ID")
 echo "Using source backend: $src_backend" >&2
+dst_backend=$(get_backend dst "$disk0")
+echo "Using destination backend: $dst_backend" >&2
 size=$($src_backend -s "$IMG_ID")
 mbr=$(create_mbr "$size" "$IMAGE_TYPE")
 
 report_info "Starting image copy..."
+# 64K is the size of the pipe buffer. This is probably the best value for bs
 { cat "$mbr"; $src_backend "$IMG_ID"; } |
-    ./copy-monitor.py -o $MONITOR_FD -r $size $DD bs=4M of="$disk0" oflag=direct iflag=fullblock conv=notrunc
+    ./copy-monitor.py -o $MONITOR_FD -r $size $DD bs=4M iflag=fullblock |
+    $dst_backend "$disk0"
 report_info "Image copy finished."
 
 # Create a floppy image
