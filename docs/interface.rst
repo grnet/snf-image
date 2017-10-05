@@ -55,37 +55,43 @@ Image ID (img_id)
 ^^^^^^^^^^^^^^^^^
 
 The **img_id** OS parameter points to the actual Image that we want to deploy.
-It is a URI and its prefix denotes the type of :ref:`backend <storage-backends>`
-to be used. If no prefix is used, it defaults to the local back-end:
+It is a URI and its prefix denotes the type of :ref:`source back-end <source-backends>`
+to be used. The user may install custom back-ends and alter the behavior of
+*snf-image*. You can find the list of the official back-ends below:
 
  * **Local backend**:
    To select it, the prefix should be ``local://``, followed by the name of the
-   image. All local images are expected to be found under a predefined image
-   directory (``/var/lib/snf-image`` by default).
+   image or simply the name of the image as long as it does not contain the
+   character *:*.  All local images are expected to be found under a predefined
+   image directory (``/var/lib/snf-image`` by default), which can be modified
+   in the configuration file of the back-end
+   (``/etc/snf-image/backends/src/local.conf``).
 
   | For example, if we want to deploy the image file:
   | ``/var/lib/snf-image/slackware.diskdump``
   | We need to assign:
   | ``img_id=local://slackware.diskdump``
+  | or:
+  | ``img_id=slackware.diskdump``
 
  * **Network backend**:
    If the **imd_id** starts with ``http:``, ``https:``, ``ftp:`` or ``ftps:``,
    *snf-image* will treat the **img_id** as a remote URL and will try to fetch
    the image using `cURL <http://curl.haxx.se/>`_.
 
-  | For example, if we want to deploy an image from an http location:
-  | ``img_id=http://www.synnefo.org/path/to/image/slackware-image``
+  | For example, if we want to deploy an image from an https location:
+  | ``img_id=https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump``
 
  * **Pithos backend**:
-   If the **img_id** is prefixed with ``pithos://`` or ``pithosmap://`` the
+   If the **img_id** is prefixed with ``pithos://`` or ``pithosmap://``, the
    image is considered to reside on a Pithos deployment. For ``pithosmap://``
    images, the user needs to have set a valid value for the *PITHOS_DATA*
-   variable in *snf-image*'s configuration file (``/etc/default/snf-image`` by
-   default) if the storage backend is ``nfs`` or *PITHOS_RADOS_POOL_MAPS* and
-   *PITHOS_RADOS_POOL_BLOCKS* if the storage backend is ``rados``.
-   For ``pithos://`` images, in addition to *PITHOS_DATA* or
-   *PITHOS_RADOS_POOL_**, the user needs to have set a valid value for the
-   *PITHOS_DB* variable, too.
+   variable in the *pithos* back-end's configuration file (
+   ``/etc/snf-image/backend/src/pithos.conf``) if the storage backend is
+   ``nfs`` or *PITHOS_RADOS_POOL_MAPS* and *PITHOS_RADOS_POOL_BLOCKS* if the
+   storage backend is ``rados``. For ``pithos://`` images, in addition to
+   *PITHOS_DATA* or *PITHOS_RADOS_POOL_**, the user needs to have set a valid
+   value for the *PITHOS_DB* variable, too.
 
   | For example, if we want to deploy using a full Pithos URI:
   | ``img_id=pithos://<user-uuid>/<container>/<slackware-image>``
