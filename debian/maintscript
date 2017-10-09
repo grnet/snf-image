@@ -1,0 +1,1 @@
+mv_conffile /etc/default/snf-image /etc/snf-image/snf-image.conf 0.22.2-1
