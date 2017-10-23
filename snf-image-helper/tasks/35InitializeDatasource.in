@@ -34,7 +34,7 @@ if ! check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
     exit 0
 fi
 
-CFG=$(get_cloud_init_config "$SNF_IMAGE_TARGET" "$CLOUD_INIT_CONFNAME")
+CFG=$(get_cloud_init_config "$SNF_IMAGE_TARGET" "$CLOUD_INIT_CONFNAME" yes)
 
 cat >> $CFG <<EOF
 datasource_list: [ NoCloud ]
@@ -71,6 +71,7 @@ fi
 SEED=$(get_cloud_init_seed "$SNF_IMAGE_TARGET")
 
 echo "instance-id: $SNF_IMAGE_HOSTNAME" > "$SEED/meta-data"
+chmod 600 "$SEED/meta-data"
 
 if [ -n "$SNF_IMAGE_CLOUD_USERDATA" ]; then
     $BASE64 -d > "$SEED/user-data" <<< "$SNF_IMAGE_CLOUD_USERDATA"
@@ -78,12 +79,13 @@ else
     warn "No cloud user-data provided"
     touch "$SEED/user-data"
 fi
+chmod 600 "$SEED/user-data"
 
 # Remove the created files that may contain sensitive user data at first boot
-SCRIPT="$SNF_IMAGE_TARGET/var/lib/cloud/scripts/per-once/clear_seed.sh"
+SCRIPT="$SNF_IMAGE_TARGET/var/lib/cloud/scripts/per-once/clear_user_data.sh"
 cat > "$SCRIPT" <<EOF
 #!/bin/sh
-rm -f ${SEED##$SNF_IMAGE_TARGET}/*
+cat /dev/null > "${SEED##$SNF_IMAGE_TARGET}/user-data"
 EOF
 if [ -z "$SNF_IMAGE_CLOUD_INIT_DEBUG" ]; then
     chmod +x "$SCRIPT"
