@@ -1,3 +1,10 @@
+2017-10-30, v0.22.3
+	* Fix a bug where the injected files in the Enforce Personality task
+	  could have had wrong ownership on cloud-init enabled images.
+	* Do not remove all the injected cloud-init files after the first boot.
+	  This will make the VM to try to perform the configuration again in
+	  the next boot.
+
 2017-08-28, v0.22.2
 	* Handle non-string image property values
 
