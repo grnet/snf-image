@@ -1,3 +1,9 @@
+snf-image (0.22.3-1~stretch) stretch; urgency=medium
+
+  * New upstream version 
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Mon, 30 Oct 2017 12:16:12 +0200
+
 snf-image (0.22.2-1~stretch) stretch; urgency=medium
 
   * New upstream version
