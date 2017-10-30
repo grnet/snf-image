@@ -43,7 +43,7 @@ else
     # If we know how to configure the network, it's better if we do it ourself.
     # From what I've seen we can do it better than cloud-init.
     if check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
-        CFG=$(get_cloud_init_config "$SNF_IMAGE_TARGET" "$CLOUD_INIT_CONFNAME")
+        CFG=$(get_cloud_init_config "$SNF_IMAGE_TARGET" "$CLOUD_INIT_CONFNAME" yes)
         echo "network: {config: disabled}" > "$CFG"
     fi
     echo "Using $networking_tool"

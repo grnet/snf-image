@@ -55,7 +55,7 @@ while read -d \$'\0' src; do
     read -d \$'\0' dest
 
     if [ -n "\$owner" ]; then
-        owner="-g \$owner"
+        owner="-o \$owner"
     fi
 
     if [ -n "\$group" ]; then
@@ -68,7 +68,7 @@ while read -d \$'\0' src; do
 
     mkdir -p \`dirname \$dest\`
 
-    install \$uid \$gid \$mode "${tmpdir##$SNF_IMAGE_TARGET}/\$src" "\$dest"
+    install \$owner \$group \$mode "${tmpdir##$SNF_IMAGE_TARGET}/\$src" "\$dest"
 done < "${tmpdir##$SNF_IMAGE_TARGET}/manifest"
 
 rm -rf "${tmpdir##$SNF_IMAGE_TARGET}" "\$0"
