@@ -1157,9 +1157,11 @@ detect_image_properties() {
 }
 
 get_cloud_init_config() {
-    local target cfg_d cfg confname rm_cfg
+    local target cfg_d cfg confname rm_cfg keep
     target="$1"
     confname="$2"
+    keep="$3"
+
     rm_cfg="$target/var/lib/cloud/scripts/per-once/rm_$(basename "$confname").sh"
 
     mkdir -p $(dirname "$rm_cfg")
@@ -1172,12 +1174,13 @@ get_cloud_init_config() {
 
             echo "$cfg_d/$confname"
 
-            # Make sure the files created by snf-image are removed at first boot
-            { printf "#!/bin/sh\nrm -f %s" "${cfg##$target}"; } > "$rm_cfg"
-            if [ -z "$SNF_IMAGE_CLOUD_INIT_DEBUG" ]; then
-                chmod +x "$rm_cfg"
+            if [ "$keep" != yes ]; then
+                # Make sure the files created by snf-image are removed at first boot
+                { printf "#!/bin/sh\nrm -f %s" "${cfg##$target}"; } > "$rm_cfg"
+                if [ -z "$SNF_IMAGE_CLOUD_INIT_DEBUG" ]; then
+                    chmod +x "$rm_cfg"
+                fi
             fi
-
             return
         fi
     done
