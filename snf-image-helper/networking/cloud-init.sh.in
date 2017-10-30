@@ -1,0 +1,78 @@
+#! /bin/bash
+
+# Copyright (C) 2017 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+# Script for writing cloud-init network configurations
+
+set -e
+. "@commondir@/common.sh"
+
+ARGS=( "$@" )
+networking_opts "$@"
+
+SEED=$(get_cloud_init_seed "$SNF_IMAGE_TARGET")
+CFG="$SEED/network-config"
+
+
+if [ "$initialize" = yes ]; then
+    cat >> "$CFG" <<EOF
+version: 1
+config:
+EOF
+    exit 0
+fi
+
+
+if [ "$finalize" = yes ]; then
+    exit 0
+fi
+
+cat >> "$CFG" <<EOF
+  - type: physical
+    name: eth$index
+    mac_address: $MAC
+EOF
+
+subnets=""
+
+if [ "$ipv4" = "dhcp" ]; then
+    subnets="      - type: dhcp"
+elif [ "$ipv4" = "static" ]; then
+    subnets="      - type: static"
+    if [ -n "$IP" -a -n "$SUBNET" ]; then
+        subnets="        address: $IP/${SUBNET##*/}"
+    fi
+    if [ -n "$GATEWAY" ]; then
+        subnets="        gateway: $GATEWAY"
+    fi
+fi
+
+if [ -n "$subnets" ]; then
+    cat >> "$CFG" <<EOF
+    subnets:
+$subnets
+EOF
+fi
+
+# Fallback to ENI
+echo "network-interfaces: |" >> "$SEED/meta-data"
+export INTERFACES=$(mktemp)
+@networkingdir@/ifupdown.sh "${ARGS[@]}"
+sed 's/^/  /' "$INTERFACES" >> "$SEED/meta-data"
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

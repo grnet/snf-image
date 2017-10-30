@@ -65,7 +65,7 @@ launch_helper() {
 
     disks=""
     for ((i=0; i < DISK_COUNT; i++)); do
-        disks+=" -drive file=$(find_disk $i),format=raw,if=none,cache=none,id=drive$i"
+        disks+=" -drive file=${DISK_PATH[$i]},format=raw,if=none,cache=none,id=drive$i"
         disks+=" -device $(get_img_driver),id=disk$i,drive=drive$i"
     done
 
@@ -90,7 +90,8 @@ launch_helper() {
       -serial "file:$(printf "%q" "$result_file")" \
       -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
       -serial pty \
-      -drive file="$floppy",if=floppy -vga none -nographic -parallel none -monitor null \
+      -drive file="$floppy",if=floppy,format=raw \
+      -vga none -nographic -parallel none -monitor null \
       -kernel "$HELPER_DIR/kernel" -initrd "$HELPER_DIR/initrd" \
       -append "quiet ro root=/dev/vda console=ttyS0,9600n8 \
              hypervisor=$HYPERVISOR snf_image_activate_helper \

@@ -35,24 +35,23 @@ Download the kernel package:
 Build the packages
 ++++++++++++++++++
 
-Apply the existing patches:
+Enter the kernel directory:
 
 .. code-block:: console
 
- $ fakeroot debian/rules source
+ $ cd linux-<version>
 
 Setup the amd64 configuration:
 
 .. code-block:: console
 
- $ cd linux-<version>
  $ fakeroot make -f debian/rules.gen setup_amd64_none
 
 Copy the snf-image provided configuration to the new kernel:
 
 .. code-block:: console
 
- $ cp /usr/share/doc/snf-image/kconfig-* debian/build/build_amd64_none_amd64/.config
+ $ zcat /usr/share/doc/snf-image/kconfig-* > debian/build/build_amd64_none_amd64/.config
 
 Apply the kernel configuration:
 
@@ -66,6 +65,7 @@ Change the ABI name (the debian building system will complain otherwise):
 .. code-block:: console
 
  $ sed -i 's|abiname: .\+|abiname: 0.snf.image.helper.1|' debian/config/defines
+ $ fakeroot debian/rules debian/control-real
 
 Add a new entry in ``debian/changelog`` with ``jessie-helper`` as distribution:
 
@@ -77,6 +77,7 @@ Build the new kernel package:
 
 .. code-block:: console
 
+ $ fakeroot debian/rules source
  $ fakeroot make -j <num> -f debian/rules.gen binary-arch_amd64_none
 
 Upload it to an apt repository

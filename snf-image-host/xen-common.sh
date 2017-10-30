@@ -29,7 +29,7 @@ assign_disk_devices_to() {
 }
 
 launch_helper() {
-    local name helperid rc floppy disks disk_path xen_dev ftype
+    local name helperid rc floppy disks xen_dev ftype
 
     floppy="$1"
 
@@ -40,8 +40,7 @@ launch_helper() {
 
     set -- c d e f g h i j k l m n o p q r
     for ((i = 0; i < DISK_COUNT; i++)); do
-        disk_path="$(find_disk $i)"
-        case $(stat -L -c %F "$disk_path") in
+        case $(stat -L -c %F "${DISK_PATH[$i]}") in
         "regular file")
             ftype=file
             ;;
@@ -49,14 +48,14 @@ launch_helper() {
             ftype=phy
             ;;
         *)
-            log_error "Disk: $disk_path is not a block device or a regular file"
-            report_error "Disk: $disk_path is not a block device or a regular file"
+            log_error "Disk: ${DISK_PATH[$i]} is not a block device or a regular file"
+            report_error "Disk: ${DISK_PATH[$i]} is not a block device or a regular file"
             exit 1
         esac
 
         xen_dev="xvd$1"; shift
 
-        disks+=",'$ftype:$disk_path,$xen_dev,w'"
+        disks+=",'$ftype:${DISK_PATH[$i]},$xen_dev,w'"
     done
 
     cat >/etc/xen/$name <<EOF

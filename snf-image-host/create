@@ -37,6 +37,12 @@ elif [ "$IMAGE_DEBUG" != "no" ]; then
     log_warning "Unsupported IMAGE_DEBUG value: \`$IMAGE_DEBUG'"
 fi
 
+if [ "$CLOUD_INIT_DEBUG" = "yes" ]; then
+    snf_export_CLOUD_INIT_DEBUG="$CLOUD_INIT_DEBUG"
+elif [ "$CLOUD_INIT_DEBUG" != "no" ]; then
+    log_warning "Unsupported CLOUD_INIT_DEBUG value: \`$CLOUD_INIT_DEBUG'"
+fi
+
 monitor_pipe=$(mktemp -u)
 mkfifo -m 600 "$monitor_pipe"
 add_cleanup rm -f "$monitor_pipe"
@@ -137,6 +143,7 @@ case "$IMAGE_TYPE" in
     ntfsdump|extdump)
         # Create a corresponding blockdev if required
         blockdev=$(losetup_disk "$disk0")
+        add_cleanup unlosetup_disk "$blockdev"
 
         # Create partitions on blockdev
         format_disk0 "$blockdev" "$IMAGE_TYPE"
@@ -198,6 +205,11 @@ fi
 if [ -n "$IMG_PROPERTIES" ]; then
     snf_export_PROPERTIES="$IMG_PROPERTIES"
 fi
+
+if [ -n "$INST_PROPERTIES" ]; then
+    snf_export_INST_PROPERTIES="$INST_PROPERTIES"
+fi
+
 if [ -n "$IMG_PERSONALITY" ]; then
     snf_export_PERSONALITY="$IMG_PERSONALITY"
 fi
@@ -208,6 +220,10 @@ fi
 
 if [ -n "${AUTH_KEYS+dummy}" ]; then
     snf_export_AUTH_KEYS="$AUTH_KEYS"
+fi
+
+if [ -n "${CLOUD_USERDATA+dummy}" ]; then
+    snf_export_CLOUD_USERDATA="$CLOUD_USERDATA"
 fi
 
 assign_disk_devices_to snf_export_DEV
