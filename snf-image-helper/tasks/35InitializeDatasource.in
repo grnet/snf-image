@@ -1,0 +1,96 @@
+#! /bin/bash
+
+# Copyright (C) 2017 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+### BEGIN TASK INFO
+# Provides:		InitializeDatasource
+# RunBefore:		EnforcePersonality
+# RunAfter:		MountImage
+# Short-Description:	Initialized the cloud-init NoCloud datasource
+### END TASK INFO
+
+set -e
+. "@commondir@/common.sh"
+
+task_init_as mounted_excludable overwritable
+
+if ! check_yes_no SNF_IMAGE_PROPERTY_CLOUD_INIT; then
+    warn "Cloud-init not enabled for this instance"
+    exit 0
+fi
+
+CFG=$(get_cloud_init_config "$SNF_IMAGE_TARGET" "$CLOUD_INIT_CONFNAME" yes)
+
+cat >> $CFG <<EOF
+datasource_list: [ NoCloud ]
+EOF
+
+if [ -n "$SNF_IMAGE_CLOUD_INIT_DEBUG" ]; then
+    mkdir -p "$SNF_IMAGE_TARGET/var/log/snf-image"
+    cat >> "$CFG" <<-EOF
+	logcfg: |
+	  [loggers]
+	  keys=root,cloudinit
+	  [handlers]
+	  keys=ch,cf
+	  [formatters]
+	  keys=
+	  [logger_root]
+	  level=DEBUG
+	  handlers=
+	  [logger_cloudinit]
+	  level=DEBUG
+	  qualname=cloudinit
+	  handlers=ch,cf
+	  [handler_ch]
+	  class=StreamHandler
+	  level=DEBUG
+	  args=(sys.stderr,)
+	  [handler_cf]
+	  class=FileHandler
+	  level=DEBUG
+	  args=('/var/log/snf-image/cloud-init-debug.log',)
+	EOF
+fi
+
+SEED=$(get_cloud_init_seed "$SNF_IMAGE_TARGET")
+
+echo "instance-id: $SNF_IMAGE_HOSTNAME" > "$SEED/meta-data"
+chmod 600 "$SEED/meta-data"
+
+if [ -n "$SNF_IMAGE_CLOUD_USERDATA" ]; then
+    $BASE64 -d > "$SEED/user-data" <<< "$SNF_IMAGE_CLOUD_USERDATA"
+else
+    warn "No cloud user-data provided"
+    touch "$SEED/user-data"
+fi
+chmod 600 "$SEED/user-data"
+
+# Remove the created files that may contain sensitive user data at first boot
+SCRIPT="$SNF_IMAGE_TARGET/var/lib/cloud/scripts/per-once/clear_user_data.sh"
+cat > "$SCRIPT" <<EOF
+#!/bin/sh
+cat /dev/null > "${SEED##$SNF_IMAGE_TARGET}/user-data"
+EOF
+if [ -z "$SNF_IMAGE_CLOUD_INIT_DEBUG" ]; then
+    chmod +x "$SCRIPT"
+fi
+
+exit 0
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

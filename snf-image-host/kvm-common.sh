@@ -90,7 +90,8 @@ launch_helper() {
       -serial "file:$(printf "%q" "$result_file")" \
       -serial file:>(./helper-monitor.py ${MONITOR_FD}) \
       -serial pty \
-      -drive file="$floppy",if=floppy -vga none -nographic -parallel none -monitor null \
+      -drive file="$floppy",if=floppy,format=raw \
+      -vga none -nographic -parallel none -monitor null \
       -kernel "$HELPER_DIR/kernel" -initrd "$HELPER_DIR/initrd" \
       -append "quiet ro root=/dev/vda console=ttyS0,9600n8 \
              hypervisor=$HYPERVISOR snf_image_activate_helper \

@@ -23,14 +23,16 @@ set -e
 
 
 check_required() {
-    local required_params="IMG_ID IMG_FORMAT"
-    local osparams="$required_params IMG_PASSWD IMG_PROPERTIES IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE AUTH_KEYS"
+    local required_params=(IMG_ID IMG_FORMAT)
+    local osparams=(${required_params[@]} IMG_PASSWD IMG_PROPERTIES
+                    IMG_PERSONALITY CONFIG_URL OS_PRODUCT_KEY OS_ANSWER_FILE
+                    AUTH_KEYS CLOUD_USERDATA INST_PROPERTIES)
     local osp
 
     source_variant
 
     # Store OSP_VAR in VAR
-    for param in $osparams; do
+    for param in "${osparams[@]}"; do
         # Only do the evaluation if OSP_$param is defined
         osp="OSP_$param"
         if [ -n "${!osp+dummy}" ]; then
@@ -38,8 +40,7 @@ check_required() {
         fi
     done
 
-
-    for var in $required_params; do
+    for var in ${required_params[@]}; do
         if [ -z "${!var}" ]; then
              log_error "Missing OS API Parameter: ${var,,}"
              exit 1
@@ -51,7 +52,6 @@ check_required() {
         log_error "Valid values are \`diskdump', \`extdump' and \`ntfsdump'"
         exit 1
     fi
-
 
     if [ -n "${OS_PRODUCT_KEY+dummy}" ]; then
         if [[ ! "${OS_PRODUCT_KEY}" =~ ^([a-zA-Z0-9]{5}-){4}[a-zA-Z0-9]{5}$ ]]; then

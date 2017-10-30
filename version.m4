@@ -1,1 +1,1 @@
-m4_define([devflow_version], [0.21.1])
+m4_define([devflow_version], [0.22.3])
