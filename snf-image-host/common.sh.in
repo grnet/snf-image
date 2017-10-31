@@ -20,18 +20,19 @@ SNF_IMAGE_VERSION="@VERSION@"
 
 AWK="awk"
 LOSETUP="losetup"
-KPARTX="kpartx"
-SFDISK="sfdisk"
 INSTALL_MBR="install-mbr"
 TIMEOUT="timeout"
-CURL="curl"
+CURL="curl -L"
 TAR="tar"
 DATE="date -u" # Time in UTC
 KVM="kvm"
 MD5SUM="md5sum"
 BLOCKDEV="blockdev"
 DD="dd"
-QEMU_NBD="qemu-nbd"
+PARTED="parted"
+
+CONFDIR=@confdir@
+BACKENDSDIR=@backendsdir@
 
 # Temporary use stderr as monitoring file descriptor.
 # `create' will overwrite this
@@ -133,8 +134,7 @@ get_api20_arguments() {
     #Check if disks are URIs
     for ((i = 0; i < DISK_COUNT; i++)); do
         if ! [ -b "${DISK_PATH[$i]}" -o -f "${DISK_PATH[$i]}" ]; then
-            DISK_PATH[$i]=$(map_uri "${DISK_URI[$i]}")
-            add_cleanup unmap_uri "${DISK_PATH[$i]}"
+            DISK_PATH[$i]="${DISK_URI[$i]}"
         fi
     done
 
@@ -206,42 +206,35 @@ parameter_check() {
     fi
 }
 
-map_disk0() {
-    blockdev="$1"
-    filesystem_dev_base=$($KPARTX -l -s -p- $blockdev | \
-                            grep -m 1 -- "-1.*$blockdev" | \
-                            $AWK '{print $1}')
-    if [ -z "$filesystem_dev_base" ]; then
-        log_error "Cannot interpret kpartx output and get partition mapping"
+create_mbr() {
+    local size img_type disk pid
+    size="$1"
+    img_type="$2"
+
+    if [ "$img_type" = "diskdump" ]; then
+        echo "/dev/null"
+        return
+    elif [ "$img_type" = ntfsdump ]; then
+        fstype=NTFS
+        snf_export_PROPERTY_OSFAMILY="windows"
+    elif [ "$img_type" = extdump ]; then
+        fstype=ext2
+        snf_export_PROPERTY_OSFAMILY="linux"
+    else
+        log_error "Unknown Image format: \`$img_type'"
+        report_error "Unknown Image Format"
         exit 1
     fi
-    $KPARTX -a -p- "$blockdev" > /dev/null
-    filesystem_dev="/dev/mapper/${filesystem_dev_base/%-1/}"
-    if [ ! -b "/dev/mapper/$filesystem_dev_base" ]; then
-        log_error "Can't find kpartx mapped partition:" \
-            "/dev/mapper/$filesystem_dev_base"
-        exit 1
-    fi
-    echo "$filesystem_dev"
-}
 
-unmap_disk0() {
-    $KPARTX -d -p- "$1"
-}
+    snf_export_PROPERTY_ROOT_PARTITION=1
 
-format_disk0() {
-    local device="$1"
-    local image_type="$2"
-
-    declare -A part_id=( ['extdump']="83" ["ntfsdump"]="7" )
-
-    # The -f is needed, because we use an optimal alignment and sfdisk complains
-    # about partitions not ending on clylinder boundary.
-    local sfdisk_cmd="$SFDISK -uS -H 255 -S 63 -f --quiet --Linux --DOS $device"
-
-    $sfdisk_cmd > /dev/null <<EOF
-2048,,${part_id["$image_type"]},*
-EOF
+    disk="$(mktemp)"
+    add_cleanup rm -f "$disk"
+    truncate -s "$((size + 2048*512))" "$disk"
+    $PARTED -s "$disk" -- mklabel msdos mkpart primary $fstype 2048s -1s set 1 boot on
+    $INSTALL_MBR -p 1 -i n "$disk"
+    truncate -s "$((2048*512))" "$disk"
+    echo "$disk"
 }
 
 # This is used for export/import and in case we have an fsdump image type.
@@ -271,54 +264,6 @@ unlosetup_disk() {
         $LOSETUP -d "$bdev"
     fi
 }
-
-map_uri() {
-    # Use qemu-nbd to map a URI to a block device
-    local disk bdev max i rc
-
-    disk="$1"
-
-    # FIXME: we probably need to check if NBD is compiled as a module.
-    modprobe nbd # just to be on the safe side
-
-    if [ -f /sys/module/nbd/parameters/nbds_max ]; then
-        max=$(cat /sys/module/nbd/parameters/nbds_max)
-    else
-        log_error "NBD module is not loaded correctly"
-        exit 1
-    fi
-
-    for ((i=0; i<max; i++)); do
-        set +e
-        $QEMU_NBD -c "/dev/nbd$i" "$disk"
-        rc=$?
-        set -e
-        if [ $rc -eq 0 ]; then
-            break
-        else
-            log_warning "Unable to map \`$disk' to /dev/nbd$i"
-        fi
-    done
-
-    if [ $i -eq $max ]; then
-        log_error "Could not find suitable NBD device to map: \`$disk'"
-        exit 1
-    fi
-
-    echo "/dev/nbd$i"
-}
-
-unmap_uri() {
-    local bdev
-    bdev="$1"
-
-    if [[ -b "$bdev" && "$bdev" = /dev/nbd* ]]; then
-        $QEMU_NBD -d "$bdev"
-    else
-        log_warning "Cannot unmap: ${bdev}. File does not exist"
-    fi
-}
-
 
 create_floppy() {
     local img target IFS index name tm
@@ -372,40 +317,107 @@ create_floppy() {
     umount "$target"
 }
 
-get_backend_type() {
-    local id=$1
+get_backend() {
+    local target=$1
+    local id=$2
+    local bckend answer priority IFS conf
 
-    if [[ "$id" =~ ^pithos: ]]; then
-        echo "pithos"
-    elif [[ "$id" =~ ^pithosmap: ]]; then
-        echo "pithos"
-    elif [[ "$id" =~ ^(http|ftp)s?: ]]; then
-        echo "network"
-    elif [ "$id" = "null" ]; then
-        echo "null"
-    else
-        echo "local"
-    fi
+    for bckend in "$BACKENDSDIR/${target}"/*; do
+        conf="${CONFDIR}/backends/${target}/$(basename "$bckend")"
+        # Check if the back-end is disabled
+        if [ -f "${conf}.disabled" ]; then
+            log_warning "Not examining disabled back-end: $bckend"
+            continue
+        fi
+
+        # Check if there is a priority file
+        if [ -f "${conf}.priority" ]; then
+            priority=$(cat "${conf}.priority")
+            if ! [[ "$priority" =~ ^[0-9]{1,2}$ ]]; then
+                log_warning "Invalid priority: $priority for $bckend. Using 50."
+                priority=50
+            fi
+        else
+            priority=50
+        fi
+
+        if [ ${#priority} -eq 1 ]; then
+            priority="0$priority"
+        fi
+
+        backends+=("${priority}@${bckend}")
+    done
+
+    # Sort the list of back-ends. Let's hope none has a new line in the
+    # filename. I couldn't make it for with \0 for IFS.
+    IFS=$'\n'
+    mapfile -t backends < <(sort -rn <<< "${backends[*]}")
+    unset IFS
+
+    for bckend in "${backends[@]}"; do
+        # Remove the priority prefix
+        bckend="${bckend:3}"
+        if [ -d "$bckend" ]; then
+            bckend="${bckend}/$(basename "$bckend")"
+        fi
+
+        answer=
+        if [ -x "$bckend" ]; then
+            answer=$($bckend -p "$id")
+        else
+            log_warning "Ignoring non-executable back-end: $bckend"
+        fi
+
+        if [ "$answer" = yes ]; then
+            echo "$bckend"
+            return
+        fi
+    done
+
+    log_error "Could not find suitable back-end to handle \`$id'"
+    exit 1
 }
 
-canonicalize() {
-    local name="$1"
+init_backend() {
+    local usage="$0 [ -s | -p ] URL"
+    local name="$(basename "$0")"
+    local target=$1; shift
 
-    if [ -d "$name" ]; then
-        name="$name/"
+    SIZE=no
+    PROBE=no
+
+    while getopts "hsp" opt; do
+        case "$opt" in
+            h) echo $usage >&2
+                exit 0
+                ;;
+            s) SIZE=yes
+                ;;
+            p) PROBE=yes
+                ;;
+            \?) exit 1
+                ;;
+        esac
+    done
+
+    shift $((OPTIND - 1))
+    if [ $# -eq 0 ]; then
+        log_error "Missing URL"
+        exit 1
+    elif [ $# -gt 1 ]; then
+        log_error "Too many arguments"
+        exit 1
     fi
 
-    local dname="${name%/*}"
-    local fname="${name##*/}"
+    URL=$1
 
-    if [ "x$dname" = "x" -a "${name:0:1}" = "/" ]; then
-        dname="/"
+    if [ "$SIZE" = yes -a "$PROBE" = yes ]; then
+        log_error "-s and -p both defined"
+        exit 1
     fi
 
-    if [ -d "$dname" ]; then
-        (cd -- "$dname" && echo "${PWD%/}/$fname")
-    else
-        echo
+    if [ -f "$CONFDIR/backends/${target}/$name.conf" ]; then
+        source "$CONFDIR/backends/${target}/$name.conf"
     fi
 }
 
@@ -556,13 +568,12 @@ cleanup() {
 
 trap cleanup EXIT
 
-DEFAULT_FILE="@sysconfdir@/default/snf-image"
-if [ -f "$DEFAULT_FILE" ]; then
-    . "$DEFAULT_FILE"
+CONFFILE="@confdir@/snf-image.conf"
+if [ -f "$CONFFILE" ]; then
+    . "$CONFFILE"
 fi
 
 : ${VARIANTS_DIR:="@sysconfdir@/ganeti/snf-image/variants"}
-: ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
 : ${IMAGE_DEBUG:="no"}
 : ${CLOUD_INIT_DEBUG:="no"}
 : ${HELPER_DIR:="@HELPER_DIR@"}
@@ -570,13 +581,6 @@ fi
 : ${HELPER_HARD_TIMEOUT:=5}
 : ${HELPER_USER:="nobody"}
 : ${HELPER_MEMORY:="512"}
-: ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
-: ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
-: ${PITHOS_BACKEND_STORAGE:="nfs"}
-: ${PITHOS_RADOS_CEPH_CONF:="@sysconfdir@/ceph/ceph.conf"}
-: ${PITHOS_RADOS_POOL_MAPS:="maps"}
-: ${PITHOS_RADOS_POOL_BLOCKS:="blocks"}
-: ${PITHOS_ARCHIPELAGO_CONF:="@sysconfdir@/archipelago/archipelago.conf"}
 : ${PROGRESS_MONITOR:="@PROGRESS_MONITOR@"}
 : ${UNATTEND:="@UNATTEND@"}
 : ${WINDOWS_TIMEZONE:="GMT Standard Time"}
