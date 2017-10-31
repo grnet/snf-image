@@ -33,7 +33,7 @@ map_uri() {
     modprobe nbd # just to be on the safe side
 
     if [ -f /sys/module/nbd/parameters/nbds_max ]; then
-        max=$(cat /sys/module/nbd/parameters/nbds_max)
+        max=$(</sys/module/nbd/parameters/nbds_max)
     else
         log_error "NBD module is not loaded correctly"
         exit 1

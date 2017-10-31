@@ -679,7 +679,7 @@ windows_add_synchronous_command() {
         $XMLSTARLET ed -L -s "$component" -t elem -n RunSynchronous "$unattend"
     fi
 
-    token=$(cat /proc/sys/kernel/random/uuid)
+    token=$(</proc/sys/kernel/random/uuid)
     $XMLSTARLET ed -L -s "$component/_:RunSynchronous" -t elem -n RunSynchronousCommand "$unattend"
     $XMLSTARLET ed -L -s "($component/_:RunSynchronous/_:RunSynchronousCommand[count(@*)=0])[1]" -t attr -n randomToken -v "$token" "$unattend"
 
@@ -753,7 +753,7 @@ find_mount_target() {
             echo "$2"
             break
         fi
-    done <<< "$(cat /proc/mounts)"
+    done <<< "$(</proc/mounts)"
 }
 
 mount_all() {

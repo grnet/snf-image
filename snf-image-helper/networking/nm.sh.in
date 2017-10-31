@@ -57,7 +57,7 @@ connection="$SYSTEM_CONNECTIONS/Wired connection $index"
 cat > "$connection" <<EOF
 [connection]
 id=Wired connection $index
-uuid=$(cat /proc/sys/kernel/random/uuid)
+uuid=$(</proc/sys/kernel/random/uuid)
 type=ethernet
 autoconnect=true
 

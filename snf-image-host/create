@@ -77,7 +77,7 @@ mbr=$(create_mbr "$size" "$IMAGE_TYPE")
 report_info "Starting image copy..."
 # 64K is the size of the pipe buffer. This is probably the best value for bs
 { cat "$mbr"; $src_backend "$IMG_ID"; } |
-    ./copy-monitor.py -o $MONITOR_FD -t $size -b $(cat /proc/sys/fs/pipe-max-size) |
+    ./copy-monitor.py -o $MONITOR_FD -t $size -b $(</proc/sys/fs/pipe-max-size) |
     $dst_backend "$disk0"
 report_info "Image copy finished."
 

@@ -332,7 +332,7 @@ get_backend() {
 
         # Check if there is a priority file
         if [ -f "${conf}.priority" ]; then
-            priority=$(cat "${conf}.priority")
+            priority=$(<"${conf}.priority")
             if ! [[ "$priority" =~ ^[0-9]{1,2}$ ]]; then
                 log_warning "Invalid priority: $priority for $bckend. Using 50."
                 priority=50
