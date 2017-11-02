@@ -35,7 +35,9 @@ override_dh_auto_configure:
 override_dh_auto_install:
 	dh_auto_install -Dsnf-image-host --destdir=debian/snf-image
 	mkdir -p debian/snf-image-tools/usr/bin
-	mv debian/snf-image/usr/bin/snf-image-create-helper debian/snf-image-tools/usr/bin/
+	mv debian/snf-image/usr/bin/snf-image-create-helper \
+		debian/snf-image/usr/bin/snf-image-dump-helper \
+		debian/snf-image-tools/usr/bin/
 	mkdir -p debian/snf-image-tools/etc/snf-image
 	mv debian/snf-image/etc/snf-image/multistrap.conf debian/snf-image-tools/etc/snf-image
 	mv debian/snf-image/etc/snf-image/apt.pref.d debian/snf-image-tools/etc/snf-image
