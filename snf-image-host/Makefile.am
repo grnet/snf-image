@@ -27,7 +27,8 @@ dist_os_DATA = $(srcdir)/ganeti_api_version $(srcdir)/parameters.list \
 
 dist_xenscripts_SCRIPTS = $(srcdir)/vif-snf-image
 
-dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-helper
+dist_bin_SCRIPTS = snf-image-update-helper snf-image-create-helper \
+		   snf-image-dump-helper
 
 dist_conf_DATA = snf-image.conf multistrap.conf
 
