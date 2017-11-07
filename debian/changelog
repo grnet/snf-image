@@ -1,3 +1,9 @@
+snf-image (0.22.4-1~jessie) jessie; urgency=medium
+
+  * New upstream version
+
+ -- Nikos Skalkotos <skalkoto@grnet.gr>  Tue, 07 Nov 2017 14:10:14 +0200
+
 snf-image (0.22.3-1~jessie) jessie; urgency=medium
 
   * New upstream version
@@ -472,6 +478,7 @@ snf-image-host (0.1-1) UNRELEASED; urgency=low
   * Initial release
 
  -- Constantinos Venetsanopoulos <cven@grnet.gr>  Tue, 04 Oct 2011 13:04:28 +0300
+
 
 
 
