@@ -290,7 +290,7 @@ map_uri() {
 
     for ((i=0; i<max; i++)); do
         set +e
-        $QEMU_NBD -c "/dev/nbd$i" "$disk"
+        $QEMU_NBD -f raw -c "/dev/nbd$i" "$disk"
         rc=$?
         set -e
         if [ $rc -eq 0 ]; then
