@@ -25,6 +25,7 @@ Makefile.in
 */depcomp
 */autotools/install-sh
 */autotools/missing
+*/autotools/compile
 */stamp-h1
 
 # https://www.gnu.org/software/libtool/
