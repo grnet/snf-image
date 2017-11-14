@@ -17,5 +17,5 @@ edit = sed \
 		   $(edit) $${srcdir}$@.in >$@.tmp
 	mv $@.tmp $@
 
-CLEANFILES = $(srcdir)/pithos $(dist_sbakendconf_DATA)
+CLEANFILES = $(srcdir)/pithos $(dist_sbackendconf_DATA)
 
