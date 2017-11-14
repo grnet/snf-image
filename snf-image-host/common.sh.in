@@ -20,7 +20,6 @@ SNF_IMAGE_VERSION="@VERSION@"
 
 AWK="awk"
 LOSETUP="losetup"
-INSTALL_MBR="install-mbr"
 TIMEOUT="timeout"
 CURL="curl -L"
 TAR="tar"
@@ -232,7 +231,7 @@ create_mbr() {
     add_cleanup rm -f "$disk"
     truncate -s "$((size + 2048*512))" "$disk"
     $PARTED -s "$disk" -- mklabel msdos mkpart primary $fstype 2048s -1s set 1 boot on
-    $INSTALL_MBR -p 1 -i n "$disk"
+    $DD if=mbr.bin of="$disk" bs=440 count=1 conv=notrunc
     truncate -s "$((2048*512))" "$disk"
     echo "$disk"
 }

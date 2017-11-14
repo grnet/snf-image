@@ -121,7 +121,6 @@
 # MD5SUM="md5sum"
 # KVM="kvm"
 # LOSETUP="losetup"
-# INSTALL_MBR="install-mbr"
 # TIMEOUT="timeout"
 # CURL="curl"
 # TAR="tar"

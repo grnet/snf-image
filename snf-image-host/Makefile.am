@@ -12,7 +12,7 @@ xenscriptsdir=$(sysconfdir)/xen/scripts
 export osdir confdir backendsdir sbackendsdir dbackendsdir
 
 
-SUBDIRS = backends
+SUBDIRS = backends mbr
 
 dist_os_SCRIPTS = $(srcdir)/create $(srcdir)/import $(srcdir)/export \
 	$(srcdir)/rename $(srcdir)/verify \
@@ -52,7 +52,6 @@ edit = sed \
 	   -e 's|@AWK[@]|$(AWK)|g' \
 	   -e 's|@MKDIR_P[@]|$(MKDIR_P)|g' \
 	   -e 's|@LOSETUP[@]|$(LOSETUP)|g' \
-	   -e 's|@INSTALL_MBR[@]|$(INSTALL_MBR)|g' \
 	   -e 's|@PROGRESS_MONITOR[@]|$(PROGRESS_MONITOR)|g' \
 	   -e 's|@UNATTEND[@]|$(UNATTEND)|g' \
 	   -e 's|@XEN_CMD[@]|$(XEN_CMD)|g' \

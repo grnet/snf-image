@@ -8,6 +8,8 @@ AC_CONFIG_SRCDIR(configure)
 
 AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability subdir-objects])
 
+AC_PROG_CC()
+
 # --with-helper-url
 AC_ARG_WITH([helper-url],
   [AS_HELP_STRING([--with-helper-url=URL],
@@ -145,11 +147,6 @@ if test -z "$LOSETUP" ; then
   AC_MSG_ERROR([losetup not found in $PATH:/usr/sbin:/sbin])
 fi
 
-AC_PATH_PROG(INSTALL_MBR, [install-mbr], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$INSTALL_MBR" ; then
-  AC_MSG_ERROR([install-mbr not found in $PATH:/usr/sbin:/sbin])
-fi
-
 AC_PATH_PROG(TIMEOUT, [timeout], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$TIMEOUT" ; then
   AC_MSG_ERROR([timeout not found in $PATH:/usr/sbin:/sbin])
@@ -173,6 +170,7 @@ AC_PYTHON_MODULE(scapy, t)
 
 AC_CONFIG_FILES([
     Makefile
+    mbr/Makefile
     backends/Makefile
     backends/src/Makefile
     backends/src/pithos/Makefile
