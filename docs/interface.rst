@@ -147,7 +147,7 @@ Image Properties (img_properties)
 
 *snf-image* may use a number of properties to properly configure the image.
 Those image properties are passed to *snf-image* by Ganeti through the
-**img_poroperties** OS parameter (see Ganeti OS Interface). The name of all
+**img_properties** OS parameter (see Ganeti OS Interface). The name of all
 image properties is case-insensitive. All image properties are optional.
 
 We can group image properties in two categories:
