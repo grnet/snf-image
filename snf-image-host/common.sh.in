@@ -319,7 +319,7 @@ create_floppy() {
 get_backend() {
     local target=$1
     local id=$2
-    local bckend answer priority IFS conf
+    local bckend answer priority IFS conf ret
 
     for bckend in "$BACKENDSDIR/${target}"/*; do
         conf="${CONFDIR}/backends/${target}/$(basename "$bckend")"
@@ -363,6 +363,11 @@ get_backend() {
         answer=
         if [ -x "$bckend" ]; then
             answer=$($bckend -p "$id")
+            ret=$?
+            if [ $ret -ne 0 ]; then
+                log_warning "Ignoring back-end: $bckend that returned error (rc=$ret)"
+                answer=
+            fi
         else
             log_warning "Ignoring non-executable back-end: $bckend"
         fi
