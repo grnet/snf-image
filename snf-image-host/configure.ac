@@ -175,6 +175,7 @@ AC_CONFIG_FILES([
     backends/src/Makefile
     backends/src/pithos/Makefile
     backends/dst/Makefile
+    backends/dst/rbd/Makefile
 ])
 
 AC_OUTPUT

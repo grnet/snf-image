@@ -7,6 +7,8 @@ dist_dbackendconf_DATA = $(srcdir)/local.conf $(srcdir)/uri.conf \
 
 export osdir dbackendsdir confdir
 
+SUBDIRS = rbd
+
 edit = sed \
 	   -e 's|@osdir[@]|$(osdir)|g' \
 	   -e 's|@localstatedir[@]|$(localstatedir)|g'
