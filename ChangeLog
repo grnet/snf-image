@@ -1,5 +1,5 @@
 2017-11-07, v0.22.4
-	* Specify the format to raw in qem-nbd connect. Newer versions of
+	* Specify the format to raw in qemu-nbd connect. Newer versions of
 	  qemu-nbd will refuse to connect unless the format is specified.
 
 2017-10-30, v0.22.3
