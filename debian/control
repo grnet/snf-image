@@ -3,7 +3,7 @@ Section: admin
 Priority: extra
 Maintainer: Nikos Skalkotos <skalkoto@grnet.gr>
 Build-Depends: debhelper (>= 7.0.50~), dh-python, automake, autotools-dev,
- kpartx, gdisk, eatmydata, mbr, curl, xmlstarlet, parted, libhivex-bin,
+ kpartx, gdisk, eatmydata, curl, xmlstarlet, parted, libhivex-bin,
  libwin-hivex-perl, python, python-prctl, python-scapy, python-sphinx,
  python-yaml
 Standards-Version: 3.9.8
@@ -13,8 +13,8 @@ Vcs-Browser: https://github.com/grnet/snf-image
 
 Package: snf-image
 Architecture: all
-Depends: ${misc:Depends}, kpartx, curl, mbr, python, python-prctl,
- python-scapy, xz-utils, qemu-utils
+Depends: ${misc:Depends}, kpartx, curl, python, python-prctl, python-scapy,
+  xz-utils, qemu-utils, parted
 Breaks: snf-image-host (<< 0.8)
 Replaces: snf-image-host
 Conflicts: snf-image-host
