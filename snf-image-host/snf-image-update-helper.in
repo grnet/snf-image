@@ -163,7 +163,7 @@ if [ "x$FORCE" != "xyes" ]; then
         log_error "File: \`$HELPER_DIR/version' is missing!"
         exit 1
     fi
-    helper_version="$(cat $HELPER_DIR/version)"
+    helper_version="$(<$HELPER_DIR/version)"
     if [ "x$SNF_IMAGE_VERSION" != "x$helper_version" ]; then
         log_error "snf-image version (=$SNF_IMAGE_VERSION) and " \
             "helper image version (=$helper_version) don't match!"

@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# Copyright (C) 2017 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+source @osdir@/common.sh
+
+canonicalize() {
+    local name="$1"
+
+    if [ -d "$name" ]; then
+        name="$name/"
+    fi
+
+    local dname="${name%/*}"
+    local fname="${name##*/}"
+
+    if [ "x$dname" = "x" -a "${name:0:1}" = "/" ]; then
+        dname="/"
+    fi
+
+    if [ -d "$dname" ]; then
+        (cd -- "$dname" && echo "${PWD%/}/$fname")
+    else
+        echo
+    fi
+}
+
+
+init_backend src "$@"
+
+: ${IMAGE_DIR:="@localstatedir@/lib/snf-image"}
+
+IMAGE_NAME=
+
+if [[ "$URL" =~ ^local:// ]]; then
+    IMAGE_NAME="${URL:8}"
+elif [[ "$URL" =~ ^file:// ]]; then
+    IMAGE_NAME="${URL:7}"
+    log_warning "The file:// backend identifier is deprecated and will be " \
+                "removed in the future. Use local:// instead."
+elif [[ "$URL" != *":"* ]]; then
+    IMAGE_NAME="$URL"
+fi
+
+if [ "$PROBE" = yes ]; then
+
+    if [ -n "$IMAGE_NAME" ]; then
+        echo yes
+    else
+        echo no
+    fi
+    exit 0
+fi
+
+if [ -z "$IMAGE_NAME" ]; then
+    log_error "Unable to handle URL: $URL"
+    exit 1
+fi
+
+CANONICAL_IMAGE_DIR="$(canonicalize "$IMAGE_DIR")"
+if [ ! -d "$CANONICAL_IMAGE_DIR" ]; then
+    log_error "The IMAGE_DIR directory: \`$IMAGE_DIR' does not exist."
+    report_error "Unable to retrieve image file."
+    exit 1
+fi
+
+IMAGE_FILE="$IMAGE_DIR/$IMAGE_NAME"
+if [ ! -e "$IMAGE_FILE" ]; then
+    if [ -e "$IMAGE_FILE.$IMAGE_TYPE" ] ; then
+        IMAGE_FILE="$IMAGE_FILE.$IMAGE_TYPE"
+        log_warning "The \`.$IMAGE_TYPE' extension is missing from" \
+            "the local backend id. This id form is deprecated and" \
+            "will be remove in the future."
+    else
+        log_error "Image file \`$IMAGE_FILE' does not exist."
+        report_error "Unable to retrieve image file."
+        exit 1
+    fi
+fi
+
+CANONICAL_IMAGE_FILE="$(canonicalize "$IMAGE_FILE")"
+
+if [[ "$CANONICAL_IMAGE_FILE" != "$CANONICAL_IMAGE_DIR"* ]]; then
+    log_error "Image ID points to a file outside the image directory: \`$IMAGE_DIR'"
+    report_error "Invalid image ID"
+    exit 1
+fi
+
+if [ "$SIZE" = yes ]; then
+    exec stat -L -c %s "$IMAGE_FILE"
+fi
+
+exec $DD if="$IMAGE_FILE" bs=1M iflag=fullblock
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

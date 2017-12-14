@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Copyright (C) 2017 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+source @osdir@/common.sh
+
+init_backend src "$@"
+
+if [ "$SIZE" = yes ]; then
+   OUT=$($CURL -f -sI $(printf "%q" "$URL"))
+   RET=$?
+   if [ $RET -ne 0 ]; then
+       log_error "Failed to get the image size for: $URL"
+       exit 1
+   fi
+
+   echo "$OUT" | grep ^Content-Length: | tail -1 | cut -d" " -f2
+   exit 0
+fi
+
+if [ "$PROBE" = yes ]; then
+    if [[ "$URL" =~ ^(http|ftp)s?: ]]; then
+        echo yes
+    else
+        echo no
+    fi
+    exit 0
+fi
+
+exec $CURL -f -s $(printf "%q" "$URL")
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
