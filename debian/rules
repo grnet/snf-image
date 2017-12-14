@@ -35,16 +35,16 @@ override_dh_auto_configure:
 override_dh_auto_install:
 	dh_auto_install -Dsnf-image-host --destdir=debian/snf-image
 	mkdir -p debian/snf-image-tools/usr/bin
-	mv debian/snf-image/usr/bin/snf-image-create-helper debian/snf-image-tools/usr/bin/
+	mv debian/snf-image/usr/bin/snf-image-create-helper \
+		debian/snf-image/usr/bin/snf-image-dump-helper \
+		debian/snf-image-tools/usr/bin/
+	mkdir -p debian/snf-image-tools/etc/snf-image
+	mv debian/snf-image/etc/snf-image/multistrap.conf debian/snf-image-tools/etc/snf-image
+	mv debian/snf-image/etc/snf-image/apt.pref.d debian/snf-image-tools/etc/snf-image
 	dh_auto_install -Dsnf-image-helper --destdir=debian/snf-image-helper
 
 override_dh_install:
 	dh_install
-	install -D -m 0600 snf-image-host/defaults $(CURDIR)/debian/snf-image/etc/default/snf-image
 	rm -f $(CURDIR)/debian/snf-image-helper/usr/share/doc/snf-image-helper/COPYING
 	mv $(CURDIR)/debian/snf-image/usr/share/ganeti/os/snf-image/variants.list \
 	 $(CURDIR)/debian/snf-image/etc/ganeti/snf-image/variants.list
-
-override_dh_fixperms:
-	dh_fixperms --exclude debian/snf-image/etc/default/snf-image
-
