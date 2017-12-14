@@ -1,0 +1,7 @@
+# Configuration file for RBD destination back-end
+
+# RBD_CEPH_CONF: Location of the ceph configuration file to use.
+# RBD_CEPH_CONF="/etc/ceph/ceph.conf"
+
+# RBD_BLOCK_SIZE: Buffer size to use while copying data to RBD image.
+# RBD_BLOCK_SIZE="4194304" # 4MiB

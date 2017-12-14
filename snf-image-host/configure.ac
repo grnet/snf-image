@@ -8,6 +8,8 @@ AC_CONFIG_SRCDIR(configure)
 
 AM_INIT_AUTOMAKE([1.9 foreign tar-ustar -Wall -Wno-portability subdir-objects])
 
+AC_PROG_CC()
+
 # --with-helper-url
 AC_ARG_WITH([helper-url],
   [AS_HELP_STRING([--with-helper-url=URL],
@@ -145,21 +147,6 @@ if test -z "$LOSETUP" ; then
   AC_MSG_ERROR([losetup not found in $PATH:/usr/sbin:/sbin])
 fi
 
-AC_PATH_PROG(KPARTX, [kpartx], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$KPARTX" ; then
-  AC_MSG_ERROR([kpartx not found in $PATH:/usr/sbin:/sbin])
-fi
-
-AC_PATH_PROG(SFDISK, [sfdisk], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$SFDISK" ; then
-  AC_MSG_ERROR([sfdisk not found in $PATH:/usr/sbin:/sbin])
-fi
-
-AC_PATH_PROG(INSTALL_MBR, [install-mbr], [], [$PATH:/usr/sbin:/sbin])
-if test -z "$INSTALL_MBR" ; then
-  AC_MSG_ERROR([install-mbr not found in $PATH:/usr/sbin:/sbin])
-fi
-
 AC_PATH_PROG(TIMEOUT, [timeout], [], [$PATH:/usr/sbin:/sbin])
 if test -z "$TIMEOUT" ; then
   AC_MSG_ERROR([timeout not found in $PATH:/usr/sbin:/sbin])
@@ -170,6 +157,11 @@ if test -z "$CURL" ; then
   AC_MSG_ERROR([curl not found in $PATH:/usr/sbin:/sbin])
 fi
 
+AC_PATH_PROG(PARTED, [parted], [], [$PATH:/usr/sbin:/sbin])
+if test -z "$PARTED" ; then
+  AC_MSG_ERROR([parted not found in $PATH:/usr/sbin:/sbin])
+fi
+
 #Python Dependencies
 AM_PATH_PYTHON(2.6)
 
@@ -178,6 +170,12 @@ AC_PYTHON_MODULE(scapy, t)
 
 AC_CONFIG_FILES([
     Makefile
+    mbr/Makefile
+    backends/Makefile
+    backends/src/Makefile
+    backends/src/pithos/Makefile
+    backends/dst/Makefile
+    backends/dst/rbd/Makefile
 ])
 
 AC_OUTPUT

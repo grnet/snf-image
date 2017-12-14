@@ -1,0 +1,9 @@
+# Local back-end configuration file
+
+# IMAGE_DIR: directory location for disk images
+# IMAGE_DIR="@localstatedir@/lib/snf-image"
+
+# Paths for needed programs. Uncomment and change the variables below if you
+# don't want to use the default one.
+#
+# DD="dd"
