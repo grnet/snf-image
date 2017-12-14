@@ -1,0 +1,145 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2017 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+"""
+A tool that reads from stdin and writes to an RBD image.
+"""
+
+import re
+import argparse
+from sys import exit, stdin, stdout, stderr
+
+try:
+    import rados
+    import rbd
+except ImportError:
+    stderr.write("RBD python bindings were not found. Exiting...\n")
+    exit(2)
+
+
+DEFAULT_CEPH_CONF_FILE = '/etc/ceph/ceph.conf'
+DEFAULT_POOL_NAME = 'rbd'
+DEFAULT_BLOCK_SIZE = 4 * 1024 * 1024
+RBD_QEMU_PATTERN = '^(?:(?P<pool>.*?)/)?(?P<image>[^@]+?)'\
+        '(?:@(?P<snap>[^:]+?))?(?::(?P<rest_conf>.+))?$'
+
+
+class UriException(Exception):
+    pass
+
+
+def parse_qemu_uri(uri, strict=False):
+    """ Parse a QEMU RBD URI in the form of
+    '[rbd:][pool/]image[@snap][:rest_conf]' """
+    if uri.startswith('rbd:'):
+        uri = uri[4:]
+    elif strict:
+        raise UriException("Unknown URI protocol. Only 'rbd' is supported")
+
+    res = re.match(RBD_QEMU_PATTERN, uri)
+    if not res:
+        raise UriException("Could not parse URI")
+
+    pool = res.group('pool')
+    image = res.group('image')
+    snap = res.group('snap')
+    rest_conf = res.group('rest_conf')
+
+    conf_dict = {}
+    if rest_conf is not None:
+        for kv in rest_conf.split(':'):
+            k, v = kv.split('=')
+            conf_dict[k] = v
+
+    return pool, image, snap, conf_dict
+
+
+def copy_from_stdin(cluster, ioctx, image, block_size=DEFAULT_BLOCK_SIZE,
+                    progress_fn=None):
+    """ Read bytes from stdin until EOF and write them to the RBD image"""
+    with rbd.Image(ioctx, image) as image:
+        offset = 0
+        if progress_fn:
+            progress_fn(offset)
+        while True:
+            data = stdin.read(block_size)
+            if not data:
+                break
+            # Skip empty blocks
+            if data[0] == '\0' and len(set(data)) == 1:
+                ret = len(data)
+            else:
+                ret = image.write(data, offset)
+            offset += ret
+            if progress_fn:
+                progress_fn(offset)
+        image.flush()
+
+
+def main():
+    parser = argparse.ArgumentParser(description='RBD import utility')
+    parser.add_argument('-c', '--ceph-config', type=str, nargs='?',
+                        default=DEFAULT_CEPH_CONF_FILE,
+                        help='Location of the ceph config file')
+    parser.add_argument('-b', '--block-size', type=int, nargs='?',
+                        default=DEFAULT_BLOCK_SIZE,
+                        help='Block buffer size to use')
+    parser.add_argument('-p', '--probe', action='store_true', default=False,
+                        help='Probe utility if the URI is supported. '
+                        'Prints \'yes\' or \'no\' on stdout and exits.')
+    parser.add_argument('uri', type=str, metavar="RBD_URI",
+                        help='Target RBD uri (QEMU compatible)')
+
+    args = parser.parse_args()
+
+    if args.probe:
+        image = None
+        try:
+            _, image, _, _ = parse_qemu_uri(args.uri, strict=True)
+        except UriException:
+            pass
+        if not image:
+            stdout.write("no\n")
+        else:
+            stdout.write("yes\n")
+        exit(0)
+
+    try:
+        pool, image, snap, conf = parse_qemu_uri(args.uri, strict=True)
+    except UriException as e:
+        stderr.write("Error parsing URI: %s\n" % str(e))
+        exit(1)
+
+    if not pool:
+        pool = DEFAULT_POOL_NAME
+
+    if snap is not None:
+        stderr.write("Error: Cannot write to an RBD snapshot.\n")
+        exit(1)
+
+    # Only id is supported for cephx authentication,
+    with rados.Rados(conffile=args.ceph_config, rados_id=conf.get('id'))\
+            as cluster:
+        with cluster.open_ioctx(pool) as ioctx:
+            copy_from_stdin(cluster, ioctx, image, block_size=args.block_size,
+                            progress_fn=None)
+
+
+if __name__ == '__main__':
+    main()

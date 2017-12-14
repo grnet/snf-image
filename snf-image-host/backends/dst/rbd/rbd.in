@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Copyright (C) 2017 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+RBD_IMPORT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/rbd_import
+
+source @osdir@/common.sh
+
+init_backend dst "$@"
+
+: ${RBD_CEPH_CONF:="/etc/ceph/ceph.conf"}
+: ${RBD_BLOCK_SIZE:="4194304"} # 4MiB
+
+ARGS=(-c "${RBD_CEPH_CONF}" -b "${RBD_BLOCK_SIZE}")
+
+if [ "$PROBE" = yes ]; then
+    ARGS+=( -p )
+fi
+
+exec "$RBD_IMPORT" "${ARGS[@]}" $(printf "%q" "${URL}")
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :

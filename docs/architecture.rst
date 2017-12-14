@@ -83,43 +83,98 @@ The architecture is presented below:
 .. image:: images/arch.png
 
 
-.. _storage-backends:
+.. _image-copying:
 
-Storage backends
-^^^^^^^^^^^^^^^^
+Image copying
+^^^^^^^^^^^^^
 
-As stated above, for step (1), *snf-image* is capable of fetching images that
-are stored in a variety of different backends and then extracting them onto the
-newly created block device. The following back-ends are supported:
+As stated above, the first step (1) is to copy the image from it's original
+location to the hard disk of the instance. This is performed by piping a source
+back-end with a destination back-end. Source back-ends are executables that
+fetch image data and write them to their standard output. In a similar manner,
+destination back-ends are executables that read data from their standard input
+and write them to the instance's hard disk. This design allows us to support
+multiple image sources (local files, remote locations, etc.) and multiple
+storage device types (local files, iSCSI devices, RBD devices, etc.). The users
+may extend the functionality of snf-image by implement their own back-ends and
+place them under ``/usr/share/ganeti/os/snf-image/backends/{src,dst}``.
 
- * **Local backend**:
-   The local backend is used to retrieve images that are stored on the Ganeti
-   node that the image deployment takes place. All local images are expected to
-   be found under a predefined image directory. By default */var/lib/snf-image*
-   is used, but the user may change this by overwriting the value of the
-   *IMAGE_DIR* variable under ``/etc/default/snf-image``.
+Before the image copy is performed, the available source back-ends are probed,
+one-by-one, based on their priority against the current *IMG_ID*. snf-image
+will use the first one that knows how to handle the current *IMG_ID*. In the
+same way, snf-image will iterate over the list of available destination
+back-ends to determine which back-end knows how to handle the current
+*DISK_0_DEV* or *DISK_0_URI*. After the suitable back-ends are chosen, the
+image copying will be performed with a command similar to this:
 
- * **Network backend**:
-   The network backend is used to retrieve images that are accessible from the
-   network. snf-image can fetch images via *http:*, *https:*, *ftp:* or
-   *ftps:*, using `cURL <http://curl.haxx.se/>`_.
+.. code-block:: console
 
- * **Pithos backend**:
-   *snf-image* contains a special command-line tool (*pithcat*) for retrieving
-   images residing on a Pithos installation. To set up *snf-image*'s Pithos
-   backend the user needs to setup the ``PITHOS_BACKEND_STORAGE`` variable
-   inside ``/etc/default/snf-image``.
-   Possible values are ``nfs`` and ``rados``. If ``nfs`` is used the user needs
-   to setup *PITHOS_DATA* variable, and when ``rados`` is used the user needs
-   to setup *PITHOS_RADOS_POOL_MAPS* and *PITHOS_RADOS_POOL_BLOCKS*
-   accordingly.
+  src_backend ${IMG_ID} | dst_backend ${DISK_0_DEV}
 
- * **Null backend**:
-   If the null backend is selected, no image copying is performed. This
-   actually is meant for bypassing step (1) altogether. This is useful, if the
-   disk provisioned by Ganeti already contains an OS installation before
-   *snf-image* is executed (for example if the disk was created as a clone of
-   an existing VM's hard disk).
+Back-ends can either be executable files or directories. If a back-end is a
+directory, it must host an executable file with the same name. This is the file
+*snf-image* will call. Directories are supported in case a back-end consists of
+multiple files.
+
+Every back-end should take a positional argument (an image id
+for source back-ends and a disk URI for destination back-ends) and should
+support a ``-p`` option. If this option is specified, the module should output
+*yes* or *no* depending on whether the given *ID* or *URI* are supported by the
+back-end. Source back-ends should also support the ``-s`` options. If this is
+given, the module should output the image size in bytes.
+
+The priority of each back-end is a number between 00 to 99 stored in the file
+``/etc/snf-image/backends/{src,dst}/<name>.priority``. Back-ends with higher
+priority will be considered first when probing the modules to find the suitable
+one. If this file is not present, the back-end's priority is set to *50*.
+
+To disable a back-end, you can create the file
+``/etc/snf-image/backends/{src,dst}/<name>.disabled``. If this file is present,
+*snf-image* will completely ignore this back-end.
+
+.. _source-backends:
+
+Source Back-ends
+""""""""""""""""
+
+The following source back-ends are shipped with snf-image:
+
+* **Local**:
+  It is used to retrieve images that are stored on the Ganeti node that the
+  image deployment takes place. All local images are expected to be found under
+  a predefined directory (``/var/lib/snf-image`` by default). The user may
+  alter this directory by setting the *IMAGE_DIR* variable under
+  ``/etc/snf-image/backends/src/local.conf``.
+
+* **Network**:
+  It is used to retrieve images from the network using *http*, *https*, *ftp*
+  or *ftps* protocols.
+
+* **Null**:
+  This is a dummy module used when no image fetching is needed
+
+* **Pithos**:
+  This is used to fetch data from pithos. To set up the pithos back-end the
+  user needs to setup the ``PITHOS_BACKEND_STORAGE`` variable inside
+  ``/etc/snf-image/backends/src/pithos.conf``. Possible values are ``nfs`` and
+  ``rados``. If ``nfs`` is used the user needs to setup *PITHOS_DATA* variable,
+  and when ``rados`` is used the user needs to setup *PITHOS_RADOS_POOL_MAPS*
+  and *PITHOS_RADOS_POOL_BLOCKS* accordingly.
+
+.. _destination-backends:
+
+Destinatio Back-ends
+""""""""""""""""""""
+
+The following destination back-ends are currently shipped with snf-image:
+
+* **Local**:
+  This is used if the instance's disk is a local file or block device.
+
+* **Uri**:
+  This is used if the instance's disk is a Device URI qemu can deal with. This
+  module will create an NBD block device using `qemu-nbd` and will use it write
+  data to the instance's disk.
 
 .. _image-configuration-tasks:
 

@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Copyright (C) 2017 GRNET S.A.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301, USA.
+
+PITHCAT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/pithcat
+
+source @osdir@/common.sh
+
+init_backend src "$@"
+
+: ${PITHOS_DB:="sqlite:////@localstatedir@/lib/pithos/backend.db"}
+: ${PITHOS_DATA:="@localstatedir@/lib/pithos/data/"}
+: ${PITHOS_BACKEND_STORAGE:="nfs"}
+: ${PITHOS_RADOS_CEPH_CONF:="@sysconfdir@/ceph/ceph.conf"}
+: ${PITHOS_RADOS_POOL_MAPS:="maps"}
+: ${PITHOS_RADOS_POOL_BLOCKS:="blocks"}
+: ${PITHOS_ARCHIPELAGO_CONF:="@sysconfdir@/archipelago/archipelago.conf"}
+
+# For security reasons pass the various options to pithcat as environment variables.
+export PITHCAT_DB="$PITHOS_DB"
+export PITHCAT_DATA="$PITHOS_DATA"
+export PITHCAT_BACKEND_STORAGE="$PITHOS_BACKEND_STORAGE"
+export PITHCAT_RADOS_CEPH_CONF="$PITHOS_RADOS_CEPH_CONF"
+export PITHCAT_RADOS_POOL_MAPS="$PITHOS_RADOS_POOL_MAPS"
+export PITHCAT_RADOS_POOL_BLOCKS="$PITHOS_RADOS_POOL_BLOCKS"
+export PITHCAT_ARCHIPELAGO_CONF="$PITHOS_ARCHIPELAGO_CONF"
+
+ARGS=""
+if [ -n "${PITHCAT_UMASK+dummy}" ]; then
+    ARGS="--umask=$PITHCAT_UMASK"
+fi
+
+if [ "$SIZE" = yes ]; then
+    exec $PITHCAT -s $ARGS $(printf "%q" "${URL}")
+fi
+
+if [ "$PROBE" = yes ]; then
+    if [[ "$URL" =~ ^pithos(map)?: ]]; then
+        echo yes
+    else
+        echo no
+    fi
+    exit 0
+fi
+
+exec $PITHCAT $ARGS $(printf "%q" "${URL}")
+
+# vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
