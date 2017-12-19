@@ -111,7 +111,7 @@ echo >&2
 echo "Downloading helper image from $HELPER_URL ..." >&2
 add_cleanup rm -f "$IMAGE_DIR/$IMAGE"
 set +e
-$CURL -O -L -f "$HELPER_URL"
+$CURL -O "$HELPER_URL"
 RET=$?
 set -e
 
@@ -127,7 +127,7 @@ if [ "x$NO_CHECKSUM" != "xyes" ]; then
     echo "Checking the helper image checksum ..." >&2
     add_cleanup rm -f "$IMAGE_DIR/$IMAGE.md5sum"
     set +e
-    $CURL -O -L -f "$HELPER_URL.md5sum"
+    $CURL -O "$HELPER_URL.md5sum"
     RET=$?
     set -e
 

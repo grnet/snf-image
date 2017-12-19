@@ -122,7 +122,7 @@
 # KVM="kvm"
 # LOSETUP="losetup"
 # TIMEOUT="timeout"
-# CURL="curl"
+# CURL="curl -fL"
 # TAR="tar"
 # BLOCKDEV="blockdev"
 # DD="dd"

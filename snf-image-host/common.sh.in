@@ -21,7 +21,7 @@ SNF_IMAGE_VERSION="@VERSION@"
 AWK="awk"
 LOSETUP="losetup"
 TIMEOUT="timeout"
-CURL="curl -L"
+CURL="curl -fL"
 TAR="tar"
 DATE="date -u" # Time in UTC
 KVM="kvm"
@@ -181,7 +181,7 @@ get_api20_arguments() {
         if [ -n "$CONFIG_URL" ]; then
             local config config_params
             echo "Downloading configuration parameters from: \`$CONFIG_URL'" >&2
-            config=$($CURL -f "$CONFIG_URL")
+            config=$($CURL "$CONFIG_URL")
             config_params=$(./decode-config.py "${osparams[@]}" <<< "$config")
             eval "$config_params"
         fi
@@ -293,7 +293,7 @@ create_floppy() {
             exit 1
         fi
     elif [ -n "$OS_ANSWER_FILE" ]; then
-        $CURL -f "$OS_ANSWER_FILE" > "$target/unattend.xml"
+        $CURL "$OS_ANSWER_FILE" > "$target/unattend.xml"
         # This file has higher priority than the one in the image
         snf_export_PROPERTY_IGNORE_UNATTEND=yes
     else

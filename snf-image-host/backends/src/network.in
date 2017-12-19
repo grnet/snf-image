@@ -22,7 +22,7 @@ source @osdir@/common.sh
 init_backend src "$@"
 
 if [ "$SIZE" = yes ]; then
-   OUT=$($CURL -f -sI $(printf "%q" "$URL"))
+   OUT=$($CURL -sI $(printf "%q" "$URL"))
    RET=$?
    if [ $RET -ne 0 ]; then
        log_error "Failed to get the image size for: $URL"
@@ -42,6 +42,6 @@ if [ "$PROBE" = yes ]; then
     exit 0
 fi
 
-exec $CURL -f -s $(printf "%q" "$URL")
+exec $CURL -s $(printf "%q" "$URL")
 
 # vim: set sta sts=4 shiftwidth=4 sw=4 et ai :
