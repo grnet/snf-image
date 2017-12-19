@@ -1,3 +1,13 @@
+2017-12-14, v0.23
+	* Make image copy modular by splitting the code to source and
+	destination backends
+	* Add new RBD destination backend that supports copying data to an RBD
+	target from userland.
+	* Add snf-image-dump-helper script for creating an archive out of a
+	helper image
+	* Import a generic Master Boot Record from syslinux and remove
+	dependency to install-mbr tool.
+
 2017-11-07, v0.22.4
 	* Specify the format to raw in qemu-nbd connect. Newer versions of
 	  qemu-nbd will refuse to connect unless the format is specified.
