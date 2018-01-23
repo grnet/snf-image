@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Copyright (C) 2011, 2015 GRNET S.A. and individual contributors
+# Copyright (C) 2011-2018 GRNET S.A. and individual contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -45,7 +45,11 @@ if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" =~ ^(open|net)bsd$ ]]; then
     $DUMPFS_OPENBSD "$part" > /dev/null ||
         { warn "Filesystem is not UFS. Resizing ommited"; exit 0; }
 
-    $GROWFS_OPENBSD -y "$part"
+    if [[ "$SNF_IMAGE_PROPERTY_OSFAMILY" == openbsd ]]; then
+        $GROWFS_OPENBSD -y "$part"
+    else
+        $GROWFS_UFS -y "$part"
+    fi
     exit 0
 fi
 
