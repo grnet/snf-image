@@ -1,3 +1,9 @@
+2017-12-23, v0.23.1
+	* Fix a bug were NetBSD was blocking on filesystem resize.
+	* Fix a bug were CoreOS creation was failing because helper VM was
+	trying to use the instance's /etc/ssh/sshd_config without checking
+	for it's presence.
+
 2017-12-14, v0.23
 	* Make image copy modular by splitting the code to source and
 	destination backends
