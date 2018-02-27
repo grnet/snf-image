@@ -11,6 +11,10 @@ following images are basic installations of some popular Linux distributions,
 that have been tested with *snf-image* and provided here for testing purposes:
 
 
+ * Debian Stretch Cloud-Init
+   [`diskdump <https://cdn.synnefo.org/debian_cloud-9.3.4-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/debian_cloud-9.3.4-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/debian_cloud-9.3.4-x86_64.diskdump.meta>`__]
  * Debian Jessie Base System
    [`diskdump <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/debian_base-8.0-x86_64.diskdump.md5sum>`__]
@@ -27,10 +31,10 @@ that have been tested with *snf-image* and provided here for testing purposes:
    [`diskdump <https://cdn.synnefo.org/fedora-23-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/fedora-23-x86_64.diskdump.md5sum>`__]
    [`metadata <https://cdn.synnefo.org/fedora-23-x86_64.diskdump.meta>`__]
- * Ubuntu Desktop LTS 16.04
-   [`diskdump <https://cdn.synnefo.org/ubuntu_desktop-16.04-x86_64.diskdump>`__]
-   [`md5sum <https://cdn.synnefo.org/ubuntu_desktop-16.04-x86_64.diskdump.md5sum>`__]
-   [`metadata <https://cdn.synnefo.org/ubuntu_desktop-16.04-x86_64.diskdump.meta>`__]
+ * Ubuntu Mate LTS 16.04
+   [`diskdump <https://cdn.synnefo.org/ubuntu_mate-16.04-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/ubuntu_mate-16.04-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/ubuntu_mate-16.04-x86_64.diskdump.meta>`__]
  * Ubuntu Server LTS 16.04
    [`diskdump <https://cdn.synnefo.org/ubuntu_server-16.04-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/ubuntu_server-16.04-x86_64.diskdump.md5sum>`__]
@@ -43,22 +47,22 @@ that have been tested with *snf-image* and provided here for testing purposes:
    [`diskdump <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump.md5sum>`__]
    [`metadata <https://cdn.synnefo.org/ubuntu_server-14.04-x86_64.diskdump.meta>`__]
- * OpenSUSE Server 42.2
-   [`diskdump <https://cdn.synnefo.org/opensuse_server-42.2-x86_64.diskdump>`__]
-   [`md5sum <https://cdn.synnefo.org/opensuse_server-42.2-x86_64.diskdump.md5sum>`__]
-   [`metadata <https://cdn.synnefo.org/opensuse_server-42.2-x86_64.diskdump.meta>`__]
+ * OpenSUSE Server 42.3
+   [`diskdump <https://cdn.synnefo.org/opensuse_server-42.3-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/opensuse_server-42.3-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/opensuse_server-42.3-x86_64.diskdump.meta>`__]
  * Oracle Linux 7.x
    [`diskdump <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump>`__]
    [`md5sum <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.md5sum>`__]
    [`metadata <https://cdn.synnefo.org/oraclelinux-7-x86_64.diskdump.meta>`__]
- * FreeBSD 11.0
-   [`diskdump <https://cdn.synnefo.org/freebsd-11.0-x86_64.diskdump>`__]
-   [`md5sum <https://cdn.synnefo.org/freebsd-11.0-x86_64.diskdump.md5sum>`__]
-   [`metadata <https://cdn.synnefo.org/freebsd-11.0-x86_64.diskdump.meta>`__]
- * NetBSD 7.0
-   [`diskdump <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump>`__]
-   [`md5sum <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump.md5sum>`__]
-   [`metadata <https://cdn.synnefo.org/netbsd-7.0-x86_64.diskdump.meta>`__]
+ * FreeBSD 11.1
+   [`diskdump <https://cdn.synnefo.org/freebsd-11.1-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/freebsd-11.1-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/freebsd-11.1-x86_64.diskdump.meta>`__]
+ * NetBSD 7.1
+   [`diskdump <https://cdn.synnefo.org/netbsd-7.1-x86_64.diskdump>`__]
+   [`md5sum <https://cdn.synnefo.org/netbsd-7.1-x86_64.diskdump.md5sum>`__]
+   [`metadata <https://cdn.synnefo.org/netbsd-7.1-x86_64.diskdump.meta>`__]
 
 Sample Usage
 ^^^^^^^^^^^^
